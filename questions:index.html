@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>questions — connor.fm</title>
+
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+  <nav>
+
+    <div class="nav-inner">
+
+      <a href="/" class="site-name">
+        connor.fm
+      </a>
+
+      <div class="nav-links">
+
+        <a href="/music">
+          music
+        </a>
+
+        <a href="/archive">
+          archive
+        </a>
+
+        <a href="/about">
+          about
+        </a>
+
+        <a href="/questions" class="active">
+          questions for connor
+        </a>
+
+        <a href="#">
+          ...
+        </a>
+
+      </div>
+
+    </div>
+
+  </nav>
+
+
+  <div class="nav-divider"></div>
+
+
+  <main>
+
+    <section class="page">
+
+
+      <div class="section-label">
+        05 / questions for connor
+      </div>
+
+
+      <div class="questions-intro">
+
+        <h1 class="questions-title">
+          questions<br>
+          for connor
+        </h1>
+
+
+        <p>
+          got something you want to ask?
+          leave your name if you want,
+          or stay anonymous.
+          selected questions may appear here
+          with an answer.
+        </p>
+
+      </div>
+
+
+      <form
+        class="question-form"
+        id="questionForm"
+      >
+
+
+        <div class="field">
+
+          <label for="name">
+            your name
+          </label>
+
+          <input
+            id="name"
+            type="text"
+            placeholder="optional"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="question">
+            your question
+          </label>
+
+          <textarea
+            id="question"
+            placeholder="ask me something..."
+          ></textarea>
+
+        </div>
+
+
+        <button
+          class="submit-button"
+          type="submit"
+        >
+          send →
+        </button>
+
+
+        <div
+          class="questions-note"
+          id="questionNote"
+        ></div>
+
+
+      </form>
+
+
+      <div class="question-list">
+
+
+        <div class="question-item">
+
+          <div class="question-meta">
+            anonymous / answered by connor
+          </div>
+
+          <div class="question-text">
+            what is avant-garde about?
+          </div>
+
+        </div>
+
+
+        <div class="question-item">
+
+          <div class="question-meta">
+            someone / unanswered
+          </div>
+
+          <div class="question-text">
+            what are you listening to right now?
+          </div>
+
+        </div>
+
+
+      </div>
+
+
+    </section>
+
+  </main>
+
+
+  <footer>
+
+    <div class="footer-divider"></div>
+
+    <div class="footer-content">
+
+      <div class="footer-name">
+        connor.fm
+      </div>
+
+      <div class="footer-year">
+        © 2026
+      </div>
+
+    </div>
+
+  </footer>
+
+
+  <script>
+
+    const questionForm =
+      document.getElementById("questionForm");
+
+    const questionNote =
+      document.getElementById("questionNote");
+
+
+    questionForm.addEventListener(
+      "submit",
+      function(event) {
+
+        event.preventDefault();
+
+        questionNote.textContent =
+          "this is a design preview — submissions are not connected yet.";
+
+      }
+    );
+
+  </script>
+
+</body>
+</html>
