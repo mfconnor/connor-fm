@@ -1,8 +1,16 @@
 {
   "name": "connor-fm",
   "compatibility_date": "2026-08-26",
+
   "assets": {
     "directory": ".",
     "not_found_handling": "404-page"
-  }
+  },
+
+  "kv_namespaces": [
+    {
+      "binding": "CONNOR_DATA",
+      "id": "0cd55b70587548b28b263bd00db73d23"
+    }
+  ]
 }
