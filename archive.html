@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -14,103 +13,104 @@
 
   <nav>
 
-```
-<div class="nav-inner">
+    <div class="nav-inner">
 
-  <a href="/" class="site-name">
-    connor.fm
-  </a>
+      <a href="/" class="site-name">
+        connor.fm
+      </a>
 
-  <div class="nav-links">
+      <div class="nav-links">
 
-    <a href="/music">
-      music
-    </a>
+        <a href="/music">
+          music
+        </a>
 
-    <a href="/archive" class="active">
-      archive
-    </a>
+        <a href="/archive" class="active">
+          archive
+        </a>
 
-    <a href="/about">
-      about
-    </a>
+        <a href="/about">
+          about
+        </a>
 
-    <a href="#">
-      ...
-    </a>
+        <a href="#">
+          ...
+        </a>
 
-  </div>
+      </div>
 
-</div>
-```
+    </div>
 
   </nav>
 
+
   <div class="nav-divider"></div>
+
 
   <main>
 
-```
-<section class="page">
+    <section class="page">
 
-  <div class="section-label">
-    03 / archive
-  </div>
-
-
-  <div id="archive-list" class="archive-list">
-
-    <div class="archive-empty">
-      loading archive...
-    </div>
-
-  </div>
+      <div class="section-label">
+        03 / archive
+      </div>
 
 
-  <div class="archive-note">
+      <div
+        id="archive-list"
+        class="archive-list"
+      >
 
-    a small archive of projects, ideas, releases and things
-    that would otherwise disappear into the internet.
+        <div class="archive-empty">
+          loading archive...
+        </div>
 
-  </div>
+      </div>
 
 
-  <div class="music-bottom">
+      <div class="archive-note">
 
-    <span>
-      a record of things that happened
-    </span>
+        a small archive of projects, ideas, releases and things
+        that would otherwise disappear into the internet.
 
-    <span>
-      connor.fm/archive
-    </span>
+      </div>
 
-  </div>
 
-</section>
-```
+      <div class="music-bottom">
+
+        <span>
+          a record of things that happened
+        </span>
+
+        <span>
+          connor.fm/archive
+        </span>
+
+      </div>
+
+    </section>
 
   </main>
 
+
   <footer>
 
-```
-<div class="footer-divider"></div>
+    <div class="footer-divider"></div>
 
-<div class="footer-content">
+    <div class="footer-content">
 
-  <div class="footer-name">
-    connor.fm
-  </div>
+      <div class="footer-name">
+        connor.fm
+      </div>
 
-  <div class="footer-year">
-    © 2026
-  </div>
+      <div class="footer-year">
+        © 2026
+      </div>
 
-</div>
-```
+    </div>
 
   </footer>
+
 
   <script>
 
@@ -178,8 +178,14 @@
           const item =
             document.createElement("div");
 
+          /*
+            Wichtig:
+            style.css erwartet .archive-item,
+            nicht .archive-entry.
+          */
+
           item.className =
-            "archive-entry";
+            "archive-item";
 
 
           const year =
