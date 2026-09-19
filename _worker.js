@@ -18,7 +18,10 @@ export default {
     // ADMIN LOGIN
     // ==========================================
 
-    if (url.pathname === "/api/admin/login" && request.method === "POST") {
+    if (
+      url.pathname === "/api/admin/login" &&
+      request.method === "POST"
+    ) {
       try {
         const { password } = await request.json();
 
@@ -35,7 +38,6 @@ export default {
           );
         }
 
-        // Generate a random server-side session token
         const token = crypto.randomUUID();
 
         await env.CONNOR_DATA.put(
@@ -51,9 +53,12 @@ export default {
             success: true
           }),
           {
+            status: 200,
             headers: {
               "Content-Type": "application/json",
-              "Set-Cookie": `connor_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=86400`
+              "Cache-Control": "no-store",
+              "Set-Cookie":
+                `connor_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=86400`
             }
           }
         );
@@ -72,7 +77,10 @@ export default {
     // ADMIN LOGOUT
     // ==========================================
 
-    if (url.pathname === "/api/admin/logout" && request.method === "POST") {
+    if (
+      url.pathname === "/api/admin/logout" &&
+      request.method === "POST"
+    ) {
       const token = getSessionToken(request);
 
       if (token) {
@@ -84,8 +92,10 @@ export default {
           success: true
         }),
         {
+          status: 200,
           headers: {
             "Content-Type": "application/json",
+            "Cache-Control": "no-store",
             "Set-Cookie":
               "connor_session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0"
           }
@@ -98,10 +108,8 @@ export default {
     // ==========================================
 
     if (url.pathname === "/api/admin/check") {
-      const authenticated = await isAuthenticated(
-        request,
-        env
-      );
+      const authenticated =
+        await isAuthenticated(request, env);
 
       return json({
         authenticated
@@ -127,8 +135,10 @@ export default {
       }
 
       try {
-        const { currentPassword, newPassword } =
-          await request.json();
+        const {
+          currentPassword,
+          newPassword
+        } = await request.json();
 
         const storedPassword =
           await env.CONNOR_DATA.get("admin_password");
@@ -163,11 +173,12 @@ export default {
           newPassword
         );
 
-        // Invalidate current session
         const token = getSessionToken(request);
 
         if (token) {
-          await env.CONNOR_DATA.delete(`session:${token}`);
+          await env.CONNOR_DATA.delete(
+            `session:${token}`
+          );
         }
 
         return new Response(
@@ -175,8 +186,10 @@ export default {
             success: true
           }),
           {
+            status: 200,
             headers: {
               "Content-Type": "application/json",
+              "Cache-Control": "no-store",
               "Set-Cookie":
                 "connor_session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0"
             }
@@ -194,7 +207,7 @@ export default {
     }
 
     // ==========================================
-    // LISTENING ROOM CODE
+    // LISTENING ROOM CODE — GET
     // ==========================================
 
     if (
@@ -221,7 +234,7 @@ export default {
     }
 
     // ==========================================
-    // CHANGE LISTENING ROOM CODE
+    // LISTENING ROOM CODE — SAVE
     // ==========================================
 
     if (
@@ -313,23 +326,40 @@ export default {
     }
 
     // ==========================================
-    // GET SITE DATA
+    // GET SITE CONTENT
     // ==========================================
 
     if (
       url.pathname === "/api/content" &&
       request.method === "GET"
     ) {
-      const data = await getContent(env);
+      try {
+        const data = await getContent(env);
 
-      return json({
-        success: true,
-        ...data
-      });
+        return json(
+          {
+            success: true,
+            ...data
+          },
+          200,
+          true
+        );
+      } catch (error) {
+        console.error("GET /api/content failed:", error);
+
+        return json(
+          {
+            success: false,
+            error: "Could not load content."
+          },
+          500,
+          true
+        );
+      }
     }
 
     // ==========================================
-    // SAVE SITE DATA
+    // SAVE SITE CONTENT
     // ==========================================
 
     if (
@@ -342,12 +372,24 @@ export default {
             success: false,
             error: "Unauthorized."
           },
-          401
+          401,
+          true
         );
       }
 
       try {
         const body = await request.json();
+
+        if (!body || typeof body !== "object") {
+          return json(
+            {
+              success: false,
+              error: "Invalid content."
+            },
+            400,
+            true
+          );
+        }
 
         const allowed = [
           "about",
@@ -365,16 +407,28 @@ export default {
           }
         }
 
-        return json({
-          success: true
-        });
-      } catch {
+        // Read the data back immediately.
+        // This confirms that the save actually reached KV.
+        const savedData = await getContent(env);
+
+        return json(
+          {
+            success: true,
+            ...savedData
+          },
+          200,
+          true
+        );
+      } catch (error) {
+        console.error("POST /api/content failed:", error);
+
         return json(
           {
             success: false,
             error: "Invalid content."
           },
-          400
+          400,
+          true
         );
       }
     }
@@ -392,21 +446,37 @@ export default {
 // HELPERS
 // ==========================================
 
-function json(data, status = 200) {
+function json(data, status = 200, noCache = true) {
+  const headers = {
+    "Content-Type": "application/json"
+  };
+
+  if (noCache) {
+    headers["Cache-Control"] =
+      "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0";
+
+    headers["Pragma"] = "no-cache";
+
+    headers["Expires"] = "0";
+  }
+
   return new Response(
     JSON.stringify(data),
     {
       status,
-      headers: {
-        "Content-Type": "application/json"
-      }
+      headers
     }
   );
 }
 
 
+// ==========================================
+// SESSION
+// ==========================================
+
 function getSessionToken(request) {
-  const cookie = request.headers.get("Cookie") || "";
+  const cookie =
+    request.headers.get("Cookie") || "";
 
   const match = cookie.match(
     /(?:^|;\s*)connor_session=([^;]+)/
@@ -417,18 +487,25 @@ function getSessionToken(request) {
 
 
 async function isAuthenticated(request, env) {
-  const token = getSessionToken(request);
+  const token =
+    getSessionToken(request);
 
   if (!token) {
     return false;
   }
 
   const session =
-    await env.CONNOR_DATA.get(`session:${token}`);
+    await env.CONNOR_DATA.get(
+      `session:${token}`
+    );
 
   return session === "1";
 }
 
+
+// ==========================================
+// CONTENT
+// ==========================================
 
 async function getContent(env) {
   const keys = [
@@ -442,7 +519,9 @@ async function getContent(env) {
 
   for (const key of keys) {
     const value =
-      await env.CONNOR_DATA.get(`content:${key}`);
+      await env.CONNOR_DATA.get(
+        `content:${key}`
+      );
 
     if (value) {
       try {
