@@ -6,125 +6,299 @@
 
   <title>archive — connor.fm</title>
 
-  <link rel="stylesheet" href="/style.css">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: #d8d2b8;
+      color: #171714;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      width: min(100% - 40px, 1100px);
+      margin: 0 auto;
+      padding: 22px 0 80px;
+    }
+
+    /* NAVIGATION */
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid rgba(23, 23, 20, 0.35);
+      font-size: 13px;
+      text-transform: lowercase;
+    }
+
+    nav a {
+      opacity: 0.7;
+      transition: opacity 0.2s ease;
+    }
+
+    nav a:hover {
+      opacity: 1;
+    }
+
+    nav a.active {
+      opacity: 1;
+    }
+
+    /* HEADER */
+
+    .site-name {
+      padding: 22px 0 55px;
+      font-size: clamp(46px, 10vw, 100px);
+      font-weight: 400;
+      letter-spacing: -0.065em;
+      line-height: 0.9;
+    }
+
+    /* PAGE */
+
+    .page-label {
+      margin-bottom: 55px;
+      font-size: 12px;
+      text-transform: lowercase;
+      opacity: 0.6;
+    }
+
+    .archive-list {
+      width: 100%;
+    }
+
+    .archive-entry {
+      display: grid;
+      grid-template-columns: 100px 1fr 140px;
+      gap: 20px;
+      align-items: baseline;
+
+      padding: 22px 0;
+      border-top: 1px solid rgba(23, 23, 20, 0.35);
+    }
+
+    .archive-entry:last-child {
+      border-bottom: 1px solid rgba(23, 23, 20, 0.35);
+    }
+
+    .archive-year,
+    .archive-type {
+      font-size: 12px;
+      opacity: 0.6;
+    }
+
+    .archive-title {
+      font-size: clamp(20px, 3vw, 30px);
+      letter-spacing: -0.035em;
+      text-transform: lowercase;
+    }
+
+    .archive-type {
+      text-align: right;
+      text-transform: lowercase;
+    }
+
+    /* EMPTY STATE */
+
+    .archive-empty {
+      padding: 25px 0;
+      border-top: 1px solid rgba(23, 23, 20, 0.35);
+      border-bottom: 1px solid rgba(23, 23, 20, 0.35);
+
+      font-size: 13px;
+      opacity: 0.6;
+    }
+
+    /* NOTE */
+
+    .archive-note {
+      max-width: 500px;
+      margin-top: 55px;
+      font-size: 13px;
+      opacity: 0.65;
+    }
+
+    /* FOOTER */
+
+    footer {
+      margin-top: 100px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(23, 23, 20, 0.35);
+
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+
+      font-size: 12px;
+      opacity: 0.55;
+    }
+
+    /* MOBILE */
+
+    @media (max-width: 650px) {
+      .page {
+        width: min(100% - 28px, 1100px);
+        padding-top: 16px;
+      }
+
+      nav {
+        gap: 14px;
+      }
+
+      .site-name {
+        padding: 20px 0 45px;
+      }
+
+      .page-label {
+        margin-bottom: 35px;
+      }
+
+      .archive-entry {
+        grid-template-columns: 60px 1fr;
+        gap: 8px 15px;
+      }
+
+      .archive-type {
+        grid-column: 2;
+        text-align: left;
+      }
+
+      footer {
+        flex-direction: column;
+        gap: 5px;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-  <nav>
+  <div class="page">
 
-    <div class="nav-inner">
+    <nav>
+      <a href="/music">music</a>
+      <a href="/archive" class="active">archive</a>
+      <a href="/about">about</a>
+      <a href="/">...</a>
+    </nav>
 
-      <a href="/" class="site-name">
-        connor.fm
-      </a>
-
-      <div class="nav-links">
-
-        <a href="/music">
-          music
-        </a>
-
-        <a href="/archive" class="active">
-          archive
-        </a>
-
-        <a href="/about">
-          about
-        </a>
-
-        <a href="#">
-          ...
-        </a>
-
-      </div>
-
+    <div class="site-name">
+      connor.fm
     </div>
 
-  </nav>
+    <main>
 
-
-  <div class="nav-divider"></div>
-
-
-  <main>
-
-    <section class="page">
-
-      <div class="section-label">
+      <div class="page-label">
         03 / archive
       </div>
 
-
-      <div class="archive-list">
-
-
-        <a href="#" class="archive-item">
-
-          <span class="archive-year">
-            2027
-          </span>
-
-          <span class="archive-title">
-            avant-garde
-          </span>
-
-          <span class="archive-type">
-            mixtape
-          </span>
-
-        </a>
-
-
-        <a href="#" class="archive-item">
-
-          <span class="archive-year">
-            2026
-          </span>
-
-          <span class="archive-title">
-            coming soon
-          </span>
-
-          <span class="archive-type">
-            project
-          </span>
-
-        </a>
-
-
+      <div id="archive-list" class="archive-list">
+        <div class="archive-empty">
+          loading archive...
+        </div>
       </div>
 
-
-      <p class="archive-note">
-
-        a small archive of projects, ideas, releases and
-        things that would otherwise disappear into the internet.
-
-      </p>
-
-    </section>
-
-  </main>
-
-
-  <footer>
-
-    <div class="footer-divider"></div>
-
-    <div class="footer-content">
-
-      <div class="footer-name">
-        connor.fm
+      <div class="archive-note">
+        a small archive of projects, ideas, releases and things
+        that would otherwise disappear into the internet.
       </div>
 
-      <div class="footer-year">
-        © 2026
-      </div>
+    </main>
 
-    </div>
+    <footer>
+      <span>connor.fm</span>
+      <span>archive</span>
+    </footer>
 
-  </footer>
+  </div>
+
+
+  <script>
+    async function loadArchive() {
+      const archiveList = document.getElementById("archive-list");
+
+      try {
+        const response = await fetch("/api/content", {
+          method: "GET",
+          cache: "no-store"
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to load archive.");
+        }
+
+        const data = await response.json();
+
+        let archive = data.archive;
+
+        if (!Array.isArray(archive)) {
+          archive = [];
+        }
+
+        if (archive.length === 0) {
+          archiveList.innerHTML = `
+            <div class="archive-empty">
+              nothing here yet.
+            </div>
+          `;
+
+          return;
+        }
+
+        archiveList.innerHTML = "";
+
+        archive.forEach(entry => {
+          const item = document.createElement("div");
+          item.className = "archive-entry";
+
+          const year = document.createElement("span");
+          year.className = "archive-year";
+          year.textContent = entry.year || "";
+
+          const title = document.createElement("span");
+          title.className = "archive-title";
+          title.textContent = entry.title || "";
+
+          const type = document.createElement("span");
+          type.className = "archive-type";
+          type.textContent = entry.type || "";
+
+          item.appendChild(year);
+          item.appendChild(title);
+          item.appendChild(type);
+
+          archiveList.appendChild(item);
+        });
+
+      } catch (error) {
+        console.error(error);
+
+        archiveList.innerHTML = `
+          <div class="archive-empty">
+            archive temporarily unavailable.
+          </div>
+        `;
+      }
+    }
+
+    loadArchive();
+  </script>
 
 </body>
 </html>
