@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>admin — connor.fm</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: #e8e3d4;
+      color: #171714;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(900px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    header {
+      padding: 28px 0 20px;
+      border-bottom: 1px solid rgba(23, 23, 20, 0.35);
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      font-size: 14px;
+      letter-spacing: 0.04em;
+    }
+
+    .back {
+      font-size: 12px;
+      opacity: 0.65;
+    }
+
+    main {
+      padding: 70px 0 100px;
+    }
+
+    .number {
+      font-size: 12px;
+      opacity: 0.55;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      font-size: clamp(38px, 8vw, 72px);
+      font-weight: 400;
+      letter-spacing: -0.05em;
+      margin: 0 0 50px;
+    }
+
+    .login,
+    .dashboard {
+      max-width: 520px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 9px;
+      opacity: 0.65;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid rgba(23, 23, 20, 0.4);
+      background: transparent;
+      padding: 15px;
+      font-size: 16px;
+      color: inherit;
+      outline: none;
+      border-radius: 0;
+    }
+
+    input:focus {
+      border-color: #171714;
+    }
+
+    button {
+      margin-top: 14px;
+      width: 100%;
+      border: 1px solid #171714;
+      background: #171714;
+      color: #e8e3d4;
+      padding: 15px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    .error {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #8b2929;
+      display: none;
+    }
+
+    .dashboard {
+      display: none;
+    }
+
+    .welcome {
+      font-size: 13px;
+      opacity: 0.65;
+      margin-bottom: 40px;
+    }
+
+    .section {
+      border-top: 1px solid rgba(23, 23, 20, 0.3);
+      padding: 25px 0;
+    }
+
+    .section:last-child {
+      border-bottom: 1px solid rgba(23, 23, 20, 0.3);
+    }
+
+    .section-title {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+
+    .section-description {
+      font-size: 12px;
+      opacity: 0.6;
+      margin-bottom: 20px;
+    }
+
+    .logout {
+      margin-top: 30px;
+      background: transparent;
+      color: #171714;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        width: calc(100% - 28px);
+      }
+
+      main {
+        padding-top: 50px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="container top">
+      <div class="brand">connor.fm / admin</div>
+      <a class="back" href="/">back to site →</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+
+      <!-- LOGIN -->
+
+      <div class="login" id="login">
+        <div class="number">00 / admin</div>
+
+        <h1>admin</h1>
+
+        <label for="password">password</label>
+
+        <input
+          id="password"
+          type="password"
+          autocomplete="current-password"
+          placeholder="enter password"
+        >
+
+        <button id="loginButton">
+          enter
+        </button>
+
+        <div class="error" id="loginError">
+          wrong password.
+        </div>
+      </div>
+
+
+      <!-- DASHBOARD -->
+
+      <div class="dashboard" id="dashboard">
+
+        <div class="number">01 / dashboard</div>
+
+        <h1>hello.</h1>
+
+        <div class="welcome">
+          you're inside the connor.fm control room.
+        </div>
+
+
+        <div class="section">
+          <div class="section-title">
+            listening room
+          </div>
+
+          <div class="section-description">
+            Change the private listening-room access code.
+          </div>
+
+          <button onclick="alert('Listening Room editor coming next.')">
+            edit listening room →
+          </button>
+        </div>
+
+
+        <div class="section">
+          <div class="section-title">
+            archive
+          </div>
+
+          <div class="section-description">
+            Add, edit and remove archive entries.
+          </div>
+
+          <button onclick="alert('Archive editor coming next.')">
+            edit archive →
+          </button>
+        </div>
+
+
+        <div class="section">
+          <div class="section-title">
+            about
+          </div>
+
+          <div class="section-description">
+            Edit the content of the about page.
+          </div>
+
+          <button onclick="alert('About editor coming next.')">
+            edit about →
+          </button>
+        </div>
+
+
+        <div class="section">
+          <div class="section-title">
+            music
+          </div>
+
+          <div class="section-description">
+            Edit project information and announcements.
+          </div>
+
+          <button onclick="alert('Music editor coming next.')">
+            edit music →
+          </button>
+        </div>
+
+
+        <button class="logout" id="logoutButton">
+          log out
+        </button>
+
+      </div>
+
+    </div>
+  </main>
+
+
+  <script>
+    const login = document.getElementById("login");
+    const dashboard = document.getElementById("dashboard");
+    const passwordInput = document.getElementById("password");
+    const loginButton = document.getElementById("loginButton");
+    const loginError = document.getElementById("loginError");
+    const logoutButton = document.getElementById("logoutButton");
+
+
+    async function doLogin() {
+      const password = passwordInput.value;
+
+      if (!password) {
+        return;
+      }
+
+      loginButton.textContent = "checking...";
+      loginError.style.display = "none";
+
+      try {
+        const response = await fetch("/api/admin/login", {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+            password: password
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          sessionStorage.setItem("connor_admin", "true");
+
+          login.style.display = "none";
+          dashboard.style.display = "block";
+        } else {
+          loginError.style.display = "block";
+        }
+
+      } catch (error) {
+        loginError.textContent = "something went wrong.";
+        loginError.style.display = "block";
+      }
+
+      loginButton.textContent = "enter";
+    }
+
+
+    loginButton.addEventListener("click", doLogin);
+
+
+    passwordInput.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        doLogin();
+      }
+    });
+
+
+    logoutButton.addEventListener("click", function() {
+      sessionStorage.removeItem("connor_admin");
+
+      dashboard.style.display = "none";
+      login.style.display = "block";
+
+      passwordInput.value = "";
+    });
+
+
+    if (sessionStorage.getItem("connor_admin") === "true") {
+      login.style.display = "none";
+      dashboard.style.display = "block";
+    }
+  </script>
+
+</body>
+</html>
