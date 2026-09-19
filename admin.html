@@ -24,146 +24,258 @@
       min-height: 100vh;
     }
 
-    a {
-      color: inherit;
-      text-decoration: none;
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
     }
 
     .container {
-      width: min(900px, calc(100% - 40px));
-      margin: 0 auto;
+      width: min(900px, calc(100% - 32px));
+      margin: auto;
     }
 
     header {
-      padding: 28px 0 20px;
-      border-bottom: 1px solid rgba(23, 23, 20, 0.35);
+      border-bottom: 1px solid rgba(23, 23, 20, .3);
+      padding: 25px 0;
     }
 
-    .top {
+    .header-inner {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
     .brand {
-      font-size: 14px;
-      letter-spacing: 0.04em;
+      font-size: 13px;
     }
 
     .back {
       font-size: 12px;
-      opacity: 0.65;
+      opacity: .55;
     }
 
     main {
-      padding: 70px 0 100px;
-    }
-
-    .number {
-      font-size: 12px;
-      opacity: 0.55;
-      margin-bottom: 18px;
+      padding: 60px 0 100px;
     }
 
     h1 {
-      font-size: clamp(38px, 8vw, 72px);
+      font-size: clamp(42px, 9vw, 80px);
       font-weight: 400;
-      letter-spacing: -0.05em;
-      margin: 0 0 50px;
+      letter-spacing: -.06em;
+      margin: 10px 0 45px;
     }
 
-    .login,
-    .dashboard {
-      max-width: 520px;
+    h2 {
+      font-size: 24px;
+      font-weight: 400;
+      margin: 0 0 8px;
+    }
+
+    .small {
+      font-size: 11px;
+      opacity: .55;
+    }
+
+    .login {
+      max-width: 500px;
     }
 
     label {
       display: block;
-      font-size: 12px;
-      margin-bottom: 9px;
-      opacity: 0.65;
+      font-size: 11px;
+      opacity: .6;
+      margin: 0 0 8px;
     }
 
-    input {
+    input,
+    textarea,
+    select {
       width: 100%;
-      border: 1px solid rgba(23, 23, 20, 0.4);
       background: transparent;
-      padding: 15px;
-      font-size: 16px;
+      border: 1px solid rgba(23, 23, 20, .35);
+      padding: 13px;
       color: inherit;
       outline: none;
       border-radius: 0;
     }
 
-    input:focus {
+    textarea {
+      min-height: 130px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
       border-color: #171714;
     }
 
     button {
-      margin-top: 14px;
-      width: 100%;
       border: 1px solid #171714;
       background: #171714;
       color: #e8e3d4;
-      padding: 15px;
-      font-size: 13px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      opacity: 0.85;
-    }
-
-    .error {
-      margin-top: 14px;
+      padding: 13px 18px;
       font-size: 12px;
-      color: #8b2929;
-      display: none;
     }
 
-    .dashboard {
-      display: none;
-    }
-
-    .welcome {
-      font-size: 13px;
-      opacity: 0.65;
-      margin-bottom: 40px;
-    }
-
-    .section {
-      border-top: 1px solid rgba(23, 23, 20, 0.3);
-      padding: 25px 0;
-    }
-
-    .section:last-child {
-      border-bottom: 1px solid rgba(23, 23, 20, 0.3);
-    }
-
-    .section-title {
-      font-size: 20px;
-      margin-bottom: 8px;
-    }
-
-    .section-description {
-      font-size: 12px;
-      opacity: 0.6;
-      margin-bottom: 20px;
-    }
-
-    .logout {
-      margin-top: 30px;
+    button.secondary {
       background: transparent;
       color: #171714;
     }
 
+    button.danger {
+      border-color: #8b2929;
+      background: transparent;
+      color: #8b2929;
+    }
+
+    .full {
+      width: 100%;
+      margin-top: 12px;
+    }
+
+    .error {
+      color: #8b2929;
+      font-size: 12px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .success {
+      color: #35633c;
+      font-size: 12px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    #dashboard {
+      display: none;
+    }
+
+    .intro {
+      margin-bottom: 50px;
+      font-size: 13px;
+      opacity: .6;
+    }
+
+    .section {
+      border-top: 1px solid rgba(23, 23, 20, .3);
+      padding: 30px 0;
+    }
+
+    .section:last-child {
+      border-bottom: 1px solid rgba(23, 23, 20, .3);
+    }
+
+    .section-head {
+      margin-bottom: 25px;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    .archive-item,
+    .message-item {
+      border: 1px solid rgba(23, 23, 20, .3);
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+
+    .item-title {
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+
+    .item-meta {
+      font-size: 11px;
+      opacity: .55;
+      margin-bottom: 18px;
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .editor {
+      display: none;
+      border-top: 1px solid rgba(23, 23, 20, .2);
+      margin-top: 20px;
+      padding-top: 20px;
+    }
+
+    .editor.visible {
+      display: block;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .schedule {
+      display: none;
+      margin-top: 15px;
+    }
+
+    .schedule.visible {
+      display: block;
+    }
+
+    .date-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .message-status {
+      display: inline-block;
+      font-size: 10px;
+      border: 1px solid rgba(23, 23, 20, .25);
+      padding: 5px 8px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .message-status.live {
+      border-color: #35633c;
+      color: #35633c;
+    }
+
+    .message-status.scheduled {
+      border-color: #8a6824;
+      color: #8a6824;
+    }
+
+    .message-status.draft {
+      opacity: .55;
+    }
+
+    .bottom-actions {
+      margin-top: 35px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
     @media (max-width: 600px) {
-      .container {
-        width: calc(100% - 28px);
+      .row,
+      .date-row {
+        grid-template-columns: 1fr;
       }
 
       main {
-        padding-top: 50px;
+        padding-top: 40px;
       }
     }
   </style>
@@ -171,202 +283,1368 @@
 
 <body>
 
-  <header>
-    <div class="container top">
-      <div class="brand">connor.fm / admin</div>
-      <a class="back" href="/">back to site →</a>
-    </div>
-  </header>
+<header>
+  <div class="container header-inner">
+    <div class="brand">connor.fm / admin</div>
+    <a class="back" href="/">back to site →</a>
+  </div>
+</header>
 
-  <main>
-    <div class="container">
+<main>
+  <div class="container">
 
-      <!-- LOGIN -->
+    <!-- LOGIN -->
 
-      <div class="login" id="login">
-        <div class="number">00 / admin</div>
+    <section id="login">
+      <div class="small">00 / authentication</div>
 
-        <h1>admin</h1>
+      <h1>admin</h1>
 
-        <label for="password">password</label>
+      <label for="loginPassword">password</label>
 
-        <input
-          id="password"
-          type="password"
-          autocomplete="current-password"
-          placeholder="enter password"
-        >
+      <input
+        id="loginPassword"
+        type="password"
+        autocomplete="current-password"
+        placeholder="enter password"
+      >
 
-        <button id="loginButton">
-          enter
-        </button>
+      <button class="full" onclick="login()">
+        enter
+      </button>
 
-        <div class="error" id="loginError">
-          wrong password.
-        </div>
+      <div class="error" id="loginError"></div>
+    </section>
+
+
+    <!-- DASHBOARD -->
+
+    <section id="dashboard">
+
+      <div class="small">01 / control room</div>
+
+      <h1>hello.</h1>
+
+      <div class="intro">
+        Everything that controls the public side of connor.fm.
       </div>
 
 
-      <!-- DASHBOARD -->
+      <!-- LISTENING ROOM -->
 
-      <div class="dashboard" id="dashboard">
+      <div class="section">
 
-        <div class="number">01 / dashboard</div>
-
-        <h1>hello.</h1>
-
-        <div class="welcome">
-          you're inside the connor.fm control room.
-        </div>
-
-
-        <div class="section">
-          <div class="section-title">
-            listening room
-          </div>
-
-          <div class="section-description">
+        <div class="section-head">
+          <h2>listening room</h2>
+          <div class="small">
             Change the private listening-room access code.
           </div>
-
-          <button onclick="alert('Listening Room editor coming next.')">
-            edit listening room →
-          </button>
         </div>
 
+        <div class="field">
+          <label>access code</label>
 
-        <div class="section">
-          <div class="section-title">
-            archive
-          </div>
-
-          <div class="section-description">
-            Add, edit and remove archive entries.
-          </div>
-
-          <button onclick="alert('Archive editor coming next.')">
-            edit archive →
-          </button>
+          <input
+            id="listeningCode"
+            type="text"
+            autocomplete="off"
+          >
         </div>
 
+        <button onclick="saveListeningCode()">
+          save code
+        </button>
 
-        <div class="section">
-          <div class="section-title">
-            about
-          </div>
-
-          <div class="section-description">
-            Edit the content of the about page.
-          </div>
-
-          <button onclick="alert('About editor coming next.')">
-            edit about →
-          </button>
+        <div class="success" id="codeSuccess">
+          listening-room code saved.
         </div>
 
+        <div class="error" id="codeError"></div>
 
-        <div class="section">
-          <div class="section-title">
-            music
+      </div>
+
+
+      <!-- ARCHIVE -->
+
+      <div class="section">
+
+        <div class="section-head">
+          <h2>archive</h2>
+          <div class="small">
+            Add, edit, delete and reorder archive entries.
           </div>
-
-          <div class="section-description">
-            Edit project information and announcements.
-          </div>
-
-          <button onclick="alert('Music editor coming next.')">
-            edit music →
-          </button>
         </div>
 
+        <div id="archiveList"></div>
 
-        <button class="logout" id="logoutButton">
+        <button onclick="addArchive()">
+          + add archive entry
+        </button>
+
+      </div>
+
+
+      <!-- ABOUT -->
+
+      <div class="section">
+
+        <div class="section-head">
+          <h2>about</h2>
+          <div class="small">
+            Edit the public about page.
+          </div>
+        </div>
+
+        <div class="field">
+          <label>title</label>
+          <input id="aboutTitle">
+        </div>
+
+        <div class="field">
+          <label>intro</label>
+          <textarea id="aboutIntro"></textarea>
+        </div>
+
+        <div class="field">
+          <label>description</label>
+          <textarea id="aboutDescription"></textarea>
+        </div>
+
+        <div class="row">
+
+          <div class="field">
+            <label>name</label>
+            <input id="aboutName">
+          </div>
+
+          <div class="field">
+            <label>currently</label>
+            <input id="aboutCurrently">
+          </div>
+
+        </div>
+
+        <div class="row">
+
+          <div class="field">
+            <label>working on</label>
+            <input id="aboutWorking">
+          </div>
+
+          <div class="field">
+            <label>website</label>
+            <input id="aboutWebsite">
+          </div>
+
+        </div>
+
+        <button onclick="saveAbout()">
+          save about
+        </button>
+
+        <div class="success" id="aboutSuccess">
+          about saved.
+        </div>
+
+      </div>
+
+
+      <!-- MUSIC -->
+
+      <div class="section">
+
+        <div class="section-head">
+          <h2>music</h2>
+          <div class="small">
+            Edit project information shown on the music page.
+          </div>
+        </div>
+
+        <div class="field">
+          <label>project title</label>
+          <input id="musicTitle">
+        </div>
+
+        <div class="row">
+
+          <div class="field">
+            <label>type</label>
+            <input id="musicType">
+          </div>
+
+          <div class="field">
+            <label>release year</label>
+            <input id="musicYear">
+          </div>
+
+        </div>
+
+        <div class="row">
+
+          <div class="field">
+            <label>track count</label>
+            <input id="musicTracks">
+          </div>
+
+          <div class="field">
+            <label>status</label>
+            <input id="musicStatus">
+          </div>
+
+        </div>
+
+        <div class="field">
+          <label>description</label>
+          <textarea id="musicDescription"></textarea>
+        </div>
+
+        <button onclick="saveMusic()">
+          save music
+        </button>
+
+        <div class="success" id="musicSuccess">
+          music information saved.
+        </div>
+
+      </div>
+
+
+      <!-- MESSAGES -->
+
+      <div class="section">
+
+        <div class="section-head">
+          <h2>messages</h2>
+          <div class="small">
+            Publish announcements immediately or schedule them for later.
+          </div>
+        </div>
+
+        <div id="messageList"></div>
+
+        <button onclick="addMessage()">
+          + new message
+        </button>
+
+      </div>
+
+
+      <!-- SECURITY -->
+
+      <div class="section">
+
+        <div class="section-head">
+          <h2>security</h2>
+          <div class="small">
+            Change the administrator password.
+          </div>
+        </div>
+
+        <div class="field">
+          <label>current password</label>
+          <input
+            id="currentPassword"
+            type="password"
+          >
+        </div>
+
+        <div class="field">
+          <label>new password</label>
+          <input
+            id="newPassword"
+            type="password"
+          >
+        </div>
+
+        <button onclick="changePassword()">
+          change password
+        </button>
+
+        <div class="success" id="passwordSuccess">
+          password changed. You have been logged out.
+        </div>
+
+        <div class="error" id="passwordError"></div>
+
+      </div>
+
+
+      <div class="bottom-actions">
+
+        <button
+          class="secondary"
+          onclick="logout()"
+        >
           log out
         </button>
 
       </div>
 
-    </div>
-  </main>
+    </section>
+
+  </div>
+</main>
 
 
-  <script>
-    const login = document.getElementById("login");
-    const dashboard = document.getElementById("dashboard");
-    const passwordInput = document.getElementById("password");
-    const loginButton = document.getElementById("loginButton");
-    const loginError = document.getElementById("loginError");
-    const logoutButton = document.getElementById("logoutButton");
+<script>
+
+let content = {
+  about: {},
+  music: {},
+  archive: [],
+  messages: []
+};
 
 
-    async function doLogin() {
-      const password = passwordInput.value;
+// ==========================================
+// LOGIN
+// ==========================================
 
-      if (!password) {
-        return;
+async function login() {
+
+  const password =
+    document.getElementById("loginPassword").value;
+
+  const error =
+    document.getElementById("loginError");
+
+  error.style.display = "none";
+
+  try {
+
+    const response = await fetch(
+      "/api/admin/login",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          password
+        })
       }
+    );
 
-      loginButton.textContent = "checking...";
-      loginError.style.display = "none";
+    const data = await response.json();
 
-      try {
-        const response = await fetch("/api/admin/login", {
-          method: "POST",
-
-          headers: {
-            "Content-Type": "application/json"
-          },
-
-          body: JSON.stringify({
-            password: password
-          })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-          sessionStorage.setItem("connor_admin", "true");
-
-          login.style.display = "none";
-          dashboard.style.display = "block";
-        } else {
-          loginError.style.display = "block";
-        }
-
-      } catch (error) {
-        loginError.textContent = "something went wrong.";
-        loginError.style.display = "block";
-      }
-
-      loginButton.textContent = "enter";
+    if (!data.success) {
+      throw new Error(data.error || "Login failed.");
     }
 
+    document.getElementById("login").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
 
-    loginButton.addEventListener("click", doLogin);
+    await loadData();
 
+  } catch (error) {
 
-    passwordInput.addEventListener("keydown", function(event) {
-      if (event.key === "Enter") {
-        doLogin();
-      }
-    });
+    errorMessage(
+      "loginError",
+      error.message
+    );
 
-
-    logoutButton.addEventListener("click", function() {
-      sessionStorage.removeItem("connor_admin");
-
-      dashboard.style.display = "none";
-      login.style.display = "block";
-
-      passwordInput.value = "";
-    });
+  }
+}
 
 
-    if (sessionStorage.getItem("connor_admin") === "true") {
-      login.style.display = "none";
-      dashboard.style.display = "block";
+// ==========================================
+// CHECK SESSION
+// ==========================================
+
+async function checkSession() {
+
+  try {
+
+    const response =
+      await fetch("/api/admin/check");
+
+    const data =
+      await response.json();
+
+    if (data.authenticated) {
+
+      document.getElementById("login").style.display = "none";
+      document.getElementById("dashboard").style.display = "block";
+
+      await loadData();
     }
-  </script>
+
+  } catch {
+    // Stay on login screen
+  }
+}
+
+
+// ==========================================
+// LOAD DATA
+// ==========================================
+
+async function loadData() {
+
+  const response =
+    await fetch("/api/content");
+
+  const data =
+    await response.json();
+
+  if (data.about) {
+    content.about = data.about;
+  }
+
+  if (data.music) {
+    content.music = data.music;
+  }
+
+  if (Array.isArray(data.archive)) {
+    content.archive = data.archive;
+  }
+
+  if (Array.isArray(data.messages)) {
+    content.messages = data.messages;
+  }
+
+  const codeResponse =
+    await fetch("/api/listening-code");
+
+  if (codeResponse.ok) {
+
+    const codeData =
+      await codeResponse.json();
+
+    document.getElementById(
+      "listeningCode"
+    ).value = codeData.code || "";
+  }
+
+  renderAll();
+}
+
+
+// ==========================================
+// RENDER
+// ==========================================
+
+function renderAll() {
+  renderAbout();
+  renderMusic();
+  renderArchive();
+  renderMessages();
+}
+
+
+// ==========================================
+// ABOUT
+// ==========================================
+
+function renderAbout() {
+
+  const about = content.about || {};
+
+  document.getElementById("aboutTitle").value =
+    about.title || "about connor";
+
+  document.getElementById("aboutIntro").value =
+    about.intro || "";
+
+  document.getElementById("aboutDescription").value =
+    about.description || "";
+
+  document.getElementById("aboutName").value =
+    about.name || "connor";
+
+  document.getElementById("aboutCurrently").value =
+    about.currently || "";
+
+  document.getElementById("aboutWorking").value =
+    about.working || "";
+
+  document.getElementById("aboutWebsite").value =
+    about.website || "connor.fm";
+}
+
+
+async function saveAbout() {
+
+  content.about = {
+    title:
+      document.getElementById("aboutTitle").value,
+
+    intro:
+      document.getElementById("aboutIntro").value,
+
+    description:
+      document.getElementById("aboutDescription").value,
+
+    name:
+      document.getElementById("aboutName").value,
+
+    currently:
+      document.getElementById("aboutCurrently").value,
+
+    working:
+      document.getElementById("aboutWorking").value,
+
+    website:
+      document.getElementById("aboutWebsite").value
+  };
+
+  await saveContent();
+
+  showSuccess("aboutSuccess");
+}
+
+
+// ==========================================
+// MUSIC
+// ==========================================
+
+function renderMusic() {
+
+  const music = content.music || {};
+
+  document.getElementById("musicTitle").value =
+    music.title || "avant-garde";
+
+  document.getElementById("musicType").value =
+    music.type || "mixtape";
+
+  document.getElementById("musicYear").value =
+    music.year || "2027";
+
+  document.getElementById("musicTracks").value =
+    music.tracks || "10 tracks / 01 instrumental";
+
+  document.getElementById("musicStatus").value =
+    music.status || "unreleased";
+
+  document.getElementById("musicDescription").value =
+    music.description || "";
+}
+
+
+async function saveMusic() {
+
+  content.music = {
+
+    title:
+      document.getElementById("musicTitle").value,
+
+    type:
+      document.getElementById("musicType").value,
+
+    year:
+      document.getElementById("musicYear").value,
+
+    tracks:
+      document.getElementById("musicTracks").value,
+
+    status:
+      document.getElementById("musicStatus").value,
+
+    description:
+      document.getElementById("musicDescription").value
+  };
+
+  await saveContent();
+
+  showSuccess("musicSuccess");
+}
+
+
+// ==========================================
+// LISTENING ROOM
+// ==========================================
+
+async function saveListeningCode() {
+
+  const code =
+    document.getElementById("listeningCode").value;
+
+  const response =
+    await fetch(
+      "/api/listening-code",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          code
+        })
+      }
+    );
+
+  const data =
+    await response.json();
+
+  if (!data.success) {
+
+    errorMessage(
+      "codeError",
+      data.error || "Could not save code."
+    );
+
+    return;
+  }
+
+  showSuccess("codeSuccess");
+}
+
+
+// ==========================================
+// ARCHIVE
+// ==========================================
+
+function renderArchive() {
+
+  const container =
+    document.getElementById("archiveList");
+
+  container.innerHTML = "";
+
+  content.archive.forEach(
+    (entry, index) => {
+
+      const item =
+        document.createElement("div");
+
+      item.className = "archive-item";
+
+      item.innerHTML = `
+        <div class="item-title">
+          ${escapeHtml(entry.title || "untitled")}
+        </div>
+
+        <div class="item-meta">
+          ${escapeHtml(entry.year || "")}
+          /
+          ${escapeHtml(entry.type || "")}
+        </div>
+
+        <div class="item-actions">
+
+          <button
+            class="secondary"
+            onclick="editArchive(${index})"
+          >
+            edit
+          </button>
+
+          <button
+            class="secondary"
+            onclick="moveArchive(${index}, -1)"
+          >
+            ↑
+          </button>
+
+          <button
+            class="secondary"
+            onclick="moveArchive(${index}, 1)"
+          >
+            ↓
+          </button>
+
+          <button
+            class="danger"
+            onclick="deleteArchive(${index})"
+          >
+            delete
+          </button>
+
+        </div>
+
+        <div
+          class="editor"
+          id="archiveEditor${index}"
+        >
+
+          <div class="field">
+            <label>year</label>
+            <input
+              id="archiveYear${index}"
+              value="${escapeAttr(entry.year || "")}"
+            >
+          </div>
+
+          <div class="field">
+            <label>title</label>
+            <input
+              id="archiveTitle${index}"
+              value="${escapeAttr(entry.title || "")}"
+            >
+          </div>
+
+          <div class="field">
+            <label>type</label>
+            <input
+              id="archiveType${index}"
+              value="${escapeAttr(entry.type || "")}"
+            >
+          </div>
+
+          <div class="field">
+            <label>link</label>
+            <input
+              id="archiveLink${index}"
+              value="${escapeAttr(entry.link || "")}"
+            >
+          </div>
+
+          <button onclick="saveArchive(${index})">
+            save entry
+          </button>
+
+        </div>
+      `;
+
+      container.appendChild(item);
+    }
+  );
+}
+
+
+function addArchive() {
+
+  content.archive.push({
+    year: "",
+    title: "untitled",
+    type: "",
+    link: ""
+  });
+
+  renderArchive();
+
+  editArchive(
+    content.archive.length - 1
+  );
+}
+
+
+function editArchive(index) {
+
+  const editor =
+    document.getElementById(
+      `archiveEditor${index}`
+    );
+
+  if (editor) {
+    editor.classList.toggle("visible");
+  }
+}
+
+
+async function saveArchive(index) {
+
+  content.archive[index] = {
+
+    year:
+      document.getElementById(
+        `archiveYear${index}`
+      ).value,
+
+    title:
+      document.getElementById(
+        `archiveTitle${index}`
+      ).value,
+
+    type:
+      document.getElementById(
+        `archiveType${index}`
+      ).value,
+
+    link:
+      document.getElementById(
+        `archiveLink${index}`
+      ).value
+  };
+
+  await saveContent();
+
+  renderArchive();
+}
+
+
+async function deleteArchive(index) {
+
+  const entry =
+    content.archive[index];
+
+  if (
+    !confirm(
+      `Delete "${entry.title || "untitled"}"?`
+    )
+  ) {
+    return;
+  }
+
+  content.archive.splice(index, 1);
+
+  await saveContent();
+
+  renderArchive();
+}
+
+
+async function moveArchive(index, direction) {
+
+  const newIndex =
+    index + direction;
+
+  if (
+    newIndex < 0 ||
+    newIndex >= content.archive.length
+  ) {
+    return;
+  }
+
+  const item =
+    content.archive[index];
+
+  content.archive[index] =
+    content.archive[newIndex];
+
+  content.archive[newIndex] =
+    item;
+
+  await saveContent();
+
+  renderArchive();
+}
+
+
+// ==========================================
+// MESSAGES
+// ==========================================
+
+function renderMessages() {
+
+  const container =
+    document.getElementById("messageList");
+
+  container.innerHTML = "";
+
+  content.messages.forEach(
+    (message, index) => {
+
+      const status =
+        getMessageStatus(message);
+
+      const item =
+        document.createElement("div");
+
+      item.className = "message-item";
+
+      item.innerHTML = `
+        <div class="message-status ${status.className}">
+          ${status.label}
+        </div>
+
+        <div class="item-title">
+          ${escapeHtml(message.title || "untitled")}
+        </div>
+
+        <div class="item-meta">
+          ${message.publishAt
+            ? escapeHtml(formatDate(message.publishAt))
+            : "no publication date"}
+        </div>
+
+        <div class="item-actions">
+
+          <button
+            class="secondary"
+            onclick="editMessage(${index})"
+          >
+            edit
+          </button>
+
+          <button
+            class="danger"
+            onclick="deleteMessage(${index})"
+          >
+            delete
+          </button>
+
+        </div>
+
+        <div
+          class="editor"
+          id="messageEditor${index}"
+        >
+
+          <div class="field">
+            <label>title</label>
+
+            <input
+              id="messageTitle${index}"
+              value="${escapeAttr(message.title || "")}"
+            >
+          </div>
+
+          <div class="field">
+            <label>message</label>
+
+            <textarea
+              id="messageText${index}"
+            >${escapeHtml(message.text || "")}</textarea>
+          </div>
+
+          <div class="field">
+
+            <label>publication</label>
+
+            <select
+              id="messageMode${index}"
+              onchange="toggleSchedule(${index})"
+            >
+
+              <option
+                value="draft"
+                ${message.status === "draft" ? "selected" : ""}
+              >
+                draft
+              </option>
+
+              <option
+                value="live"
+                ${message.status === "live" ? "selected" : ""}
+              >
+                publish immediately
+              </option>
+
+              <option
+                value="scheduled"
+                ${message.status === "scheduled" ? "selected" : ""}
+              >
+                schedule
+              </option>
+
+            </select>
+
+          </div>
+
+          <div
+            class="schedule ${
+              message.status === "scheduled"
+                ? "visible"
+                : ""
+            }"
+            id="schedule${index}"
+          >
+
+            <div class="date-row">
+
+              <div class="field">
+                <label>date</label>
+
+                <input
+                  type="date"
+                  id="messageDate${index}"
+                  value="${getDatePart(message.publishAt)}"
+                >
+              </div>
+
+              <div class="field">
+                <label>time</label>
+
+                <input
+                  type="time"
+                  id="messageTime${index}"
+                  value="${getTimePart(message.publishAt)}"
+                >
+              </div>
+
+            </div>
+
+          </div>
+
+          <button
+            onclick="saveMessage(${index})"
+          >
+            save message
+          </button>
+
+        </div>
+      `;
+
+      container.appendChild(item);
+    }
+  );
+}
+
+
+function addMessage() {
+
+  content.messages.push({
+    title: "new message",
+    text: "",
+    status: "draft",
+    publishAt: null
+  });
+
+  renderMessages();
+
+  editMessage(
+    content.messages.length - 1
+  );
+}
+
+
+function editMessage(index) {
+
+  const editor =
+    document.getElementById(
+      `messageEditor${index}`
+    );
+
+  if (editor) {
+    editor.classList.toggle("visible");
+  }
+}
+
+
+function toggleSchedule(index) {
+
+  const mode =
+    document.getElementById(
+      `messageMode${index}`
+    ).value;
+
+  const schedule =
+    document.getElementById(
+      `schedule${index}`
+    );
+
+  if (mode === "scheduled") {
+    schedule.classList.add("visible");
+  } else {
+    schedule.classList.remove("visible");
+  }
+}
+
+
+async function saveMessage(index) {
+
+  const mode =
+    document.getElementById(
+      `messageMode${index}`
+    ).value;
+
+  let publishAt = null;
+
+  if (mode === "scheduled") {
+
+    const date =
+      document.getElementById(
+        `messageDate${index}`
+      ).value;
+
+    const time =
+      document.getElementById(
+        `messageTime${index}`
+      ).value;
+
+    if (!date || !time) {
+      alert(
+        "Please choose a date and time."
+      );
+      return;
+    }
+
+    publishAt =
+      `${date}T${time}`;
+  }
+
+  content.messages[index] = {
+
+    id:
+      content.messages[index].id ||
+      crypto.randomUUID(),
+
+    title:
+      document.getElementById(
+        `messageTitle${index}`
+      ).value,
+
+    text:
+      document.getElementById(
+        `messageText${index}`
+      ).value,
+
+    status: mode,
+
+    publishAt
+  };
+
+  await saveContent();
+
+  renderMessages();
+}
+
+
+async function deleteMessage(index) {
+
+  const message =
+    content.messages[index];
+
+  if (
+    !confirm(
+      `Delete "${message.title || "untitled"}"?`
+    )
+  ) {
+    return;
+  }
+
+  content.messages.splice(index, 1);
+
+  await saveContent();
+
+  renderMessages();
+}
+
+
+function getMessageStatus(message) {
+
+  if (message.status === "draft") {
+    return {
+      label: "draft",
+      className: "draft"
+    };
+  }
+
+  if (
+    message.status === "scheduled" &&
+    message.publishAt
+  ) {
+
+    const publishTime =
+      new Date(message.publishAt);
+
+    if (publishTime <= new Date()) {
+      return {
+        label: "live",
+        className: "live"
+      };
+    }
+
+    return {
+      label: "scheduled",
+      className: "scheduled"
+    };
+  }
+
+  return {
+    label: "live",
+    className: "live"
+  };
+}
+
+
+function formatDate(value) {
+
+  if (!value) {
+    return "";
+  }
+
+  const date =
+    new Date(value);
+
+  return date.toLocaleString(
+    undefined,
+    {
+      dateStyle: "medium",
+      timeStyle: "short"
+    }
+  );
+}
+
+
+function getDatePart(value) {
+
+  if (!value) {
+    return "";
+  }
+
+  return value.substring(0, 10);
+}
+
+
+function getTimePart(value) {
+
+  if (!value) {
+    return "";
+  }
+
+  return value.substring(11, 16);
+}
+
+
+// ==========================================
+// SAVE CONTENT
+// ==========================================
+
+async function saveContent() {
+
+  const response =
+    await fetch(
+      "/api/content",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(content)
+      }
+    );
+
+  if (response.status === 401) {
+
+    alert(
+      "Your session has expired. Please log in again."
+    );
+
+    location.reload();
+
+    return;
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      "Could not save content."
+    );
+  }
+}
+
+
+// ==========================================
+// CHANGE PASSWORD
+// ==========================================
+
+async function changePassword() {
+
+  const currentPassword =
+    document.getElementById(
+      "currentPassword"
+    ).value;
+
+  const newPassword =
+    document.getElementById(
+      "newPassword"
+    ).value;
+
+  const response =
+    await fetch(
+      "/api/admin/password",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword
+        })
+      }
+    );
+
+  const data =
+    await response.json();
+
+  if (!data.success) {
+
+    errorMessage(
+      "passwordError",
+      data.error
+    );
+
+    return;
+  }
+
+  document.getElementById(
+    "passwordSuccess"
+  ).style.display = "block";
+
+  setTimeout(
+    () => location.reload(),
+    1500
+  );
+}
+
+
+// ==========================================
+// LOGOUT
+// ==========================================
+
+async function logout() {
+
+  await fetch(
+    "/api/admin/logout",
+    {
+      method: "POST"
+    }
+  );
+
+  location.reload();
+}
+
+
+// ==========================================
+// UI HELPERS
+// ==========================================
+
+function showSuccess(id) {
+
+  const element =
+    document.getElementById(id);
+
+  element.style.display = "block";
+
+  setTimeout(
+    () => {
+      element.style.display = "none";
+    },
+    2500
+  );
+}
+
+
+function errorMessage(id, message) {
+
+  const element =
+    document.getElementById(id);
+
+  element.textContent =
+    message;
+
+  element.style.display =
+    "block";
+}
+
+
+function escapeHtml(value) {
+
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+
+function escapeAttr(value) {
+
+  return escapeHtml(value);
+}
+
+
+// ==========================================
+// START
+// ==========================================
+
+checkSession();
+
+</script>
 
 </body>
 </html>
