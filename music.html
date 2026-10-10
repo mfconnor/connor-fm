@@ -38,17 +38,17 @@
   <main>
 
     <section class="page">
-      <div class="section-label">02 / music</div>
+      <div class="section-label" data-content="music.label">02 / music</div>
 
       <div class="music-intro">
-        <div class="cover">
+        <div class="cover" data-cover="music">
           <span>?</span>
         </div>
 
         <div class="project-info">
-          <div class="project-status">currently locked</div>
+          <div class="project-status" data-content="music.lockedLabel">currently locked</div>
 
-          <h1 class="project-title" id="musicTitle">avant-garde</h1>
+          <h1 class="project-title" data-content="music.title">avant-garde</h1>
 
           <div class="project-meta" id="musicMeta">
             mixtape / 2027<br>
@@ -56,15 +56,15 @@
             status: unreleased
           </div>
 
-          <p class="project-description" id="musicDescription">
+          <p class="project-description" data-content="music.description">
             the next mixtape by connor. the listening room
             will open when the project is ready.
           </p>
 
           <div class="access-box">
-            <div class="access-label">access required</div>
+            <div class="access-label" data-content="music.accessLabel">access required</div>
 
-            <p class="access-description">
+            <p class="access-description" data-content="music.accessDescription">
               enter your access code to enter the listening room.
             </p>
 
@@ -88,14 +88,14 @@
       </div>
 
       <div class="listening-room" id="listeningRoom">
-        <div class="room-label">access granted</div>
-        <h2 class="room-title">listening room</h2>
+        <div class="room-label" data-content="music.roomLabel">access granted</div>
+        <h2 class="room-title" data-content="music.roomTitle">listening room</h2>
         <div class="track-list" id="trackList"></div>
       </div>
 
       <div class="music-bottom">
-        <span>this project is private</span>
-        <span>connor.fm/music</span>
+        <span data-content="music.footerLeft">this project is private</span>
+        <span data-content="music.footerRight">connor.fm/music</span>
       </div>
     </section>
   </main>
@@ -104,45 +104,43 @@
     <div class="footer-divider"></div>
 
     <div class="footer-content">
-      <div class="footer-name">connor.fm</div>
-      <div class="footer-year">© 2026</div>
+      <div class="footer-name" data-content="site.footerName">connor.fm</div>
+      <div class="footer-year" data-content="site.footerYear">© 2026</div>
     </div>
   </footer>
 
   <script src="/site.js"></script>
+
   <script>
 
     let trackCount = 10;
 
 
-    loadContent()
-      .then(({ music }) => {
-        if (!music) {
-          return;
-        }
+    contentReady.then(data => {
+      const music = data?.music;
 
-        setText("musicTitle", music.title);
-        setText("musicDescription", music.description);
+      if (!music) {
+        return;
+      }
 
-        const type = [music.type, music.year].filter(Boolean).join(" / ");
-        const lines = [type, music.tracks, music.status && `status: ${music.status}`].filter(Boolean);
+      const type = [music.type, music.year].filter(Boolean).join(" / ");
+      const lines = [type, music.tracks, music.status && `status: ${music.status}`].filter(Boolean);
 
-        if (lines.length) {
-          const meta = document.getElementById("musicMeta");
-          meta.replaceChildren();
+      if (lines.length) {
+        const meta = document.getElementById("musicMeta");
+        meta.replaceChildren();
 
-          lines.forEach((line, index) => {
-            if (index > 0) {
-              meta.append(document.createElement("br"));
-            }
+        lines.forEach((line, index) => {
+          if (index > 0) {
+            meta.append(document.createElement("br"));
+          }
 
-            meta.append(line);
-          });
-        }
+          meta.append(line);
+        });
+      }
 
-        trackCount = parseInt(music.tracks, 10) || trackCount;
-      })
-      .catch(console.error);
+      trackCount = parseInt(music.tracks, 10) || trackCount;
+    });
 
 
     const form = document.getElementById("codeForm");

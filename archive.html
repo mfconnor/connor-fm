@@ -38,20 +38,20 @@
   <main>
 
     <section class="page">
-      <div class="section-label">03 / archive</div>
+      <div class="section-label" data-content="archivePage.label">03 / archive</div>
 
       <div class="archive-list" id="archiveList">
         <div class="archive-empty">loading archive...</div>
       </div>
 
-      <div class="archive-note">
+      <div class="archive-note" data-content="archivePage.note">
         a small archive of projects, ideas, releases and things
         that would otherwise disappear into the internet.
       </div>
 
       <div class="music-bottom">
-        <span>a record of things that happened</span>
-        <span>connor.fm/archive</span>
+        <span data-content="archivePage.footerLeft">a record of things that happened</span>
+        <span data-content="archivePage.footerRight">connor.fm/archive</span>
       </div>
     </section>
   </main>
@@ -60,30 +60,31 @@
     <div class="footer-divider"></div>
 
     <div class="footer-content">
-      <div class="footer-name">connor.fm</div>
-      <div class="footer-year">© 2026</div>
+      <div class="footer-name" data-content="site.footerName">connor.fm</div>
+      <div class="footer-year" data-content="site.footerYear">© 2026</div>
     </div>
   </footer>
 
   <script src="/site.js"></script>
+
   <script>
 
     const archiveList = document.getElementById("archiveList");
 
 
-    loadContent()
-      .then(({ archive }) => {
-        if (!Array.isArray(archive) || archive.length === 0) {
-          showEmpty(archiveList, "nothing here yet.");
-          return;
-        }
-
-        archiveList.replaceChildren(...archive.map(renderEntry));
-      })
-      .catch(error => {
-        console.error(error);
+    contentReady.then(data => {
+      if (!data) {
         showEmpty(archiveList, "archive temporarily unavailable.");
-      });
+        return;
+      }
+
+      if (!Array.isArray(data.archive) || data.archive.length === 0) {
+        showEmpty(archiveList, "nothing here yet.");
+        return;
+      }
+
+      archiveList.replaceChildren(...data.archive.map(renderEntry));
+    });
 
 
     function renderEntry(entry) {

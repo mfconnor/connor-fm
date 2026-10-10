@@ -19,17 +19,26 @@ Runs on Cloudflare Workers (static assets + a small API).
 ## Content
 
 Everything editable lives in the KV namespace `CONNOR_DATA` and is edited
-through `/admin`:
+through `/admin`. The admin panel has one tab per page:
 
-- **listening room** — access code for `/music`. The tracklist is only sent to
-  the browser after the correct code was entered.
-- **archive** — entries on `/archive` (optional link).
-- **about** — text and facts on `/about`.
-- **music** — project info and tracklist on `/music`.
-- **messages** — shown on `/messages` (the `...` link). Drafts and scheduled
-  messages stay hidden until they are published.
+| Tab | What you can edit |
+| --- | --- |
+| home | announcement texts, cover image or text |
+| music | project info, cover, access code, access box, listening room + tracklist, page footer |
+| archive | archive entries (with optional link), note and footer of the page |
+| about | label, title, text, the list of facts |
+| messages | messages (draft / published / scheduled) and the page texts |
+| site | footer on every page |
+| security | admin password |
 
-If nothing is stored yet, the pages show the text written in the HTML.
+Every text in the HTML is marked with `data-content="<key>.<field>"`;
+`site.js` fills it with the saved value. If nothing is saved, the text written
+in the HTML is shown. The fields allowed for each key are defined in `SCHEMA`
+in `_worker.js` and the admin form in `TABS` in `admin.html` — to make a new
+text editable, add it in both places and mark the element in the HTML.
+
+The tracklist is only sent to the browser after the correct listening-room
+code was entered. Drafts and scheduled messages stay hidden until published.
 
 ## Admin password
 

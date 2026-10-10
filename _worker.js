@@ -5,7 +5,76 @@
 // Everything else is served from the static assets.
 // ==========================================
 
-const CONTENT_KEYS = ["about", "music", "archive", "messages"];
+// Everything that can be edited in the admin panel.
+// Each key is stored in KV as "content:<key>".
+//
+// Field types:
+//   text  — single line       long  — multi-line text
+//   url   — http(s) or /path  id / status / date — used by messages
+//   listOf(...)               — list of objects
+
+const SCHEMA = {
+  site: {
+    footerName: "text",
+    footerYear: "text"
+  },
+
+  home: {
+    label: "text",
+    coming: "text",
+    title: "text",
+    description: "long",
+    coverImage: "url",
+    coverText: "text"
+  },
+
+  music: {
+    label: "text",
+    lockedLabel: "text",
+    title: "text",
+    type: "text",
+    year: "text",
+    tracks: "text",
+    status: "text",
+    description: "long",
+    coverImage: "url",
+    coverText: "text",
+    accessLabel: "text",
+    accessDescription: "long",
+    roomLabel: "text",
+    roomTitle: "text",
+    footerLeft: "text",
+    footerRight: "text",
+    tracklist: listOf({ title: "text", duration: "text" })
+  },
+
+  archivePage: {
+    label: "text",
+    note: "long",
+    footerLeft: "text",
+    footerRight: "text"
+  },
+
+  archive: listOf({ year: "text", title: "text", type: "text", link: "url" }),
+
+  about: {
+    label: "text",
+    title: "text",
+    intro: "long",
+    description: "long",
+    facts: listOf({ label: "text", value: "text" })
+  },
+
+  messagesPage: {
+    label: "text",
+    title: "text",
+    intro: "long"
+  },
+
+  messages: listOf({ id: "id", title: "text", text: "long", status: "status", publishAt: "date" })
+};
+
+const CONTENT_KEYS = Object.keys(SCHEMA);
 
 const SESSION_TTL = 60 * 60 * 24; // 24 hours
 
@@ -130,7 +199,7 @@ async function getPublicContent(env) {
 
   return json({
     success: true,
-    about: content.about,
+    ...content,
     music,
     archive: content.archive || [],
     messages: publishedMessages(content.messages || [])
@@ -321,16 +390,9 @@ async function saveContent(request, env) {
     return json({ success: false, error: "Invalid content." }, 400);
   }
 
-  const sanitizers = {
-    about: sanitizeAbout,
-    music: sanitizeMusic,
-    archive: sanitizeArchive,
-    messages: sanitizeMessages
-  };
-
   for (const key of CONTENT_KEYS) {
     if (body[key] !== undefined) {
-      await env.CONNOR_DATA.put(`content:${key}`, JSON.stringify(sanitizers[key](body[key])));
+      await env.CONNOR_DATA.put(`content:${key}`, JSON.stringify(sanitize(SCHEMA[key], body[key])));
     }
   }
 
@@ -340,10 +402,21 @@ async function saveContent(request, env) {
 
 
 async function readContent(env) {
-  const result = {};
+  const values = await Promise.all(CONTENT_KEYS.map(key => readKey(env, key)));
+  const result = Object.fromEntries(CONTENT_KEYS.map((key, index) => [key, values[index]]));
 
-  for (const key of CONTENT_KEYS) {
-    result[key] = await readKey(env, key);
+  // Older versions stored the about facts as fixed fields.
+  const about = result.about;
+
+  if (about && !Array.isArray(about.facts)) {
+    about.facts = [
+      ["name", about.name],
+      ["currently", about.currently],
+      ["working on", about.working],
+      ["website", about.website]
+    ]
+      .filter(([, value]) => value)
+      .map(([label, value]) => ({ label, value }));
   }
 
   return result;
@@ -369,77 +442,50 @@ async function readKey(env, key) {
 // SANITIZING
 // ==========================================
 
+function listOf(item) {
+  return { $list: item };
+}
+
+
+const FIELD_TYPES = {
+  text: value => text(value),
+  long: value => text(value, LIMITS.longText),
+  url: value => safeLink(value),
+  id: value => text(value, 64) || crypto.randomUUID(),
+  status: value => (["draft", "live", "scheduled"].includes(value) ? value : "draft"),
+  date: value => {
+    const date = text(value, 40);
+    return date && !Number.isNaN(Date.parse(date)) ? new Date(date).toISOString() : null;
+  }
+};
+
+
+// Keeps only the fields described in the schema,
+// with the right types and lengths.
+function sanitize(schema, value) {
+  if (typeof schema === "string") {
+    return FIELD_TYPES[schema](value);
+  }
+
+  if (schema.$list) {
+    return Array.isArray(value)
+      ? value
+          .filter(item => item && typeof item === "object")
+          .slice(0, LIMITS.listItems)
+          .map(item => sanitize(schema.$list, item))
+      : [];
+  }
+
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+
+  return Object.fromEntries(
+    Object.entries(schema).map(([key, type]) => [key, sanitize(type, source[key])])
+  );
+}
+
+
 function text(value, max = LIMITS.shortText) {
   return typeof value === "string" ? value.slice(0, max) : "";
-}
-
-
-function list(value) {
-  return Array.isArray(value)
-    ? value.filter(item => item && typeof item === "object").slice(0, LIMITS.listItems)
-    : [];
-}
-
-
-function sanitizeAbout(about) {
-  about = about && typeof about === "object" ? about : {};
-
-  return {
-    title: text(about.title),
-    intro: text(about.intro, LIMITS.longText),
-    description: text(about.description, LIMITS.longText),
-    name: text(about.name),
-    currently: text(about.currently),
-    working: text(about.working),
-    website: text(about.website)
-  };
-}
-
-
-function sanitizeMusic(music) {
-  music = music && typeof music === "object" ? music : {};
-
-  return {
-    title: text(music.title),
-    type: text(music.type),
-    year: text(music.year),
-    tracks: text(music.tracks),
-    status: text(music.status),
-    description: text(music.description, LIMITS.longText),
-    tracklist: list(music.tracklist).map(track => ({
-      title: text(track.title),
-      duration: text(track.duration, 20)
-    }))
-  };
-}
-
-
-function sanitizeArchive(archive) {
-  return list(archive).map(entry => ({
-    year: text(entry.year, 20),
-    title: text(entry.title),
-    type: text(entry.type),
-    link: safeLink(entry.link)
-  }));
-}
-
-
-function sanitizeMessages(messages) {
-  const statuses = ["draft", "live", "scheduled"];
-
-  return list(messages).map(message => {
-    const publishAt = text(message.publishAt, 40);
-
-    return {
-      id: text(message.id, 64) || crypto.randomUUID(),
-      title: text(message.title),
-      text: text(message.text, LIMITS.longText),
-      status: statuses.includes(message.status) ? message.status : "draft",
-      publishAt: publishAt && !Number.isNaN(Date.parse(publishAt))
-        ? new Date(publishAt).toISOString()
-        : null
-    };
-  });
 }
 
 

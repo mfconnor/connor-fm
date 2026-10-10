@@ -10,6 +10,18 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 
   <style>
+    :root {
+      --background: #e8e3d4;
+      --surface: #efebdf;
+      --text: #171714;
+      --muted: rgba(23, 23, 20, .55);
+      --line: rgba(23, 23, 20, .3);
+      --line-light: rgba(23, 23, 20, .15);
+      --error: #8b2929;
+      --success: #35633c;
+      --warning: #8a6824;
+    }
+
     * {
       box-sizing: border-box;
     }
@@ -18,13 +30,17 @@
     body {
       margin: 0;
       padding: 0;
-      background: #e8e3d4;
-      color: #171714;
+      background: var(--background);
+      color: var(--text);
       font-family: Arial, Helvetica, sans-serif;
     }
 
     body {
       min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
     }
 
     button,
@@ -36,6 +52,11 @@
 
     button {
       cursor: pointer;
+      border: 1px solid var(--text);
+      background: var(--text);
+      color: var(--background);
+      padding: 11px 16px;
+      font-size: 12px;
     }
 
     button:disabled {
@@ -43,62 +64,238 @@
       cursor: wait;
     }
 
+    button.secondary {
+      background: transparent;
+      color: var(--text);
+    }
+
+    button.danger {
+      border-color: var(--error);
+      background: transparent;
+      color: var(--error);
+    }
+
+    button.small {
+      padding: 6px 10px;
+      font-size: 11px;
+    }
+
     .container {
-      width: min(900px, calc(100% - 32px));
+      width: min(1100px, calc(100% - 32px));
       margin: auto;
     }
 
+    .small {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .mono {
+      font-family: monospace;
+    }
+
+
+    /* HEADER */
+
     header {
-      border-bottom: 1px solid rgba(23, 23, 20, .3);
-      padding: 25px 0;
+      border-bottom: 1px solid var(--line);
+      padding: 22px 0;
     }
 
     .header-inner {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 20px;
     }
 
     .brand {
       font-size: 13px;
     }
 
-    .back {
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 18px;
       font-size: 12px;
-      opacity: .55;
     }
 
-    main {
-      padding: 60px 0 100px;
+    .header-actions a {
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .header-actions a:hover {
+      color: var(--text);
+    }
+
+    #logoutButton {
+      display: none;
+    }
+
+
+    /* LOGIN */
+
+    .login {
+      max-width: 460px;
+      padding: 70px 0 100px;
     }
 
     h1 {
-      font-size: clamp(42px, 9vw, 80px);
+      font-size: clamp(42px, 8vw, 76px);
       font-weight: 400;
       letter-spacing: -.06em;
-      margin: 10px 0 45px;
+      line-height: .95;
+      margin: 10px 0 30px;
+    }
+
+    .login button {
+      width: 100%;
+      margin-top: 12px;
+      padding: 13px;
+    }
+
+    .login .status {
+      display: block;
+      margin-top: 12px;
+    }
+
+
+    /* LAYOUT */
+
+    #dashboard {
+      display: none;
+      grid-template-columns: 190px 1fr;
+      gap: 60px;
+      padding: 50px 0 0;
+    }
+
+    .tabs {
+      position: sticky;
+      top: 20px;
+      align-self: start;
+      display: flex;
+      flex-direction: column;
+      border-top: 1px solid var(--line);
+    }
+
+    .tabs button {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: transparent;
+      color: var(--muted);
+      border: 0;
+      border-bottom: 1px solid var(--line-light);
+      padding: 13px 0;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    .tabs button:hover,
+    .tabs button.active {
+      color: var(--text);
+    }
+
+    .tabs button .num {
+      font-family: monospace;
+      font-size: 10px;
+      margin-right: 10px;
+      opacity: .7;
+    }
+
+    .tabs button .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--warning);
+      visibility: hidden;
+    }
+
+    .tabs button.dirty .dot {
+      visibility: visible;
+    }
+
+    .panel {
+      min-width: 0;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 20px;
+    }
+
+    .panel-head h1 {
+      margin-bottom: 0;
+    }
+
+    .panel-intro {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 18px 0 40px;
+      max-width: 560px;
+      line-height: 1.5;
+    }
+
+    .view-link {
+      font-size: 12px;
+      color: var(--muted);
+      text-decoration: none;
+      white-space: nowrap;
+      margin-bottom: 8px;
+    }
+
+    .view-link:hover {
+      color: var(--text);
+    }
+
+
+    /* GROUPS + FIELDS */
+
+    .group {
+      border-top: 1px solid var(--line);
+      padding: 28px 0 10px;
+    }
+
+    .group-head {
+      margin-bottom: 22px;
     }
 
     h2 {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 400;
-      margin: 0 0 8px;
+      margin: 0 0 6px;
     }
 
-    .small {
-      font-size: 11px;
-      opacity: .55;
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 14px;
     }
 
-    .login {
-      max-width: 500px;
+    .field {
+      grid-column: 1 / -1;
+      margin-bottom: 18px;
+    }
+
+    .field.half {
+      grid-column: auto;
     }
 
     label {
       display: block;
       font-size: 11px;
-      opacity: .6;
-      margin: 0 0 8px;
+      color: var(--muted);
+      margin: 0 0 7px;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+      line-height: 1.4;
     }
 
     input,
@@ -107,183 +304,203 @@
       width: 100%;
       background: transparent;
       border: 1px solid rgba(23, 23, 20, .35);
-      padding: 13px;
+      padding: 12px;
       color: inherit;
       outline: none;
       border-radius: 0;
     }
 
     textarea {
-      min-height: 130px;
+      min-height: 110px;
       resize: vertical;
+      line-height: 1.5;
     }
 
     input:focus,
     textarea:focus,
     select:focus {
-      border-color: #171714;
+      border-color: var(--text);
     }
 
-    button {
-      border: 1px solid #171714;
-      background: #171714;
-      color: #e8e3d4;
-      padding: 13px 18px;
-      font-size: 12px;
+    input::placeholder,
+    textarea::placeholder {
+      color: rgba(23, 23, 20, .35);
     }
 
-    button.secondary {
-      background: transparent;
-      color: #171714;
-    }
-
-    button.danger {
-      border-color: #8b2929;
-      background: transparent;
-      color: #8b2929;
-    }
-
-    .full {
-      width: 100%;
-      margin-top: 12px;
-    }
-
-    .error {
-      color: #8b2929;
-      font-size: 12px;
-      margin-top: 12px;
+    .preview {
       display: none;
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border: 1px solid var(--line);
+      margin-top: 10px;
     }
 
-    .success {
-      color: #35633c;
-      font-size: 12px;
-      margin-top: 12px;
-      display: none;
+
+    /* LISTS */
+
+    .list-items {
+      margin-bottom: 14px;
     }
 
-    #dashboard {
-      display: none;
+    .list-item {
+      border: 1px solid var(--line);
+      margin-bottom: 10px;
+      background: var(--surface);
     }
 
-    .intro {
-      margin-bottom: 50px;
-      font-size: 13px;
-      opacity: .6;
-    }
-
-    .section {
-      border-top: 1px solid rgba(23, 23, 20, .3);
-      padding: 30px 0;
-    }
-
-    .section:last-child {
-      border-bottom: 1px solid rgba(23, 23, 20, .3);
-    }
-
-    .section-head {
-      margin-bottom: 25px;
-    }
-
-    .field {
-      margin-bottom: 18px;
-    }
-
-    .archive-item,
-    .message-item {
-      border: 1px solid rgba(23, 23, 20, .3);
-      padding: 20px;
-      margin-bottom: 12px;
-    }
-
-    .item-title {
-      font-size: 18px;
-      margin-bottom: 5px;
-    }
-
-    .item-meta {
-      font-size: 11px;
-      opacity: .55;
-      margin-bottom: 18px;
-    }
-
-    .item-actions {
+    .list-item-head {
       display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      cursor: pointer;
     }
 
-    .editor {
-      display: none;
-      border-top: 1px solid rgba(23, 23, 20, .2);
-      margin-top: 20px;
-      padding-top: 20px;
-    }
-
-    .editor.visible {
-      display: block;
-    }
-
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .schedule {
-      display: none;
-      margin-top: 15px;
-    }
-
-    .schedule.visible {
-      display: block;
-    }
-
-    .date-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .message-status {
-      display: inline-block;
+    .list-item-index {
+      font-family: monospace;
       font-size: 10px;
-      border: 1px solid rgba(23, 23, 20, .25);
-      padding: 5px 8px;
-      margin-bottom: 12px;
+      color: var(--muted);
+      width: 22px;
+    }
+
+    .list-item-title {
+      flex: 1;
+      min-width: 0;
+      font-size: 15px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .list-item-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .list-item-body {
+      display: none;
+      border-top: 1px solid var(--line-light);
+      padding: 18px 14px 4px;
+    }
+
+    .list-item.open .list-item-body {
+      display: block;
+    }
+
+    .badge {
+      font-family: monospace;
+      font-size: 9px;
       text-transform: uppercase;
       letter-spacing: .05em;
+      border: 1px solid var(--line);
+      padding: 4px 6px;
+      white-space: nowrap;
     }
 
-    .message-status.live {
-      border-color: #35633c;
-      color: #35633c;
+    .badge.live {
+      border-color: var(--success);
+      color: var(--success);
     }
 
-    .message-status.scheduled {
-      border-color: #8a6824;
-      color: #8a6824;
+    .badge.scheduled {
+      border-color: var(--warning);
+      color: var(--warning);
     }
 
-    .message-status.draft {
-      opacity: .55;
+    .badge.draft {
+      color: var(--muted);
     }
 
-    .bottom-actions {
-      margin-top: 35px;
+    .empty {
+      font-size: 12px;
+      color: var(--muted);
+      border: 1px dashed var(--line);
+      padding: 18px 14px;
+      margin-bottom: 14px;
+    }
+
+
+    /* SAVE BAR */
+
+    .save-bar {
+      position: sticky;
+      bottom: 0;
       display: flex;
-      gap: 10px;
+      align-items: center;
+      gap: 16px;
+      background: var(--background);
+      border-top: 1px solid var(--line);
+      padding: 16px 0 22px;
+      margin-top: 20px;
+      z-index: 2;
+    }
+
+    .status {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .status.error {
+      color: var(--error);
+    }
+
+    .status.success {
+      color: var(--success);
+    }
+
+    .status.warning {
+      color: var(--warning);
+    }
+
+    .inline-action {
+      display: flex;
+      align-items: center;
+      gap: 14px;
       flex-wrap: wrap;
     }
 
-    @media (max-width: 600px) {
-      .row,
-      .date-row {
+
+    /* MOBILE */
+
+    @media (max-width: 760px) {
+      #dashboard {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        padding-top: 25px;
+      }
+
+      .tabs {
+        position: static;
+        flex-direction: row;
+        overflow-x: auto;
+        border-top: 0;
+        border-bottom: 1px solid var(--line);
+        gap: 20px;
+        scrollbar-width: none;
+      }
+
+      .tabs button {
+        border-bottom: 0;
+        white-space: nowrap;
+        gap: 6px;
+      }
+
+      .tabs button .num {
+        display: none;
+      }
+
+      .fields {
         grid-template-columns: 1fr;
       }
 
-      main {
-        padding-top: 40px;
+      .panel-head {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .list-item-head {
+        flex-wrap: wrap;
       }
     }
   </style>
@@ -294,335 +511,322 @@
 <header>
   <div class="container header-inner">
     <div class="brand">connor.fm / admin</div>
-    <a class="back" href="/">back to site →</a>
+
+    <div class="header-actions">
+      <a href="/" target="_blank" rel="noopener">view site ↗</a>
+      <button id="logoutButton" class="secondary small" type="button">log out</button>
+    </div>
   </div>
 </header>
 
-<main>
-  <div class="container">
+<main class="container">
 
-    <!-- LOGIN -->
+  <!-- LOGIN -->
 
-    <section id="login" class="login">
-      <div class="small">00 / authentication</div>
+  <section id="login" class="login">
+    <div class="small mono">00 / authentication</div>
 
-      <h1>admin</h1>
+    <h1>admin</h1>
 
-      <form id="loginForm">
-        <label for="loginPassword">password</label>
+    <form id="loginForm">
+      <label for="loginPassword">password</label>
 
-        <input
-          id="loginPassword"
-          type="password"
-          autocomplete="current-password"
-          placeholder="enter password"
-          required
-        >
+      <input
+        id="loginPassword"
+        type="password"
+        autocomplete="current-password"
+        placeholder="enter password"
+        required
+      >
 
-        <button class="full" type="submit">
-          enter
-        </button>
-      </form>
+      <button type="submit">enter</button>
+    </form>
 
-      <div class="error" id="loginError"></div>
-    </section>
+    <span class="status error" id="loginError" role="alert"></span>
+  </section>
 
 
-    <!-- DASHBOARD -->
+  <!-- DASHBOARD -->
 
-    <section id="dashboard">
+  <section id="dashboard">
+    <nav class="tabs" id="tabs"></nav>
+    <div class="panel" id="panel"></div>
+  </section>
 
-      <div class="small">01 / control room</div>
-
-      <h1>hello.</h1>
-
-      <div class="intro">
-        Everything that controls the public side of connor.fm.
-      </div>
-
-
-      <!-- LISTENING ROOM -->
-
-      <div class="section">
-
-        <div class="section-head">
-          <h2>listening room</h2>
-          <div class="small">
-            Change the private listening-room access code.
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="listeningCode">access code</label>
-
-          <input
-            id="listeningCode"
-            type="text"
-            autocomplete="off"
-          >
-        </div>
-
-        <button onclick="saveListeningCode()">
-          save code
-        </button>
-
-        <div class="success" id="codeSuccess">
-          listening-room code saved.
-        </div>
-
-        <div class="error" id="codeError"></div>
-
-      </div>
-
-
-      <!-- ARCHIVE -->
-
-      <div class="section">
-
-        <div class="section-head">
-          <h2>archive</h2>
-          <div class="small">
-            Add, edit, delete and reorder archive entries.
-          </div>
-        </div>
-
-        <div id="archiveList"></div>
-
-        <button onclick="addArchive()">
-          + add archive entry
-        </button>
-
-      </div>
-
-
-      <!-- ABOUT -->
-
-      <div class="section">
-
-        <div class="section-head">
-          <h2>about</h2>
-          <div class="small">
-            Edit the public about page.
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="aboutTitle">title</label>
-          <input id="aboutTitle">
-        </div>
-
-        <div class="field">
-          <label for="aboutIntro">intro</label>
-          <textarea id="aboutIntro"></textarea>
-        </div>
-
-        <div class="field">
-          <label for="aboutDescription">description</label>
-          <textarea id="aboutDescription"></textarea>
-        </div>
-
-        <div class="row">
-
-          <div class="field">
-            <label for="aboutName">name</label>
-            <input id="aboutName">
-          </div>
-
-          <div class="field">
-            <label for="aboutCurrently">currently</label>
-            <input id="aboutCurrently">
-          </div>
-
-        </div>
-
-        <div class="row">
-
-          <div class="field">
-            <label for="aboutWorking">working on</label>
-            <input id="aboutWorking">
-          </div>
-
-          <div class="field">
-            <label for="aboutWebsite">website</label>
-            <input id="aboutWebsite">
-          </div>
-
-        </div>
-
-        <button onclick="saveAbout()">
-          save about
-        </button>
-
-        <div class="success" id="aboutSuccess">
-          about saved.
-        </div>
-
-        <div class="error" id="aboutError"></div>
-
-      </div>
-
-
-      <!-- MUSIC -->
-
-      <div class="section">
-
-        <div class="section-head">
-          <h2>music</h2>
-          <div class="small">
-            Edit project information shown on the music page.
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="musicTitle">project title</label>
-          <input id="musicTitle">
-        </div>
-
-        <div class="row">
-
-          <div class="field">
-            <label for="musicType">type</label>
-            <input id="musicType">
-          </div>
-
-          <div class="field">
-            <label for="musicYear">release year</label>
-            <input id="musicYear">
-          </div>
-
-        </div>
-
-        <div class="row">
-
-          <div class="field">
-            <label for="musicTracks">track count</label>
-            <input id="musicTracks">
-          </div>
-
-          <div class="field">
-            <label for="musicStatus">status</label>
-            <input id="musicStatus">
-          </div>
-
-        </div>
-
-        <div class="field">
-          <label for="musicDescription">description</label>
-          <textarea id="musicDescription"></textarea>
-        </div>
-
-        <div class="field">
-          <label for="musicTracklist">
-            tracklist — only visible inside the listening room.
-            one track per line: title | duration
-          </label>
-          <textarea
-            id="musicTracklist"
-            placeholder="untitled | 3:21"
-          ></textarea>
-        </div>
-
-        <button onclick="saveMusic()">
-          save music
-        </button>
-
-        <div class="success" id="musicSuccess">
-          music information saved.
-        </div>
-
-        <div class="error" id="musicError"></div>
-
-      </div>
-
-
-      <!-- MESSAGES -->
-
-      <div class="section">
-
-        <div class="section-head">
-          <h2>messages</h2>
-          <div class="small">
-            Publish announcements immediately or schedule them for later.
-          </div>
-        </div>
-
-        <div id="messageList"></div>
-
-        <button onclick="addMessage()">
-          + new message
-        </button>
-
-      </div>
-
-
-      <!-- SECURITY -->
-
-      <div class="section">
-
-        <div class="section-head">
-          <h2>security</h2>
-          <div class="small">
-            Change the administrator password.
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="currentPassword">current password</label>
-          <input
-            id="currentPassword"
-            type="password"
-            autocomplete="current-password"
-          >
-        </div>
-
-        <div class="field">
-          <label for="newPassword">new password</label>
-          <input
-            id="newPassword"
-            type="password"
-            autocomplete="new-password"
-            minlength="12"
-          >
-        </div>
-
-        <button onclick="changePassword()">
-          change password
-        </button>
-
-        <div class="success" id="passwordSuccess">
-          password changed. You have been logged out.
-        </div>
-
-        <div class="error" id="passwordError"></div>
-
-      </div>
-
-
-      <div class="bottom-actions">
-
-        <button
-          class="secondary"
-          onclick="logout()"
-        >
-          log out
-        </button>
-
-      </div>
-
-    </section>
-
-  </div>
 </main>
 
 
 <script>
 
-let content = {
-  about: {},
-  music: {},
-  archive: [],
-  messages: []
-};
+// ==========================================
+// WHAT CAN BE EDITED
+//
+// Every tab describes its fields. "path" is where the
+// value lives in the content (e.g. "home.title"), "def"
+// is the text the website shows when nothing is saved.
+//
+// Field types: text (default), long, image, select,
+// datetime and list.
+// ==========================================
+
+const MESSAGE_STATUSES = [
+  { value: "draft", label: "draft — not visible" },
+  { value: "live", label: "published" },
+  { value: "scheduled", label: "scheduled — goes live at the date" }
+];
+
+const TABS = [
+  {
+    id: "home",
+    title: "home",
+    view: "/",
+    intro: "The announcement on the front page.",
+    groups: [
+      {
+        title: "announcement",
+        fields: [
+          { path: "home.label", label: "section label", def: "01 / announcement", half: true },
+          { path: "home.coming", label: "small line above the title", def: "coming 2027", half: true },
+          { path: "home.title", label: "title", def: "avant-garde" },
+          { path: "home.description", label: "description", def: "a mixtape by connor" }
+        ]
+      },
+      {
+        title: "cover",
+        fields: [
+          { path: "home.coverImage", label: "cover image url", type: "image", hint: "Link to an image (https://…). Leave empty to show the cover text instead." },
+          { path: "home.coverText", label: "cover text", def: "?", half: true }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: "music",
+    title: "music",
+    view: "/music",
+    intro: "The project on the music page and the private listening room.",
+    groups: [
+      {
+        title: "project",
+        fields: [
+          { path: "music.label", label: "section label", def: "02 / music", half: true },
+          { path: "music.lockedLabel", label: "status line above the title", def: "currently locked", half: true },
+          { path: "music.title", label: "project title", def: "avant-garde" },
+          { path: "music.type", label: "type", def: "mixtape", half: true },
+          { path: "music.year", label: "release year", def: "2027", half: true },
+          { path: "music.tracks", label: "track count", def: "10 tracks / 01 instrumental", half: true },
+          { path: "music.status", label: "status", def: "unreleased", half: true },
+          { path: "music.description", label: "description", type: "long", def: "the next mixtape by connor. the listening room will open when the project is ready." }
+        ]
+      },
+      {
+        title: "cover",
+        fields: [
+          { path: "music.coverImage", label: "cover image url", type: "image", hint: "Link to an image (https://…). Leave empty to show the cover text instead." },
+          { path: "music.coverText", label: "cover text", def: "?", half: true }
+        ]
+      },
+      {
+        title: "access code",
+        description: "The code people need to enter the listening room.",
+        special: "listeningCode"
+      },
+      {
+        title: "access box",
+        fields: [
+          { path: "music.accessLabel", label: "label", def: "access required" },
+          { path: "music.accessDescription", label: "description", type: "long", def: "enter your access code to enter the listening room." }
+        ]
+      },
+      {
+        title: "listening room",
+        description: "Only visible after the correct access code was entered.",
+        fields: [
+          { path: "music.roomLabel", label: "label", def: "access granted", half: true },
+          { path: "music.roomTitle", label: "title", def: "listening room", half: true },
+          {
+            path: "music.tracklist",
+            label: "tracklist",
+            type: "list",
+            addLabel: "+ add track",
+            empty: "No tracks yet — the room shows “untitled” placeholders based on the track count.",
+            newItem: () => ({ title: "untitled", duration: "" }),
+            itemTitle: track => [track.title || "untitled", track.duration].filter(Boolean).join(" — "),
+            item: [
+              { path: "title", label: "title", half: true },
+              { path: "duration", label: "duration", placeholder: "3:21", half: true }
+            ]
+          }
+        ]
+      },
+      {
+        title: "page footer",
+        fields: [
+          { path: "music.footerLeft", label: "left", def: "this project is private", half: true },
+          { path: "music.footerRight", label: "right", def: "connor.fm/music", half: true }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: "archive",
+    title: "archive",
+    view: "/archive",
+    intro: "Entries on the archive page. Entries with a link are clickable.",
+    groups: [
+      {
+        title: "entries",
+        fields: [
+          {
+            path: "archive",
+            type: "list",
+            addLabel: "+ add archive entry",
+            empty: "No entries yet.",
+            newItem: () => ({ year: String(new Date().getFullYear()), title: "untitled", type: "", link: "" }),
+            itemTitle: entry => [entry.year, entry.title || "untitled"].filter(Boolean).join(" — "),
+            item: [
+              { path: "year", label: "year", half: true },
+              { path: "type", label: "type", placeholder: "single, video, …", half: true },
+              { path: "title", label: "title" },
+              { path: "link", label: "link (optional)", placeholder: "https://… or /page" }
+            ]
+          }
+        ]
+      },
+      {
+        title: "page",
+        fields: [
+          { path: "archivePage.label", label: "section label", def: "03 / archive" },
+          { path: "archivePage.note", label: "note below the list", type: "long", def: "a small archive of projects, ideas, releases and things that would otherwise disappear into the internet." },
+          { path: "archivePage.footerLeft", label: "footer left", def: "a record of things that happened", half: true },
+          { path: "archivePage.footerRight", label: "footer right", def: "connor.fm/archive", half: true }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: "about",
+    title: "about",
+    view: "/about",
+    intro: "Everything on the about page.",
+    groups: [
+      {
+        title: "text",
+        fields: [
+          { path: "about.label", label: "section label", def: "04 / about", half: true },
+          { path: "about.title", label: "title", def: "about connor", half: true, hint: "The first word goes on the first line." },
+          { path: "about.intro", label: "intro", type: "long", def: "just some guy making music and putting things on the internet." },
+          { path: "about.description", label: "description", type: "long", def: "connor.fm is a personal space for music, ideas, questions, unfinished things and whatever else ends up here.", hint: "Leave an empty line between paragraphs." }
+        ]
+      },
+      {
+        title: "facts",
+        description: "The list on the right side.",
+        fields: [
+          {
+            path: "about.facts",
+            type: "list",
+            addLabel: "+ add fact",
+            empty: "No facts.",
+            def: [
+              { label: "name", value: "connor" },
+              { label: "currently", value: "making music" },
+              { label: "working on", value: "avant-garde" },
+              { label: "website", value: "connor.fm" }
+            ],
+            newItem: () => ({ label: "", value: "" }),
+            itemTitle: fact => [fact.label, fact.value].filter(Boolean).join(": ") || "new fact",
+            item: [
+              { path: "label", label: "label", half: true },
+              { path: "value", label: "value", half: true }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: "messages",
+    title: "messages",
+    view: "/messages",
+    intro: "Notes and updates on the messages page (the “...” link). Publish now or schedule for later.",
+    beforeSave: prepareMessages,
+    groups: [
+      {
+        title: "messages",
+        fields: [
+          {
+            path: "messages",
+            type: "list",
+            addLabel: "+ new message",
+            addToTop: true,
+            empty: "No messages yet.",
+            newItem: () => ({ id: crypto.randomUUID(), title: "new message", text: "", status: "draft", publishAt: null }),
+            itemTitle: message => message.title || "untitled",
+            itemBadge: messageStatus,
+            item: [
+              { path: "title", label: "title" },
+              { path: "text", label: "message", type: "long" },
+              { path: "status", label: "publication", type: "select", options: MESSAGE_STATUSES, half: true },
+              { path: "publishAt", label: "date", type: "datetime", half: true, hint: "Set automatically when published. Required when scheduled." }
+            ]
+          }
+        ]
+      },
+      {
+        title: "page",
+        fields: [
+          { path: "messagesPage.label", label: "section label", def: "05 / ...", half: true },
+          { path: "messagesPage.title", label: "title", def: "messages", half: true },
+          { path: "messagesPage.intro", label: "intro", type: "long", def: "notes, updates and things worth saying." }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: "site",
+    title: "site",
+    view: "/",
+    intro: "Things that appear on every page.",
+    groups: [
+      {
+        title: "footer",
+        fields: [
+          { path: "site.footerName", label: "left", def: "connor.fm", half: true },
+          { path: "site.footerYear", label: "right", def: "© 2026", half: true }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: "security",
+    title: "security",
+    intro: "Change the administrator password. You will be logged out afterwards.",
+    groups: [
+      {
+        title: "password",
+        special: "password"
+      }
+    ]
+  }
+];
+
+
+// ==========================================
+// STATE
+// ==========================================
+
+let content = {};
+let currentTab = null;
+
+const dirtyTabs = new Set();
+const openItems = new WeakSet();
 
 
 // ==========================================
@@ -634,9 +838,7 @@ async function api(path, options = {}) {
   const response = await fetch(path, {
     cache: "no-store",
     ...options,
-    headers: options.body
-      ? { "Content-Type": "application/json" }
-      : undefined
+    headers: options.body ? { "Content-Type": "application/json" } : undefined
   });
 
   let data = {};
@@ -648,6 +850,7 @@ async function api(path, options = {}) {
   }
 
   if (response.status === 401 && path !== "/api/admin/login") {
+    dirtyTabs.clear();
     alert("Your session has expired. Please log in again.");
     location.reload();
     throw new Error("Unauthorized.");
@@ -662,586 +865,566 @@ async function api(path, options = {}) {
 
 
 // ==========================================
-// LOGIN
+// LOGIN / LOGOUT
 // ==========================================
 
-document.getElementById("loginForm").addEventListener(
-  "submit",
-  async event => {
+document.getElementById("loginForm").addEventListener("submit", async event => {
 
-    event.preventDefault();
+  event.preventDefault();
 
-    const button =
-      event.target.querySelector("button");
+  const button = event.target.querySelector("button");
+  const error = document.getElementById("loginError");
 
-    hideMessage("loginError");
-    button.disabled = true;
+  error.textContent = "";
+  button.disabled = true;
 
-    try {
+  try {
+    await api("/api/admin/login", {
+      method: "POST",
+      body: JSON.stringify({ password: document.getElementById("loginPassword").value })
+    });
 
-      await api("/api/admin/login", {
-        method: "POST",
-        body: JSON.stringify({
-          password:
-            document.getElementById("loginPassword").value
-        })
-      });
+    document.getElementById("loginPassword").value = "";
 
-      document.getElementById("loginPassword").value = "";
+    await showDashboard();
 
-      await showDashboard();
+  } catch (err) {
+    error.textContent = err.message;
 
-    } catch (error) {
-
-      errorMessage("loginError", error.message);
-
-    } finally {
-
-      button.disabled = false;
-    }
+  } finally {
+    button.disabled = false;
   }
-);
+});
+
+
+document.getElementById("logoutButton").addEventListener("click", async () => {
+
+  if (dirtyTabs.size && !confirm("You have unsaved changes. Log out anyway?")) {
+    return;
+  }
+
+  dirtyTabs.clear();
+
+  await fetch("/api/admin/logout", { method: "POST" });
+
+  location.reload();
+});
 
 
 async function checkSession() {
 
   try {
-
-    const data =
-      await api("/api/admin/check");
+    const data = await api("/api/admin/check");
 
     if (data.authenticated) {
       await showDashboard();
     }
 
   } catch {
-    // Stay on login screen
+    // Stay on the login screen.
   }
 }
 
 
 async function showDashboard() {
 
+  content = await api("/api/admin/content");
+
   document.getElementById("login").style.display = "none";
-  document.getElementById("dashboard").style.display = "block";
+  document.getElementById("dashboard").style.display = "grid";
+  document.getElementById("logoutButton").style.display = "inline-block";
 
-  await loadData();
+  applyDefaults();
+  renderTabs();
+
+  const fromHash = TABS.find(tab => `#${tab.id}` === location.hash);
+
+  openTab((fromHash || TABS[0]).id);
 }
 
 
-// ==========================================
-// LOAD DATA
-// ==========================================
+// Fills empty fields with the text the website shows by default,
+// so you always edit what is actually visible.
+function applyDefaults() {
 
-async function loadData() {
+  TABS.forEach(tab =>
+    tab.groups.forEach(group =>
+      (group.fields || []).forEach(field => {
+        const value = getPath(content, field.path);
 
-  const [data, codeData] = await Promise.all([
-    api("/api/admin/content"),
-    api("/api/admin/listening-code")
-  ]);
+        if (field.type === "list") {
+          if (!Array.isArray(value) || (value.length === 0 && field.def)) {
+            setPath(content, field.path, structuredClone(field.def || []));
+          }
 
-  applyContent(data);
-
-  document.getElementById("listeningCode").value =
-    codeData.code || "";
-
-  renderAll();
-}
-
-
-function applyContent(data) {
-
-  content.about =
-    data.about || {};
-
-  content.music =
-    data.music || {};
-
-  content.archive =
-    Array.isArray(data.archive) ? data.archive : [];
-
-  content.messages =
-    Array.isArray(data.messages) ? data.messages : [];
-}
-
-
-// ==========================================
-// RENDER
-// ==========================================
-
-function renderAll() {
-  renderAbout();
-  renderMusic();
-  renderArchive();
-  renderMessages();
-}
-
-
-// ==========================================
-// ABOUT
-// ==========================================
-
-function renderAbout() {
-
-  const about = content.about || {};
-
-  setValue("aboutTitle", about.title || "about connor");
-  setValue("aboutIntro", about.intro || "");
-  setValue("aboutDescription", about.description || "");
-  setValue("aboutName", about.name || "connor");
-  setValue("aboutCurrently", about.currently || "");
-  setValue("aboutWorking", about.working || "");
-  setValue("aboutWebsite", about.website || "connor.fm");
-}
-
-
-async function saveAbout() {
-
-  content.about = {
-    title: getValue("aboutTitle"),
-    intro: getValue("aboutIntro"),
-    description: getValue("aboutDescription"),
-    name: getValue("aboutName"),
-    currently: getValue("aboutCurrently"),
-    working: getValue("aboutWorking"),
-    website: getValue("aboutWebsite")
-  };
-
-  if (await saveContent("aboutError")) {
-    renderAbout();
-    showSuccess("aboutSuccess");
-  }
-}
-
-
-// ==========================================
-// MUSIC
-// ==========================================
-
-function renderMusic() {
-
-  const music = content.music || {};
-
-  setValue("musicTitle", music.title || "avant-garde");
-  setValue("musicType", music.type || "mixtape");
-  setValue("musicYear", music.year || "2027");
-  setValue("musicTracks", music.tracks || "10 tracks / 01 instrumental");
-  setValue("musicStatus", music.status || "unreleased");
-  setValue("musicDescription", music.description || "");
-
-  setValue(
-    "musicTracklist",
-    (music.tracklist || [])
-      .map(track =>
-        track.duration
-          ? `${track.title} | ${track.duration}`
-          : track.title
-      )
-      .join("\n")
-  );
-}
-
-
-async function saveMusic() {
-
-  const tracklist =
-    getValue("musicTracklist")
-      .split("\n")
-      .map(line => line.trim())
-      .filter(Boolean)
-      .map(line => {
-        const [title, duration = ""] =
-          line.split("|").map(part => part.trim());
-
-        return { title, duration };
-      });
-
-  content.music = {
-    title: getValue("musicTitle"),
-    type: getValue("musicType"),
-    year: getValue("musicYear"),
-    tracks: getValue("musicTracks"),
-    status: getValue("musicStatus"),
-    description: getValue("musicDescription"),
-    tracklist
-  };
-
-  if (await saveContent("musicError")) {
-    renderMusic();
-    showSuccess("musicSuccess");
-  }
-}
-
-
-// ==========================================
-// LISTENING ROOM
-// ==========================================
-
-async function saveListeningCode() {
-
-  hideMessage("codeError");
-
-  try {
-
-    await api("/api/admin/listening-code", {
-      method: "POST",
-      body: JSON.stringify({
-        code: getValue("listeningCode")
+        } else if (!value && field.def !== undefined) {
+          setPath(content, field.path, field.def);
+        }
       })
-    });
-
-    showSuccess("codeSuccess");
-
-  } catch (error) {
-
-    errorMessage("codeError", error.message);
-  }
-}
-
-
-// ==========================================
-// ARCHIVE
-// ==========================================
-
-function renderArchive() {
-
-  const container =
-    document.getElementById("archiveList");
-
-  container.innerHTML = "";
-
-  content.archive.forEach(
-    (entry, index) => {
-
-      const item =
-        document.createElement("div");
-
-      item.className = "archive-item";
-
-      item.innerHTML = `
-        <div class="item-title">
-          ${escapeHtml(entry.title || "untitled")}
-        </div>
-
-        <div class="item-meta">
-          ${escapeHtml(
-            [entry.year, entry.type, entry.link]
-              .filter(Boolean)
-              .join(" / ") || "—"
-          )}
-        </div>
-
-        <div class="item-actions">
-          <button class="secondary" onclick="editArchive(${index})">edit</button>
-          <button class="secondary" onclick="moveArchive(${index}, -1)">↑</button>
-          <button class="secondary" onclick="moveArchive(${index}, 1)">↓</button>
-          <button class="danger" onclick="deleteArchive(${index})">delete</button>
-        </div>
-
-        <div class="editor" id="archiveEditor${index}">
-
-          <div class="row">
-            <div class="field">
-              <label for="archiveYear${index}">year</label>
-              <input id="archiveYear${index}" value="${escapeHtml(entry.year || "")}">
-            </div>
-
-            <div class="field">
-              <label for="archiveType${index}">type</label>
-              <input id="archiveType${index}" value="${escapeHtml(entry.type || "")}">
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="archiveTitle${index}">title</label>
-            <input id="archiveTitle${index}" value="${escapeHtml(entry.title || "")}">
-          </div>
-
-          <div class="field">
-            <label for="archiveLink${index}">link (optional, https://… or /page)</label>
-            <input id="archiveLink${index}" value="${escapeHtml(entry.link || "")}">
-          </div>
-
-          <button onclick="saveArchive(${index})">save entry</button>
-
-        </div>
-      `;
-
-      container.appendChild(item);
-    }
+    )
   );
 }
 
 
-function addArchive() {
+// ==========================================
+// TABS
+// ==========================================
 
-  content.archive.push({
-    year: String(new Date().getFullYear()),
-    title: "untitled",
-    type: "",
-    link: ""
+function renderTabs() {
+
+  const nav = document.getElementById("tabs");
+
+  nav.replaceChildren(
+    ...TABS.map((tab, index) => {
+      const button = el("button", { type: "button", "data-tab": tab.id });
+      const name = el("span");
+
+      name.append(el("span", { class: "num" }, String(index + 1).padStart(2, "0")), tab.title);
+
+      button.append(name, el("span", { class: "dot", title: "unsaved changes" }));
+      button.addEventListener("click", () => openTab(tab.id));
+
+      return button;
+    })
+  );
+
+  updateTabStates();
+}
+
+
+function updateTabStates() {
+
+  document.querySelectorAll("#tabs button").forEach(button => {
+    button.classList.toggle("active", button.dataset.tab === currentTab);
+    button.classList.toggle("dirty", dirtyTabs.has(button.dataset.tab));
+  });
+}
+
+
+function openTab(id) {
+
+  currentTab = id;
+  history.replaceState(null, "", `#${id}`);
+
+  renderPanel();
+  updateTabStates();
+  window.scrollTo(0, 0);
+}
+
+
+function markDirty() {
+
+  dirtyTabs.add(currentTab);
+  updateTabStates();
+  setStatus("unsaved changes", "warning");
+}
+
+
+// Which top-level content keys a tab edits.
+function tabKeys(tab) {
+
+  return [
+    ...new Set(
+      tab.groups.flatMap(group => (group.fields || []).map(field => field.path.split(".")[0]))
+    )
+  ];
+}
+
+
+// ==========================================
+// PANEL
+// ==========================================
+
+function renderPanel() {
+
+  const tab = TABS.find(item => item.id === currentTab);
+  const index = TABS.indexOf(tab) + 1;
+
+  const head = el("div", { class: "panel-head" });
+  const titles = el("div");
+
+  titles.append(
+    el("div", { class: "small mono" }, `${String(index).padStart(2, "0")} / ${tab.title}`),
+    el("h1", {}, tab.title)
+  );
+
+  head.append(titles);
+
+  if (tab.view) {
+    head.append(el("a", { class: "view-link", href: tab.view, target: "_blank", rel: "noopener" }, "view page ↗"));
+  }
+
+  const children = [head, el("p", { class: "panel-intro" }, tab.intro)];
+
+  tab.groups.forEach(group => children.push(renderGroup(group)));
+
+  if (tabKeys(tab).length) {
+    const saveButton = el("button", { type: "button", id: "saveButton" }, "save changes");
+    saveButton.addEventListener("click", saveCurrentTab);
+
+    const bar = el("div", { class: "save-bar" });
+    bar.append(saveButton, el("span", { class: "status", id: "saveStatus" }));
+
+    children.push(bar);
+  }
+
+  document.getElementById("panel").replaceChildren(...children);
+
+  if (dirtyTabs.has(currentTab)) {
+    setStatus("unsaved changes", "warning");
+  }
+}
+
+
+function renderGroup(group) {
+
+  const section = el("section", { class: "group" });
+  const head = el("div", { class: "group-head" });
+
+  head.append(el("h2", {}, group.title));
+
+  if (group.description) {
+    head.append(el("div", { class: "small" }, group.description));
+  }
+
+  section.append(head);
+
+  if (group.special === "listeningCode") {
+    section.append(renderListeningCode());
+
+  } else if (group.special === "password") {
+    section.append(renderPasswordForm());
+
+  } else {
+    section.append(renderFields(group.fields, content));
+  }
+
+  return section;
+}
+
+
+function renderFields(fields, target, onChange) {
+
+  const wrapper = el("div", { class: "fields" });
+
+  fields.forEach(field => {
+    wrapper.append(
+      field.type === "list"
+        ? renderList(field, target)
+        : renderField(field, target, onChange)
+    );
   });
 
-  renderArchive();
-
-  editArchive(content.archive.length - 1);
+  return wrapper;
 }
 
 
-function editArchive(index) {
+let fieldCounter = 0;
 
-  document
-    .getElementById(`archiveEditor${index}`)
-    ?.classList.toggle("visible");
+function renderField(field, target, onChange) {
+
+  const id = `field${++fieldCounter}`;
+  const wrapper = el("div", { class: field.half ? "field half" : "field" });
+  const value = getPath(target, field.path) ?? "";
+
+  let input;
+
+  if (field.type === "long") {
+    input = el("textarea", { id });
+    input.value = value;
+
+  } else if (field.type === "select") {
+    input = el("select", { id });
+
+    field.options.forEach(option => {
+      input.append(el("option", { value: option.value }, option.label));
+    });
+
+    input.value = value || field.options[0].value;
+
+  } else if (field.type === "datetime") {
+    input = el("input", { id, type: "datetime-local" });
+    input.value = toLocalInput(value);
+
+  } else {
+    input = el("input", { id, type: "text" });
+    input.value = value;
+  }
+
+  if (field.type === "image") {
+    input.placeholder = "https://…";
+  } else if (field.placeholder || field.def) {
+    input.placeholder = field.placeholder || field.def;
+  }
+
+  const preview = field.type === "image" ? el("img", { class: "preview", alt: "" }) : null;
+
+  if (preview) {
+    updatePreview(preview, value);
+  }
+
+  input.addEventListener("input", () => {
+    const newValue = field.type === "datetime" ? fromLocalInput(input.value) : input.value;
+
+    setPath(target, field.path, newValue);
+
+    if (preview) {
+      updatePreview(preview, newValue);
+    }
+
+    if (onChange) {
+      onChange();
+    }
+
+    markDirty();
+  });
+
+  wrapper.append(el("label", { for: id }, field.label), input);
+
+  if (preview) {
+    wrapper.append(preview);
+  }
+
+  if (field.hint) {
+    wrapper.append(el("div", { class: "hint" }, field.hint));
+  }
+
+  return wrapper;
 }
 
 
-async function saveArchive(index) {
+function updatePreview(image, url) {
 
-  content.archive[index] = {
-    year: getValue(`archiveYear${index}`),
-    title: getValue(`archiveTitle${index}`),
-    type: getValue(`archiveType${index}`),
-    link: getValue(`archiveLink${index}`).trim()
+  if (url && /^(https?:\/\/|\/[^/])/.test(url)) {
+    image.src = url;
+    image.style.display = "block";
+  } else {
+    image.removeAttribute("src");
+    image.style.display = "none";
+  }
+}
+
+
+// ==========================================
+// LISTS (archive, messages, tracklist, facts)
+// ==========================================
+
+function renderList(field, target) {
+
+  const wrapper = el("div", { class: "field" });
+  const items = el("div", { class: "list-items" });
+  const list = getPath(target, field.path);
+
+  const rerender = () => wrapper.replaceWith(renderList(field, target));
+
+  if (field.label) {
+    wrapper.append(el("label", {}, field.label));
+  }
+
+  if (!list.length) {
+    items.append(el("div", { class: "empty" }, field.empty));
+  }
+
+  list.forEach((item, index) => {
+    items.append(renderListItem(field, list, item, index, rerender));
+  });
+
+  const addButton = el("button", { type: "button", class: "secondary" }, field.addLabel);
+
+  addButton.addEventListener("click", () => {
+    const item = field.newItem();
+
+    if (field.addToTop) {
+      list.unshift(item);
+    } else {
+      list.push(item);
+    }
+
+    openItems.add(item);
+    markDirty();
+    rerender();
+  });
+
+  wrapper.append(items, addButton);
+
+  return wrapper;
+}
+
+
+function renderListItem(field, list, item, index, rerender) {
+
+  const card = el("div", { class: openItems.has(item) ? "list-item open" : "list-item" });
+  const head = el("div", { class: "list-item-head" });
+  const title = el("div", { class: "list-item-title" });
+  const badge = field.itemBadge ? el("span") : null;
+  const actions = el("div", { class: "list-item-actions" });
+
+  head.append(el("span", { class: "list-item-index" }, String(index + 1).padStart(2, "0")), title);
+
+  if (badge) {
+    head.append(badge);
+  }
+
+  const updateHead = () => {
+    title.textContent = field.itemTitle(item);
+
+    if (badge) {
+      const status = field.itemBadge(item);
+      badge.className = `badge ${status}`;
+      badge.textContent = status;
+    }
   };
 
-  await saveContent();
+  updateHead();
 
-  renderArchive();
+  const addAction = (label, className, handler) => {
+    const button = el("button", { type: "button", class: `small ${className}` }, label);
+
+    button.addEventListener("click", event => {
+      event.stopPropagation();
+      handler();
+    });
+
+    actions.append(button);
+  };
+
+  const move = direction => {
+    const newIndex = index + direction;
+
+    if (newIndex < 0 || newIndex >= list.length) {
+      return;
+    }
+
+    [list[index], list[newIndex]] = [list[newIndex], list[index]];
+    markDirty();
+    rerender();
+  };
+
+  addAction("↑", "secondary", () => move(-1));
+  addAction("↓", "secondary", () => move(1));
+  addAction("delete", "danger", () => {
+    if (confirm(`Delete "${field.itemTitle(item)}"?`)) {
+      list.splice(index, 1);
+      markDirty();
+      rerender();
+    }
+  });
+
+  head.append(actions);
+
+  head.addEventListener("click", () => {
+    const open = card.classList.toggle("open");
+
+    if (open) {
+      openItems.add(item);
+    } else {
+      openItems.delete(item);
+    }
+  });
+
+  const body = el("div", { class: "list-item-body" });
+  body.append(renderFields(field.item, item, updateHead));
+
+  card.append(head, body);
+
+  return card;
 }
 
 
-async function deleteArchive(index) {
+// ==========================================
+// SAVING
+// ==========================================
 
-  const entry = content.archive[index];
+async function saveCurrentTab() {
 
-  if (!confirm(`Delete "${entry.title || "untitled"}"?`)) {
+  const tab = TABS.find(item => item.id === currentTab);
+  const button = document.getElementById("saveButton");
+
+  const problem = tab.beforeSave?.();
+
+  if (problem) {
+    setStatus(problem, "error");
     return;
   }
 
-  content.archive.splice(index, 1);
+  const keys = tabKeys(tab);
+  const body = Object.fromEntries(keys.map(key => [key, content[key]]));
 
-  await saveContent();
+  button.disabled = true;
+  setStatus("saving…");
 
-  renderArchive();
-}
+  try {
+    const saved = await api("/api/admin/content", {
+      method: "POST",
+      body: JSON.stringify(body)
+    });
 
+    // Take over what the server actually stored — only for this tab,
+    // so unsaved changes in other tabs are kept.
+    keys.forEach(key => {
+      content[key] = saved[key];
+    });
 
-async function moveArchive(index, direction) {
+    applyDefaults();
+    dirtyTabs.delete(tab.id);
 
-  const newIndex = index + direction;
+    renderPanel();
+    updateTabStates();
+    setStatus("saved — live on the website.", "success");
 
-  if (newIndex < 0 || newIndex >= content.archive.length) {
-    return;
+  } catch (error) {
+    setStatus(`could not save: ${error.message}`, "error");
+
+  } finally {
+    const current = document.getElementById("saveButton");
+
+    if (current) {
+      current.disabled = false;
+    }
   }
-
-  [content.archive[index], content.archive[newIndex]] =
-    [content.archive[newIndex], content.archive[index]];
-
-  await saveContent();
-
-  renderArchive();
 }
+
+
+function setStatus(text, type = "") {
+
+  const status = document.getElementById("saveStatus");
+
+  if (status) {
+    status.textContent = text;
+    status.className = `status ${type}`;
+  }
+}
+
+
+// Save with Ctrl+S / Cmd+S.
+document.addEventListener("keydown", event => {
+
+  if ((event.ctrlKey || event.metaKey) && event.key === "s" && document.getElementById("saveButton")) {
+    event.preventDefault();
+    saveCurrentTab();
+  }
+});
+
+
+window.addEventListener("beforeunload", event => {
+
+  if (dirtyTabs.size) {
+    event.preventDefault();
+  }
+});
 
 
 // ==========================================
 // MESSAGES
 // ==========================================
 
-function renderMessages() {
-
-  const container =
-    document.getElementById("messageList");
-
-  container.innerHTML = "";
-
-  content.messages.forEach(
-    (message, index) => {
-
-      const status =
-        getMessageStatus(message);
-
-      const item =
-        document.createElement("div");
-
-      item.className = "message-item";
-
-      item.innerHTML = `
-        <div class="message-status ${status}">
-          ${status}
-        </div>
-
-        <div class="item-title">
-          ${escapeHtml(message.title || "untitled")}
-        </div>
-
-        <div class="item-meta">
-          ${message.publishAt
-            ? escapeHtml(formatDate(message.publishAt))
-            : "no publication date"}
-        </div>
-
-        <div class="item-actions">
-          <button class="secondary" onclick="editMessage(${index})">edit</button>
-          <button class="danger" onclick="deleteMessage(${index})">delete</button>
-        </div>
-
-        <div class="editor" id="messageEditor${index}">
-
-          <div class="field">
-            <label for="messageTitle${index}">title</label>
-            <input id="messageTitle${index}" value="${escapeHtml(message.title || "")}">
-          </div>
-
-          <div class="field">
-            <label for="messageText${index}">message</label>
-            <textarea id="messageText${index}">${escapeHtml(message.text || "")}</textarea>
-          </div>
-
-          <div class="field">
-            <label for="messageMode${index}">publication</label>
-
-            <select id="messageMode${index}" onchange="toggleSchedule(${index})">
-              <option value="draft" ${message.status === "draft" ? "selected" : ""}>draft</option>
-              <option value="live" ${message.status === "live" ? "selected" : ""}>publish immediately</option>
-              <option value="scheduled" ${message.status === "scheduled" ? "selected" : ""}>schedule</option>
-            </select>
-          </div>
-
-          <div
-            class="schedule ${message.status === "scheduled" ? "visible" : ""}"
-            id="schedule${index}"
-          >
-            <div class="date-row">
-              <div class="field">
-                <label for="messageDate${index}">date</label>
-                <input type="date" id="messageDate${index}" value="${getDatePart(message.publishAt)}">
-              </div>
-
-              <div class="field">
-                <label for="messageTime${index}">time</label>
-                <input type="time" id="messageTime${index}" value="${getTimePart(message.publishAt)}">
-              </div>
-            </div>
-          </div>
-
-          <button onclick="saveMessage(${index})">save message</button>
-
-        </div>
-      `;
-
-      container.appendChild(item);
-    }
-  );
-}
-
-
-function addMessage() {
-
-  content.messages.push({
-    id: crypto.randomUUID(),
-    title: "new message",
-    text: "",
-    status: "draft",
-    publishAt: null
-  });
-
-  renderMessages();
-
-  editMessage(content.messages.length - 1);
-}
-
-
-function editMessage(index) {
-
-  document
-    .getElementById(`messageEditor${index}`)
-    ?.classList.toggle("visible");
-}
-
-
-function toggleSchedule(index) {
-
-  document
-    .getElementById(`schedule${index}`)
-    .classList.toggle(
-      "visible",
-      getValue(`messageMode${index}`) === "scheduled"
-    );
-}
-
-
-async function saveMessage(index) {
-
-  const previous = content.messages[index];
-
-  const mode = getValue(`messageMode${index}`);
-
-  let publishAt = null;
-
-  if (mode === "scheduled") {
-
-    const date = getValue(`messageDate${index}`);
-    const time = getValue(`messageTime${index}`);
-
-    if (!date || !time) {
-      alert("Please choose a date and time.");
-      return;
-    }
-
-    // Interpreted in your local time zone, stored as UTC.
-    publishAt = new Date(`${date}T${time}`).toISOString();
-  }
-
-  if (mode === "live") {
-
-    // Keep the original publication date when a live message is edited.
-    publishAt =
-      previous.status === "live" && previous.publishAt
-        ? previous.publishAt
-        : new Date().toISOString();
-  }
-
-  content.messages[index] = {
-    id: previous.id || crypto.randomUUID(),
-    title: getValue(`messageTitle${index}`),
-    text: getValue(`messageText${index}`),
-    status: mode,
-    publishAt
-  };
-
-  await saveContent();
-
-  renderMessages();
-}
-
-
-async function deleteMessage(index) {
-
-  const message = content.messages[index];
-
-  if (!confirm(`Delete "${message.title || "untitled"}"?`)) {
-    return;
-  }
-
-  content.messages.splice(index, 1);
-
-  await saveContent();
-
-  renderMessages();
-}
-
-
-function getMessageStatus(message) {
+function messageStatus(message) {
 
   if (message.status === "draft") {
     return "draft";
   }
 
-  if (
-    message.status === "scheduled" &&
-    new Date(message.publishAt) > new Date()
-  ) {
+  if (message.status === "scheduled" && (!message.publishAt || new Date(message.publishAt) > new Date())) {
     return "scheduled";
   }
 
@@ -1249,164 +1432,202 @@ function getMessageStatus(message) {
 }
 
 
-function formatDate(value) {
+// Returns an error text, or nothing when everything is fine.
+function prepareMessages() {
 
-  return new Date(value).toLocaleString(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short"
-  });
+  for (const message of content.messages) {
+
+    if (message.status === "scheduled" && !message.publishAt) {
+      openItems.add(message);
+      renderPanel();
+      return `"${message.title || "untitled"}" is scheduled but has no date.`;
+    }
+
+    if (message.status === "live" && !message.publishAt) {
+      message.publishAt = new Date().toISOString();
+    }
+  }
 }
 
 
-// Date/time inputs work in local time; publishAt is stored as UTC.
+// datetime-local inputs work in local time; dates are stored as UTC.
 
-function toLocalParts(value) {
+function toLocalInput(value) {
 
   const date = new Date(value);
 
   if (!value || Number.isNaN(date.getTime())) {
-    return null;
+    return "";
   }
 
   const pad = number => String(number).padStart(2, "0");
 
-  return {
-    date: `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
-    time: `${pad(date.getHours())}:${pad(date.getMinutes())}`
-  };
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 
-function getDatePart(value) {
-  return toLocalParts(value)?.date || "";
-}
+function fromLocalInput(value) {
 
-
-function getTimePart(value) {
-  return toLocalParts(value)?.time || "";
+  return value ? new Date(value).toISOString() : null;
 }
 
 
 // ==========================================
-// SAVE CONTENT
+// LISTENING CODE
 // ==========================================
 
-async function saveContent(errorId) {
+function renderListeningCode() {
 
-  try {
+  const wrapper = el("div", { class: "fields" });
+  const field = el("div", { class: "field" });
+  const input = el("input", { id: "listeningCode", type: "text", autocomplete: "off" });
+  const row = el("div", { class: "inline-action" });
+  const button = el("button", { type: "button", class: "secondary" }, "save code");
+  const status = el("span", { class: "status" });
 
-    const data = await api("/api/admin/content", {
-      method: "POST",
-      body: JSON.stringify(content)
+  row.append(button, status);
+  row.style.marginTop = "12px";
+
+  field.append(
+    el("label", { for: "listeningCode" }, "access code"),
+    input,
+    el("div", { class: "hint" }, "4–32 characters. Saved separately with its own button."),
+    row
+  );
+
+  wrapper.append(field);
+
+  api("/api/admin/listening-code")
+    .then(data => {
+      input.value = data.code || "";
+    })
+    .catch(error => {
+      status.textContent = error.message;
+      status.className = "status error";
     });
 
-    // Use what the server actually stored.
-    applyContent(data);
+  button.addEventListener("click", async () => {
+    button.disabled = true;
 
-    return true;
+    try {
+      await api("/api/admin/listening-code", {
+        method: "POST",
+        body: JSON.stringify({ code: input.value })
+      });
 
-  } catch (error) {
+      status.textContent = "code saved.";
+      status.className = "status success";
 
-    if (errorId) {
-      errorMessage(errorId, error.message);
-    } else {
-      alert(`Could not save: ${error.message}`);
+    } catch (error) {
+      status.textContent = error.message;
+      status.className = "status error";
+
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  return wrapper;
+}
+
+
+// ==========================================
+// PASSWORD
+// ==========================================
+
+function renderPasswordForm() {
+
+  const form = el("form", { class: "fields" });
+
+  const current = el("div", { class: "field half" });
+  current.append(
+    el("label", { for: "currentPassword" }, "current password"),
+    el("input", { id: "currentPassword", type: "password", autocomplete: "current-password", required: "" })
+  );
+
+  const next = el("div", { class: "field half" });
+  next.append(
+    el("label", { for: "newPassword" }, "new password"),
+    el("input", { id: "newPassword", type: "password", autocomplete: "new-password", minlength: "12", required: "" }),
+    el("div", { class: "hint" }, "At least 12 characters.")
+  );
+
+  const row = el("div", { class: "field inline-action" });
+  const button = el("button", { type: "submit" }, "change password");
+  const status = el("span", { class: "status" });
+
+  row.append(button, status);
+  form.append(current, next, row);
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    button.disabled = true;
+
+    try {
+      await api("/api/admin/password", {
+        method: "POST",
+        body: JSON.stringify({
+          currentPassword: document.getElementById("currentPassword").value,
+          newPassword: document.getElementById("newPassword").value
+        })
+      });
+
+      status.textContent = "password changed. you will be logged out.";
+      status.className = "status success";
+
+      dirtyTabs.clear();
+      setTimeout(() => location.reload(), 1500);
+
+    } catch (error) {
+      status.textContent = error.message;
+      status.className = "status error";
+      button.disabled = false;
+    }
+  });
+
+  return form;
+}
+
+
+// ==========================================
+// HELPERS
+// ==========================================
+
+// Creates an element. Text is always set as text, never as HTML.
+function el(tag, attributes = {}, text) {
+
+  const element = document.createElement(tag);
+
+  Object.entries(attributes).forEach(([name, value]) => element.setAttribute(name, value));
+
+  if (text !== undefined) {
+    element.textContent = text;
+  }
+
+  return element;
+}
+
+
+function getPath(data, path) {
+
+  return path.split(".").reduce((value, key) => value?.[key], data);
+}
+
+
+function setPath(data, path, value) {
+
+  const keys = path.split(".");
+  const last = keys.pop();
+
+  const parent = keys.reduce((object, key) => {
+    if (!object[key] || typeof object[key] !== "object") {
+      object[key] = {};
     }
 
-    return false;
-  }
-}
+    return object[key];
+  }, data);
 
-
-// ==========================================
-// CHANGE PASSWORD
-// ==========================================
-
-async function changePassword() {
-
-  hideMessage("passwordError");
-
-  try {
-
-    await api("/api/admin/password", {
-      method: "POST",
-      body: JSON.stringify({
-        currentPassword: getValue("currentPassword"),
-        newPassword: getValue("newPassword")
-      })
-    });
-
-    document.getElementById("passwordSuccess").style.display = "block";
-
-    setTimeout(() => location.reload(), 1500);
-
-  } catch (error) {
-
-    errorMessage("passwordError", error.message);
-  }
-}
-
-
-// ==========================================
-// LOGOUT
-// ==========================================
-
-async function logout() {
-
-  await fetch("/api/admin/logout", { method: "POST" });
-
-  location.reload();
-}
-
-
-// ==========================================
-// UI HELPERS
-// ==========================================
-
-function getValue(id) {
-  return document.getElementById(id).value;
-}
-
-
-function setValue(id, value) {
-  document.getElementById(id).value = value;
-}
-
-
-function showSuccess(id) {
-
-  const element = document.getElementById(id);
-
-  element.style.display = "block";
-
-  setTimeout(() => {
-    element.style.display = "none";
-  }, 2500);
-}
-
-
-function errorMessage(id, message) {
-
-  const element = document.getElementById(id);
-
-  element.textContent = message;
-  element.style.display = "block";
-}
-
-
-function hideMessage(id) {
-  document.getElementById(id).style.display = "none";
-}
-
-
-function escapeHtml(value) {
-
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+  parent[last] = value;
 }
 
 

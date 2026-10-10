@@ -38,13 +38,13 @@
   <main>
 
     <section class="page">
-      <div class="section-label">04 / about</div>
+      <div class="section-label" data-content="about.label">04 / about</div>
 
       <div class="about-grid">
         <div>
           <h1 class="about-title" id="aboutTitle">about<br>connor</h1>
 
-          <div class="about-copy" id="aboutCopy">
+          <div class="about-copy" data-content-paragraphs="about.intro about.description">
             <p>
               just some guy making music and putting
               things on the internet.
@@ -58,25 +58,25 @@
           </div>
         </div>
 
-        <div class="about-facts">
+        <div class="about-facts" id="aboutFacts">
           <div class="fact">
             <span>name</span>
-            <span id="aboutName">connor</span>
+            <span>connor</span>
           </div>
 
           <div class="fact">
             <span>currently</span>
-            <span id="aboutCurrently">making music</span>
+            <span>making music</span>
           </div>
 
           <div class="fact">
             <span>working on</span>
-            <span id="aboutWorking">avant-garde</span>
+            <span>avant-garde</span>
           </div>
 
           <div class="fact">
             <span>website</span>
-            <span id="aboutWebsite">connor.fm</span>
+            <span>connor.fm</span>
           </div>
         </div>
       </div>
@@ -87,40 +87,46 @@
     <div class="footer-divider"></div>
 
     <div class="footer-content">
-      <div class="footer-name">connor.fm</div>
-      <div class="footer-year">© 2026</div>
+      <div class="footer-name" data-content="site.footerName">connor.fm</div>
+      <div class="footer-year" data-content="site.footerYear">© 2026</div>
     </div>
   </footer>
 
   <script src="/site.js"></script>
+
   <script>
 
-    loadContent()
-      .then(({ about }) => {
-        if (!about) {
-          return;
+    contentReady.then(data => {
+      const about = data?.about;
+
+      if (!about) {
+        return;
+      }
+
+      // "about connor" is shown on two lines, like the original layout.
+      if (about.title && about.title.trim()) {
+        const [first, ...rest] = about.title.trim().split(/\s+/);
+        const title = document.getElementById("aboutTitle");
+
+        title.replaceChildren(first);
+
+        if (rest.length) {
+          title.append(document.createElement("br"), rest.join(" "));
         }
+      }
 
-        // "about connor" is shown on two lines, like the original layout.
-        if (about.title && about.title.trim()) {
-          const [first, ...rest] = about.title.trim().split(/\s+/);
-          const title = document.getElementById("aboutTitle");
+      const facts = (about.facts || []).filter(fact => fact.label || fact.value);
 
-          title.replaceChildren(first);
-
-          if (rest.length) {
-            title.append(document.createElement("br"), rest.join(" "));
-          }
-        }
-
-        setParagraphs(document.getElementById("aboutCopy"), about.intro, about.description);
-
-        setText("aboutName", about.name);
-        setText("aboutCurrently", about.currently);
-        setText("aboutWorking", about.working);
-        setText("aboutWebsite", about.website);
-      })
-      .catch(console.error);
+      if (facts.length) {
+        document.getElementById("aboutFacts").replaceChildren(
+          ...facts.map(fact => {
+            const row = createElement("div", "fact");
+            row.append(createElement("span", "", fact.label), createElement("span", "", fact.value));
+            return row;
+          })
+        );
+      }
+    });
   </script>
 
 </body>
