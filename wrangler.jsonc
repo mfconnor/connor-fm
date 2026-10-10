@@ -14,5 +14,18 @@
       "binding": "CONNOR_DATA",
       "id": "0cd55b70587548b28b263bd00db73d23"
     }
+  ],
+  // History of the Durable Object that was briefly used for the database.
+  // v1 created it, v2 removes it again. Keep both entries: Cloudflare
+  // compares them with what was already applied.
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["Database"]
+    },
+    {
+      "tag": "v2",
+      "deleted_classes": ["Database"]
+    }
   ]
 }
