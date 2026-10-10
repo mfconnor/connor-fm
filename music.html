@@ -61,7 +61,7 @@
             will open when the project is ready.
           </p>
 
-          <div class="access-box">
+          <div class="access-box" id="accessBox">
             <div class="access-label" data-content="music.accessLabel">access required</div>
 
             <p class="access-description" data-content="music.accessDescription">
@@ -98,6 +98,29 @@
         <span data-content="music.footerRight">connor.fm/music</span>
       </div>
     </section>
+
+    <div class="player" id="player" hidden>
+      <div class="player-inner">
+        <div class="player-now">
+          <span class="player-label">now playing</span>
+          <span class="player-title" id="playerTitle">—</span>
+        </div>
+
+        <div class="player-controls">
+          <button class="player-button" id="previousButton" type="button" aria-label="previous track"></button>
+          <button class="player-button player-play" id="playButton" type="button" aria-label="play"></button>
+          <button class="player-button" id="nextButton" type="button" aria-label="next track"></button>
+        </div>
+
+        <div class="player-progress">
+          <span class="player-time" id="currentTime">0:00</span>
+          <input class="player-seek" id="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="position">
+          <span class="player-time" id="totalTime">0:00</span>
+        </div>
+      </div>
+    </div>
+
+    <audio id="audio" preload="metadata"></audio>
   </main>
 
   <footer>
@@ -114,7 +137,11 @@
   <script>
 
     let trackCount = 10;
+    let tracks = [];
+    let current = -1;
 
+
+    // ---------- project info ----------
 
     contentReady.then(data => {
       const music = data?.music;
@@ -143,18 +170,31 @@
     });
 
 
+    // ---------- access ----------
+
     const form = document.getElementById("codeForm");
     const input = document.getElementById("codeInput");
-    const button = form.querySelector("button");
+    const unlockButton = form.querySelector("button");
     const room = document.getElementById("listeningRoom");
     const error = document.getElementById("codeError");
+
+
+    // Still unlocked from earlier? (access lasts a few hours)
+    fetch("/api/listening-room", { cache: "no-store" })
+      .then(response => (response.ok ? response.json() : null))
+      .then(data => {
+        if (data?.success) {
+          openRoom(data.tracklist, false);
+        }
+      })
+      .catch(() => {});
 
 
     form.addEventListener("submit", async event => {
       event.preventDefault();
 
       error.style.display = "none";
-      button.disabled = true;
+      unlockButton.disabled = true;
 
       try {
         const response = await fetch("/api/listening-room", {
@@ -171,40 +211,253 @@
           );
         }
 
-        renderTracks(data.tracklist);
-
         input.value = "";
-        room.classList.add("visible");
-        room.scrollIntoView({ behavior: "smooth", block: "start" });
+        openRoom(data.tracklist, true);
 
       } catch (err) {
         error.textContent = err instanceof SyntaxError ? "something went wrong" : err.message;
         error.style.display = "block";
 
       } finally {
-        button.disabled = false;
+        unlockButton.disabled = false;
       }
     });
 
 
-    function renderTracks(tracklist) {
-      const tracks = Array.isArray(tracklist) && tracklist.length
+    async function openRoom(tracklist, scroll) {
+      await contentReady;
+
+      tracks = Array.isArray(tracklist) && tracklist.length
         ? tracklist
         : Array.from({ length: trackCount }, () => ({}));
 
+      renderTracks();
+
+      room.classList.add("visible");
+      document.getElementById("accessBox").hidden = true;
+
+      if (tracks.some(track => track.audio)) {
+        document.getElementById("player").hidden = false;
+        document.body.classList.add("has-player");
+        updatePlayer();
+      }
+
+      if (scroll) {
+        room.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+
+
+    function renderTracks() {
       document.getElementById("trackList").replaceChildren(
         ...tracks.map((track, index) => {
-          const row = createElement("div", "track");
+          const playable = Boolean(track.audio);
+          const row = createElement(playable ? "button" : "div", "track");
+
+          if (playable) {
+            row.type = "button";
+            row.classList.add("playable");
+            row.addEventListener("click", () => (index === current ? togglePlay() : playTrack(index)));
+          }
+
+          if (index === current) {
+            row.classList.add("current");
+          }
+
+          const number = createElement("span", "track-num");
+          number.append(
+            index === current && !audio.paused ? icon("pause") : String(index + 1).padStart(2, "0")
+          );
 
           row.append(
-            createElement("span", "track-num", String(index + 1).padStart(2, "0")),
-            createElement("span", "", track.title || "untitled"),
+            number,
+            createElement("span", "track-title", track.title || "untitled"),
             createElement("span", "track-time", track.duration || "—")
           );
 
           return row;
         })
       );
+    }
+
+
+    // ---------- player ----------
+
+    const audio = document.getElementById("audio");
+    const playButton = document.getElementById("playButton");
+    const seek = document.getElementById("seek");
+    let seeking = false;
+
+    document.getElementById("previousButton").append(icon("previous"));
+    document.getElementById("nextButton").append(icon("next"));
+
+    playButton.addEventListener("click", togglePlay);
+    document.getElementById("previousButton").addEventListener("click", previousTrack);
+    document.getElementById("nextButton").addEventListener("click", nextTrack);
+
+
+    function playable(index) {
+      return Boolean(tracks[index]?.audio);
+    }
+
+
+    function playTrack(index) {
+      if (!playable(index)) {
+        return;
+      }
+
+      current = index;
+      audio.src = tracks[index].audio;
+      audio.play().catch(() => {});
+
+      updatePlayer();
+      renderTracks();
+      updateMediaSession();
+    }
+
+
+    function togglePlay() {
+      if (current === -1) {
+        playTrack(tracks.findIndex(track => track.audio));
+        return;
+      }
+
+      if (audio.paused) {
+        audio.play().catch(() => {});
+      } else {
+        audio.pause();
+      }
+    }
+
+
+    function step(direction) {
+      for (let index = current + direction; index >= 0 && index < tracks.length; index += direction) {
+        if (playable(index)) {
+          return index;
+        }
+      }
+
+      return -1;
+    }
+
+
+    function nextTrack() {
+      const index = step(1);
+
+      if (index !== -1) {
+        playTrack(index);
+      }
+    }
+
+
+    function previousTrack() {
+      // Like most players: first press restarts the song.
+      if (audio.currentTime > 3 || step(-1) === -1) {
+        audio.currentTime = 0;
+        return;
+      }
+
+      playTrack(step(-1));
+    }
+
+
+    function updatePlayer() {
+      const track = tracks[current];
+
+      document.getElementById("playerTitle").textContent = track
+        ? `${String(current + 1).padStart(2, "0")} — ${track.title || "untitled"}`
+        : "select a track";
+
+      playButton.replaceChildren(icon(audio.paused ? "play" : "pause"));
+      playButton.setAttribute("aria-label", audio.paused ? "play" : "pause");
+
+      document.getElementById("previousButton").disabled = current === -1;
+      document.getElementById("nextButton").disabled = step(1) === -1;
+    }
+
+
+    function updateTime() {
+      const duration = audio.duration;
+
+      document.getElementById("currentTime").textContent = formatTime(audio.currentTime);
+      document.getElementById("totalTime").textContent = formatTime(duration);
+
+      if (!seeking) {
+        seek.value = duration ? Math.round((audio.currentTime / duration) * 1000) : 0;
+      }
+
+      seek.style.setProperty("--progress", `${seek.value / 10}%`);
+    }
+
+
+    seek.addEventListener("input", () => {
+      seeking = true;
+      document.getElementById("currentTime").textContent = formatTime((seek.value / 1000) * (audio.duration || 0));
+      seek.style.setProperty("--progress", `${seek.value / 10}%`);
+    });
+
+    seek.addEventListener("change", () => {
+      if (audio.duration) {
+        audio.currentTime = (seek.value / 1000) * audio.duration;
+      }
+
+      seeking = false;
+    });
+
+
+    audio.addEventListener("timeupdate", updateTime);
+    audio.addEventListener("durationchange", updateTime);
+
+    audio.addEventListener("loadedmetadata", () => {
+      // Show the real length in the tracklist when no duration was entered.
+      if (tracks[current] && !tracks[current].duration) {
+        tracks[current].duration = formatTime(audio.duration);
+        renderTracks();
+      }
+    });
+
+    ["play", "pause"].forEach(name =>
+      audio.addEventListener(name, () => {
+        updatePlayer();
+        renderTracks();
+      })
+    );
+
+    audio.addEventListener("ended", () => {
+      if (step(1) !== -1) {
+        nextTrack();
+      } else {
+        updatePlayer();
+        renderTracks();
+      }
+    });
+
+
+    // Space bar = play / pause
+    document.addEventListener("keydown", event => {
+      if (event.code === "Space" && !document.getElementById("player").hidden && !event.target.closest("input, textarea, button")) {
+        event.preventDefault();
+        togglePlay();
+      }
+    });
+
+
+    // Controls on the lock screen / headphones
+    function updateMediaSession() {
+      if (!("mediaSession" in navigator) || !tracks[current]) {
+        return;
+      }
+
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: tracks[current].title || "untitled",
+        artist: "connor",
+        album: document.querySelector(".project-title").textContent
+      });
+
+      navigator.mediaSession.setActionHandler("play", () => audio.play());
+      navigator.mediaSession.setActionHandler("pause", () => audio.pause());
+      navigator.mediaSession.setActionHandler("previoustrack", previousTrack);
+      navigator.mediaSession.setActionHandler("nexttrack", nextTrack);
     }
   </script>
 

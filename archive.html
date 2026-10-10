@@ -88,25 +88,107 @@
 
 
     function renderEntry(entry) {
-      const item = createElement(entry.link ? "a" : "div", "archive-item");
+      const item = createElement("div", "archive-item");
+      const main = createElement("div", "archive-main");
+
+      if (entry.image) {
+        const image = createElement("img", "archive-image");
+        image.src = entry.image;
+        image.alt = "";
+        image.loading = "lazy";
+        main.append(image);
+      }
+
+      const title = createElement(entry.link ? "a" : "span", "archive-title", entry.title || "");
 
       if (entry.link) {
-        item.href = entry.link;
+        title.href = entry.link;
 
         if (!entry.link.startsWith("/")) {
-          item.target = "_blank";
-          item.rel = "noopener noreferrer";
+          title.target = "_blank";
+          title.rel = "noopener noreferrer";
+          title.append(createElement("span", "archive-arrow", " ↗"));
         }
       }
 
-      item.append(
-        createElement("span", "archive-year", entry.year || ""),
-        createElement("span", "archive-title", entry.title || ""),
-        createElement("span", "archive-type", entry.link ? `${entry.type || ""} ↗`.trim() : entry.type || "")
-      );
+      main.append(title);
+
+      const side = createElement("div", "archive-side");
+      side.append(createElement("span", "archive-type", entry.type || ""));
+
+      if (entry.audio) {
+        side.append(snippetButton(entry.audio));
+      }
+
+      item.append(createElement("span", "archive-year", entry.year || ""), main, side);
 
       return item;
     }
+
+
+    // ---------- snippets (one at a time) ----------
+
+    const snippet = new Audio();
+    let activeButton = null;
+
+
+    function snippetButton(src) {
+      const button = createElement("button", "snippet-button");
+      button.type = "button";
+      button.dataset.src = src;
+      setSnippetState(button, false);
+
+      button.addEventListener("click", () => {
+        if (activeButton === button) {
+          if (snippet.paused) {
+            snippet.play().catch(() => {});
+          } else {
+            snippet.pause();
+          }
+
+          return;
+        }
+
+        if (activeButton) {
+          setSnippetState(activeButton, false);
+        }
+
+        activeButton = button;
+        snippet.src = src;
+        snippet.play().catch(() => {});
+      });
+
+      return button;
+    }
+
+
+    function setSnippetState(button, playing, time) {
+      button.replaceChildren(
+        icon(playing ? "pause" : "play"),
+        createElement("span", "", time || "snippet")
+      );
+
+      button.classList.toggle("playing", playing);
+      button.setAttribute("aria-label", playing ? "pause snippet" : "play snippet");
+    }
+
+
+    const updateSnippet = () => {
+      if (activeButton) {
+        setSnippetState(
+          activeButton,
+          !snippet.paused,
+          `${formatTime(snippet.currentTime)} / ${formatTime(snippet.duration)}`
+        );
+      }
+    };
+
+    ["play", "pause", "timeupdate"].forEach(name => snippet.addEventListener(name, updateSnippet));
+
+    snippet.addEventListener("ended", () => {
+      setSnippetState(activeButton, false);
+      activeButton = null;
+    });
   </script>
 
 </body>

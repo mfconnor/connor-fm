@@ -45,7 +45,7 @@ const SCHEMA = {
     roomTitle: "text",
     footerLeft: "text",
     footerRight: "text",
-    tracklist: listOf({ title: "text", duration: "text" })
+    tracklist: listOf({ title: "text", duration: "text", audio: "url" })
   },
 
   archivePage: {
@@ -55,7 +55,7 @@ const SCHEMA = {
     footerRight: "text"
   },
 
-  archive: listOf({ year: "text", title: "text", type: "text", link: "url" }),
+  archive: listOf({ year: "text", title: "text", type: "text", link: "url", image: "url", audio: "url" }),
 
   about: {
     label: "text",
@@ -85,6 +85,20 @@ const RATE_LIMITS = {
   code: { max: 20, window: 15 * 60 }
 };
 
+const LISTEN_TTL = 60 * 60 * 6; // listening-room access lasts 6 hours
+
+// Uploads are stored in KV (max. 25 MB per value).
+const MEDIA_MAX_SIZE = 25 * 1024 * 1024;
+
+const MEDIA_TYPES = {
+  "audio/mpeg": "mp3",
+  "audio/mp3": "mp3",
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif"
+};
+
 const LIMITS = {
   shortText: 200,
   longText: 5000,
@@ -95,6 +109,10 @@ const LIMITS = {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    if (url.pathname.startsWith("/media/")) {
+      return serveMedia(request, env, url);
+    }
 
     if (!url.pathname.startsWith("/api/")) {
       return env.ASSETS.fetch(request);
@@ -126,6 +144,7 @@ async function handleApi(request, env, url) {
     },
 
     "/api/listening-room": {
+      GET: () => getListeningRoom(request, env),
       POST: () => openListeningRoom(request, env)
     },
 
@@ -153,6 +172,12 @@ async function handleApi(request, env, url) {
     "/api/admin/listening-code": {
       GET: requireAdmin(request, env, () => getListeningCode(env)),
       POST: requireAdmin(request, env, () => saveListeningCode(request, env))
+    },
+
+    "/api/admin/media": {
+      GET: requireAdmin(request, env, () => listMedia(env)),
+      POST: requireAdmin(request, env, () => uploadMedia(request, env, url)),
+      DELETE: requireAdmin(request, env, () => deleteMedia(env, url))
     }
   };
 
@@ -251,12 +276,50 @@ async function openListeningRoom(request, env) {
     return json({ success: false, error: "Invalid access code." }, 401);
   }
 
+  // Remember the access in a cookie, so the audio files can be
+  // loaded and the room stays open after a reload.
+  const token = crypto.randomUUID();
+
+  await env.CONNOR_DATA.put(`listen:${token}`, storedCode, { expirationTtl: LISTEN_TTL });
+
+  return json(
+    { success: true, tracklist: await readTracklist(env) },
+    200,
+    { "Set-Cookie": `connor_listen=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${LISTEN_TTL}` }
+  );
+}
+
+
+async function getListeningRoom(request, env) {
+  if (!(await hasListeningAccess(request, env))) {
+    return json({ success: false, error: "Access code required." }, 401);
+  }
+
+  return json({ success: true, tracklist: await readTracklist(env) });
+}
+
+
+async function readTracklist(env) {
   const music = await readKey(env, "music");
 
-  return json({
-    success: true,
-    tracklist: Array.isArray(music?.tracklist) ? music.tracklist : []
-  });
+  return Array.isArray(music?.tracklist) ? music.tracklist : [];
+}
+
+
+// Access is only valid while the code it was opened with is still the current code.
+async function hasListeningAccess(request, env) {
+  const token = getCookie(request, "connor_listen");
+
+  if (!token) {
+    return false;
+  }
+
+  const [codeUsed, currentCode] = await Promise.all([
+    env.CONNOR_DATA.get(`listen:${token}`),
+    env.CONNOR_DATA.get("listening_code")
+  ]);
+
+  return Boolean(codeUsed) && codeUsed === currentCode;
 }
 
 
@@ -354,8 +417,13 @@ function sessionCookie(token, maxAge) {
 
 
 function getSessionToken(request) {
+  return getCookie(request, "connor_session");
+}
+
+
+function getCookie(request, name) {
   const cookie = request.headers.get("Cookie") || "";
-  const match = cookie.match(/(?:^|;\s*)connor_session=([^;]+)/);
+  const match = cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
 
   return match ? match[1] : null;
 }
@@ -507,6 +575,163 @@ function safeLink(value) {
   } catch {
     return "";
   }
+}
+
+
+// ==========================================
+// MEDIA (mp3 + images)
+//
+// Stored in KV as "media:<id>" with metadata.
+// Files uploaded as "private" (listening room) are
+// only served with listening-room access or as admin.
+// ==========================================
+
+async function uploadMedia(request, env, url) {
+  const type = (request.headers.get("Content-Type") || "").split(";")[0].trim().toLowerCase();
+  const extension = MEDIA_TYPES[type];
+
+  if (!extension) {
+    return json({ success: false, error: "Only mp3, jpg, png, webp and gif files are allowed." }, 415);
+  }
+
+  const size = Number(request.headers.get("Content-Length")) || 0;
+
+  if (size > MEDIA_MAX_SIZE) {
+    return json({ success: false, error: "File is too big (max. 25 MB)." }, 413);
+  }
+
+  const data = await request.arrayBuffer();
+
+  if (data.byteLength === 0 || data.byteLength > MEDIA_MAX_SIZE) {
+    return json({ success: false, error: "File is empty or too big (max. 25 MB)." }, 413);
+  }
+
+  const id = `${crypto.randomUUID()}.${extension}`;
+
+  const metadata = {
+    name: (url.searchParams.get("name") || id).slice(0, 120),
+    type: type === "audio/mp3" ? "audio/mpeg" : type,
+    size: data.byteLength,
+    private: url.searchParams.get("private") === "1",
+    uploaded: new Date().toISOString()
+  };
+
+  await env.CONNOR_DATA.put(`media:${id}`, data, { metadata });
+
+  return json({ success: true, file: { id, url: `/media/${id}`, ...metadata } });
+}
+
+
+async function listMedia(env) {
+  const files = [];
+  let cursor;
+
+  do {
+    const page = await env.CONNOR_DATA.list({ prefix: "media:", cursor });
+
+    page.keys.forEach(key => {
+      const id = key.name.slice("media:".length);
+      files.push({ id, url: `/media/${id}`, ...(key.metadata || {}) });
+    });
+
+    cursor = page.list_complete ? null : page.cursor;
+  } while (cursor);
+
+  files.sort((a, b) => String(b.uploaded).localeCompare(String(a.uploaded)));
+
+  return json({ success: true, files });
+}
+
+
+async function deleteMedia(env, url) {
+  const id = url.searchParams.get("id") || "";
+
+  if (!/^[\w-]+\.\w+$/.test(id)) {
+    return json({ success: false, error: "Invalid file." }, 400);
+  }
+
+  await env.CONNOR_DATA.delete(`media:${id}`);
+
+  return json({ success: true });
+}
+
+
+async function serveMedia(request, env, url) {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return new Response("Method not allowed.", { status: 405 });
+  }
+
+  const id = url.pathname.slice("/media/".length);
+
+  if (!/^[\w-]+\.\w+$/.test(id)) {
+    return new Response("Not found.", { status: 404 });
+  }
+
+  const { value, metadata } = await env.CONNOR_DATA.getWithMetadata(`media:${id}`, { type: "arrayBuffer" });
+
+  if (!value) {
+    return new Response("Not found.", { status: 404 });
+  }
+
+  if (metadata?.private && !(await hasListeningAccess(request, env)) && !(await isAuthenticated(request, env))) {
+    return new Response("Access code required.", { status: 403 });
+  }
+
+  const headers = {
+    "Content-Type": metadata?.type || "application/octet-stream",
+    "Accept-Ranges": "bytes",
+    "X-Content-Type-Options": "nosniff",
+    // File ids never change, so public files can be cached forever.
+    "Cache-Control": metadata?.private ? "private, no-store" : "public, max-age=31536000, immutable"
+  };
+
+  const total = value.byteLength;
+  const range = parseRange(request.headers.get("Range"), total);
+
+  // Range requests are needed to skip around in audio files.
+  if (range === "invalid") {
+    return new Response(null, { status: 416, headers: { ...headers, "Content-Range": `bytes */${total}` } });
+  }
+
+  if (range) {
+    const [start, end] = range;
+
+    return new Response(request.method === "HEAD" ? null : value.slice(start, end + 1), {
+      status: 206,
+      headers: {
+        ...headers,
+        "Content-Range": `bytes ${start}-${end}/${total}`,
+        "Content-Length": String(end - start + 1)
+      }
+    });
+  }
+
+  return new Response(request.method === "HEAD" ? null : value, {
+    headers: { ...headers, "Content-Length": String(total) }
+  });
+}
+
+
+function parseRange(header, total) {
+  const match = /^bytes=(\d*)-(\d*)$/.exec(header || "");
+
+  if (!match || (!match[1] && !match[2])) {
+    return null;
+  }
+
+  let start;
+  let end;
+
+  if (!match[1]) {
+    // "bytes=-500" means the last 500 bytes.
+    start = Math.max(0, total - Number(match[2]));
+    end = total - 1;
+  } else {
+    start = Number(match[1]);
+    end = match[2] ? Math.min(Number(match[2]), total - 1) : total - 1;
+  }
+
+  return start > end || start >= total ? "invalid" : [start, end];
 }
 
 

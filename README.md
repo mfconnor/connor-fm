@@ -29,6 +29,7 @@ through `/admin`. The admin panel has one tab per page:
 | about | label, title, text, the list of facts |
 | messages | messages (draft / published / scheduled) and the page texts |
 | site | footer on every page |
+| media | all uploaded files, storage used, delete unused files |
 | security | admin password |
 
 Every text in the HTML is marked with `data-content="<key>.<field>"`;
@@ -39,6 +40,23 @@ text editable, add it in both places and mark the element in the HTML.
 
 The tracklist is only sent to the browser after the correct listening-room
 code was entered. Drafts and scheduled messages stay hidden until published.
+
+## Uploads (mp3 + images)
+
+Files are uploaded in the admin panel (upload button or drag & drop) and
+stored in the same KV namespace as `media:<id>`, served at `/media/<id>`.
+
+- max. 25 MB per file (KV limit), about 1 GB in total on the free plan
+- mp3, jpg, png, webp, gif
+- **listening-room tracks are private**: they are only served to visitors who
+  entered the access code (cookie, valid 6 hours and only as long as the code
+  is not changed) or to the admin
+- archive snippets and images are public and cached by the browser
+- seeking in songs works via HTTP range requests
+
+The listening room shows a player (play / pause, previous / next, seek bar,
+time) as soon as at least one track has an mp3. Tracks without an mp3 are
+listed but not playable.
 
 ## Admin password
 
@@ -56,13 +74,16 @@ Logins and listening-room codes are rate limited per IP
 | Route | Method | Auth |
 | --- | --- | --- |
 | `/api/content` | GET | public (published content only) |
-| `/api/listening-room` | POST `{ code }` | public, rate limited |
+| `/api/listening-room` | POST `{ code }` | public, rate limited, sets access cookie |
+| `/api/listening-room` | GET | with access cookie |
+| `/media/<id>` | GET | public, or listening-room access for private files |
 | `/api/admin/login` | POST `{ password }` | rate limited |
 | `/api/admin/logout` | POST | – |
 | `/api/admin/check` | GET | – |
 | `/api/admin/content` | GET / POST | admin |
 | `/api/admin/listening-code` | GET / POST | admin |
 | `/api/admin/password` | POST | admin |
+| `/api/admin/media` | GET / POST (raw file) / DELETE `?id=` | admin |
 
 ## Development
 

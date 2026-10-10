@@ -125,3 +125,41 @@ const contentReady = loadContent()
     console.error(error);
     return null;
   });
+
+
+// ==========================================
+// AUDIO HELPERS
+// ==========================================
+
+function formatTime(seconds) {
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    return "0:00";
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  const rest = Math.floor(seconds % 60);
+
+  return `${minutes}:${String(rest).padStart(2, "0")}`;
+}
+
+
+const ICONS = {
+  play: "M8 5v14l11-7z",
+  pause: "M7 5h4v14H7zM13 5h4v14h-4z",
+  previous: "M6 5h2v14H6zM9.5 12 19 19V5z",
+  next: "M16 5h2v14h-2zM5 19l9.5-7L5 5z"
+};
+
+
+function icon(name) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  svg.classList.add("icon");
+  path.setAttribute("d", ICONS[name]);
+  svg.append(path);
+
+  return svg;
+}

@@ -421,6 +421,111 @@
     }
 
 
+    /* FILE FIELDS */
+
+    .file-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .file-row input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .file-row button {
+      white-space: nowrap;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .progress {
+      height: 2px;
+      background: var(--line-light);
+      margin-top: 8px;
+      display: none;
+    }
+
+    .progress.visible {
+      display: block;
+    }
+
+    .progress div {
+      height: 100%;
+      width: 0;
+      background: var(--text);
+      transition: width .2s ease;
+    }
+
+    .audio-preview {
+      display: block;
+      width: 100%;
+      height: 36px;
+      margin-top: 10px;
+    }
+
+    .file-row.dragging input {
+      border-color: var(--text);
+      border-style: dashed;
+    }
+
+
+    /* MEDIA LIBRARY */
+
+    .media-summary {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    .media-item {
+      display: grid;
+      grid-template-columns: 56px 1fr auto;
+      gap: 14px;
+      align-items: center;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+
+    .media-thumb {
+      width: 56px;
+      height: 56px;
+      object-fit: cover;
+      border: 1px solid var(--line-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: monospace;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .media-info {
+      min-width: 0;
+    }
+
+    .media-name {
+      font-size: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .media-meta {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .media-meta .unused {
+      color: var(--warning);
+    }
+
+
     /* SAVE BAR */
 
     .save-bar {
@@ -501,6 +606,18 @@
 
       .list-item-head {
         flex-wrap: wrap;
+      }
+
+      .file-row {
+        flex-wrap: wrap;
+      }
+
+      .media-item {
+        grid-template-columns: 56px 1fr;
+      }
+
+      .media-item .list-item-actions {
+        grid-column: 1 / -1;
       }
     }
   </style>
@@ -594,7 +711,7 @@ const TABS = [
       {
         title: "cover",
         fields: [
-          { path: "home.coverImage", label: "cover image url", type: "image", hint: "Link to an image (https://…). Leave empty to show the cover text instead." },
+          { path: "home.coverImage", label: "cover image", type: "image", hint: "Upload an image or paste a link. Leave empty to show the cover text instead." },
           { path: "home.coverText", label: "cover text", def: "?", half: true }
         ]
       }
@@ -623,7 +740,7 @@ const TABS = [
       {
         title: "cover",
         fields: [
-          { path: "music.coverImage", label: "cover image url", type: "image", hint: "Link to an image (https://…). Leave empty to show the cover text instead." },
+          { path: "music.coverImage", label: "cover image", type: "image", hint: "Upload an image or paste a link. Leave empty to show the cover text instead." },
           { path: "music.coverText", label: "cover text", def: "?", half: true }
         ]
       },
@@ -651,11 +768,19 @@ const TABS = [
             type: "list",
             addLabel: "+ add track",
             empty: "No tracks yet — the room shows “untitled” placeholders based on the track count.",
-            newItem: () => ({ title: "untitled", duration: "" }),
-            itemTitle: track => [track.title || "untitled", track.duration].filter(Boolean).join(" — "),
+            newItem: () => ({ title: "untitled", duration: "", audio: "" }),
+            itemTitle: track => [track.title || "untitled", track.duration, track.audio ? "♪" : ""].filter(Boolean).join(" — "),
             item: [
               { path: "title", label: "title", half: true },
-              { path: "duration", label: "duration", placeholder: "3:21", half: true }
+              { path: "duration", label: "duration", placeholder: "3:21 — filled in automatically", half: true },
+              {
+                path: "audio",
+                label: "mp3",
+                type: "audio",
+                private: true,
+                hint: "Private — only playable inside the listening room. Max. 25 MB.",
+                onUpload: fillTrackFromFile
+              }
             ]
           }
         ]
@@ -684,13 +809,15 @@ const TABS = [
             type: "list",
             addLabel: "+ add archive entry",
             empty: "No entries yet.",
-            newItem: () => ({ year: String(new Date().getFullYear()), title: "untitled", type: "", link: "" }),
-            itemTitle: entry => [entry.year, entry.title || "untitled"].filter(Boolean).join(" — "),
+            newItem: () => ({ year: String(new Date().getFullYear()), title: "untitled", type: "", link: "", image: "", audio: "" }),
+            itemTitle: entry => [entry.year, entry.title || "untitled", entry.audio ? "♪" : ""].filter(Boolean).join(" — "),
             item: [
               { path: "year", label: "year", half: true },
               { path: "type", label: "type", placeholder: "single, video, …", half: true },
               { path: "title", label: "title" },
-              { path: "link", label: "link (optional)", placeholder: "https://… or /page" }
+              { path: "link", label: "link (optional)", placeholder: "https://… or /page" },
+              { path: "image", label: "image (optional)", type: "image", hint: "Shown as a small picture next to the title." },
+              { path: "audio", label: "snippet mp3 (optional)", type: "audio", hint: "Public — visitors can play it on the archive page. Max. 25 MB." }
             ]
           }
         ]
@@ -800,6 +927,18 @@ const TABS = [
           { path: "site.footerName", label: "left", def: "connor.fm", half: true },
           { path: "site.footerYear", label: "right", def: "© 2026", half: true }
         ]
+      }
+    ]
+  },
+
+  {
+    id: "media",
+    title: "media",
+    intro: "All uploaded files. Files that are not used anywhere can be deleted to free up space.",
+    groups: [
+      {
+        title: "files",
+        special: "media"
       }
     ]
   },
@@ -1095,6 +1234,9 @@ function renderGroup(group) {
   } else if (group.special === "password") {
     section.append(renderPasswordForm());
 
+  } else if (group.special === "media") {
+    section.append(renderMediaLibrary());
+
   } else {
     section.append(renderFields(group.fields, content));
   }
@@ -1122,6 +1264,10 @@ function renderFields(fields, target, onChange) {
 let fieldCounter = 0;
 
 function renderField(field, target, onChange) {
+
+  if (field.type === "image" || field.type === "audio") {
+    return renderFileField(field, target, onChange);
+  }
 
   const id = `field${++fieldCounter}`;
   const wrapper = el("div", { class: field.half ? "field half" : "field" });
@@ -1151,26 +1297,12 @@ function renderField(field, target, onChange) {
     input.value = value;
   }
 
-  if (field.type === "image") {
-    input.placeholder = "https://…";
-  } else if (field.placeholder || field.def) {
+  if (field.placeholder || field.def) {
     input.placeholder = field.placeholder || field.def;
   }
 
-  const preview = field.type === "image" ? el("img", { class: "preview", alt: "" }) : null;
-
-  if (preview) {
-    updatePreview(preview, value);
-  }
-
   input.addEventListener("input", () => {
-    const newValue = field.type === "datetime" ? fromLocalInput(input.value) : input.value;
-
-    setPath(target, field.path, newValue);
-
-    if (preview) {
-      updatePreview(preview, newValue);
-    }
+    setPath(target, field.path, field.type === "datetime" ? fromLocalInput(input.value) : input.value);
 
     if (onChange) {
       onChange();
@@ -1181,9 +1313,116 @@ function renderField(field, target, onChange) {
 
   wrapper.append(el("label", { for: id }, field.label), input);
 
-  if (preview) {
-    wrapper.append(preview);
+  if (field.hint) {
+    wrapper.append(el("div", { class: "hint" }, field.hint));
   }
+
+  return wrapper;
+}
+
+
+// ==========================================
+// FILE FIELDS (images + mp3)
+//
+// A link field with an upload button. Uploaded files
+// get a /media/… link that is put into the field.
+// Files can also be dropped onto the field.
+// ==========================================
+
+const MAX_UPLOAD = 25 * 1024 * 1024;
+
+function renderFileField(field, target, onChange) {
+
+  const id = `field${++fieldCounter}`;
+  const wrapper = el("div", { class: field.half ? "field half" : "field" });
+  const row = el("div", { class: "file-row" });
+  const input = el("input", { id, type: "text", placeholder: "upload a file or paste a link" });
+  const fileInput = el("input", { type: "file", class: "file-input", accept: field.type === "audio" ? "audio/mpeg,.mp3" : "image/*" });
+  const uploadButton = el("button", { type: "button", class: "secondary" }, "upload");
+  const removeButton = el("button", { type: "button", class: "danger" }, "remove");
+  const progress = el("div", { class: "progress" });
+  const bar = el("div");
+  const status = el("div", { class: "hint" });
+
+  const preview = field.type === "image"
+    ? el("img", { class: "preview", alt: "" })
+    : el("audio", { class: "audio-preview", controls: "", preload: "none" });
+
+  progress.append(bar);
+
+  const setValue = value => {
+    input.value = value || "";
+    setPath(target, field.path, value || "");
+    updateFilePreview(preview, value);
+    removeButton.style.display = value ? "" : "none";
+
+    if (onChange) {
+      onChange();
+    }
+
+    markDirty();
+  };
+
+  input.value = getPath(target, field.path) || "";
+  updateFilePreview(preview, input.value);
+  removeButton.style.display = input.value ? "" : "none";
+
+  input.addEventListener("input", () => setValue(input.value));
+  uploadButton.addEventListener("click", () => fileInput.click());
+  removeButton.addEventListener("click", () => setValue(""));
+
+  const handleFile = async file => {
+    if (!file) {
+      return;
+    }
+
+    uploadButton.disabled = true;
+    progress.classList.add("visible");
+    bar.style.width = "0";
+    status.textContent = `uploading ${file.name}…`;
+    status.style.color = "";
+
+    try {
+      const uploaded = await uploadFile(file, field.type, field.private, percent => {
+        bar.style.width = `${percent}%`;
+      });
+
+      setValue(uploaded.url);
+      status.textContent = `uploaded ${file.name} (${formatSize(uploaded.size)}). save to publish.`;
+
+      if (field.onUpload) {
+        await field.onUpload(target, file);
+        renderPanel();
+      }
+
+    } catch (error) {
+      status.textContent = error.message;
+      status.style.color = "var(--error)";
+
+    } finally {
+      uploadButton.disabled = false;
+      progress.classList.remove("visible");
+      fileInput.value = "";
+    }
+  };
+
+  fileInput.addEventListener("change", () => handleFile(fileInput.files[0]));
+
+  row.addEventListener("dragover", event => {
+    event.preventDefault();
+    row.classList.add("dragging");
+  });
+
+  row.addEventListener("dragleave", () => row.classList.remove("dragging"));
+
+  row.addEventListener("drop", event => {
+    event.preventDefault();
+    row.classList.remove("dragging");
+    handleFile(event.dataTransfer.files[0]);
+  });
+
+  row.append(input, uploadButton, removeButton, fileInput);
+  wrapper.append(el("label", { for: id }, field.label), row, progress, preview, status);
 
   if (field.hint) {
     wrapper.append(el("div", { class: "hint" }, field.hint));
@@ -1193,15 +1432,231 @@ function renderField(field, target, onChange) {
 }
 
 
-function updatePreview(image, url) {
+function updateFilePreview(preview, url) {
 
-  if (url && /^(https?:\/\/|\/[^/])/.test(url)) {
-    image.src = url;
-    image.style.display = "block";
-  } else {
-    image.removeAttribute("src");
-    image.style.display = "none";
+  const valid = url && /^(https?:\/\/|\/[^/])/.test(url);
+
+  if (valid && preview.getAttribute("src") !== url) {
+    preview.src = url;
   }
+
+  if (!valid) {
+    preview.removeAttribute("src");
+  }
+
+  preview.style.display = valid ? "block" : "none";
+}
+
+
+function uploadFile(file, kind, isPrivate, onProgress) {
+
+  return new Promise((resolve, reject) => {
+
+    const isMp3 = file.type === "audio/mpeg" || file.type === "audio/mp3" || /\.mp3$/i.test(file.name);
+    const type = kind === "audio" ? (isMp3 ? "audio/mpeg" : file.type) : file.type;
+
+    if (kind === "audio" && !isMp3) {
+      reject(new Error("Please choose an mp3 file."));
+      return;
+    }
+
+    if (kind === "image" && !/^image\/(jpeg|png|webp|gif)$/.test(type)) {
+      reject(new Error("Please choose a jpg, png, webp or gif image."));
+      return;
+    }
+
+    if (file.size > MAX_UPLOAD) {
+      reject(new Error(`${file.name} is too big (${formatSize(file.size)}, max. 25 MB).`));
+      return;
+    }
+
+    const params = new URLSearchParams({ name: file.name });
+
+    if (isPrivate) {
+      params.set("private", "1");
+    }
+
+    // XMLHttpRequest instead of fetch, because it can report upload progress.
+    const request = new XMLHttpRequest();
+
+    request.open("POST", `/api/admin/media?${params}`);
+    request.setRequestHeader("Content-Type", type);
+
+    request.upload.addEventListener("progress", event => {
+      if (event.lengthComputable) {
+        onProgress(Math.round((event.loaded / event.total) * 100));
+      }
+    });
+
+    request.addEventListener("load", () => {
+      let data = {};
+
+      try {
+        data = JSON.parse(request.responseText);
+      } catch {
+        // handled below
+      }
+
+      if (request.status === 401) {
+        reject(new Error("Your session has expired. Please log in again."));
+      } else if (request.status >= 400 || !data.success) {
+        reject(new Error(data.error || "Upload failed."));
+      } else {
+        resolve(data.file);
+      }
+    });
+
+    request.addEventListener("error", () => reject(new Error("Upload failed. Check your connection.")));
+
+    request.send(file);
+  });
+}
+
+
+// After uploading an mp3 to a track: use the file name as title
+// (if the track has none yet) and read the length of the song.
+async function fillTrackFromFile(track, file) {
+
+  if (!track.title || track.title === "untitled") {
+    track.title = file.name.replace(/\.mp3$/i, "").replace(/^\d+[\s._-]*/, "");
+  }
+
+  const duration = await readDuration(file);
+
+  if (duration) {
+    track.duration = duration;
+  }
+}
+
+
+function readDuration(file) {
+
+  return new Promise(resolve => {
+    const audio = new Audio();
+    const url = URL.createObjectURL(file);
+
+    audio.preload = "metadata";
+
+    audio.addEventListener("loadedmetadata", () => {
+      URL.revokeObjectURL(url);
+
+      const seconds = audio.duration;
+
+      resolve(
+        Number.isFinite(seconds)
+          ? `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`
+          : ""
+      );
+    });
+
+    audio.addEventListener("error", () => {
+      URL.revokeObjectURL(url);
+      resolve("");
+    });
+
+    audio.src = url;
+  });
+}
+
+
+function formatSize(bytes) {
+
+  if (bytes >= 1024 * 1024) {
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  }
+
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
+
+
+// ==========================================
+// MEDIA LIBRARY
+// ==========================================
+
+function renderMediaLibrary() {
+
+  const wrapper = el("div");
+  const summary = el("div", { class: "media-summary" }, "loading files…");
+  const list = el("div");
+
+  wrapper.append(summary, list);
+
+  const load = async () => {
+    try {
+      const { files } = await api("/api/admin/media");
+      const used = JSON.stringify(content);
+      const total = files.reduce((sum, file) => sum + (file.size || 0), 0);
+
+      summary.textContent = `${files.length} file${files.length === 1 ? "" : "s"} · ${formatSize(total)} of about 1 GB`;
+
+      if (!files.length) {
+        list.replaceChildren(el("div", { class: "empty" }, "Nothing uploaded yet. Upload files in the archive, music or home tab."));
+        return;
+      }
+
+      list.replaceChildren(
+        ...files.map(file => {
+          const item = el("div", { class: "media-item" });
+          const isImage = String(file.type).startsWith("image/");
+          const inUse = used.includes(file.url);
+
+          const thumb = isImage
+            ? el("img", { class: "media-thumb", src: file.url, alt: "", loading: "lazy" })
+            : el("div", { class: "media-thumb" }, "mp3");
+
+          const info = el("div", { class: "media-info" });
+          const meta = el("div", { class: "media-meta" });
+
+          meta.append(
+            [formatSize(file.size || 0), file.private ? "private" : "public", file.uploaded ? new Date(file.uploaded).toLocaleDateString() : ""]
+              .filter(Boolean)
+              .join(" · ") + " · ",
+            el("span", { class: inUse ? "" : "unused" }, inUse ? "in use" : "not used")
+          );
+
+          info.append(el("div", { class: "media-name" }, file.name || file.id), meta);
+
+          const actions = el("div", { class: "list-item-actions" });
+          const open = el("a", { href: file.url, target: "_blank", rel: "noopener" });
+          open.append(el("button", { type: "button", class: "small secondary" }, "open"));
+
+          const remove = el("button", { type: "button", class: "small danger" }, "delete");
+
+          remove.addEventListener("click", async () => {
+            const warning = inUse
+              ? `"${file.name}" is still used on the website. Delete anyway?`
+              : `Delete "${file.name}"?`;
+
+            if (!confirm(warning)) {
+              return;
+            }
+
+            remove.disabled = true;
+
+            try {
+              await api(`/api/admin/media?id=${encodeURIComponent(file.id)}`, { method: "DELETE" });
+              load();
+            } catch (error) {
+              alert(error.message);
+              remove.disabled = false;
+            }
+          });
+
+          actions.append(open, remove);
+          item.append(thumb, info, actions);
+
+          return item;
+        })
+      );
+
+    } catch (error) {
+      summary.textContent = error.message;
+    }
+  };
+
+  load();
+
+  return wrapper;
 }
 
 
