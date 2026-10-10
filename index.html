@@ -28,6 +28,7 @@
         <a href="/music">music</a>
         <a href="/archive">archive</a>
         <a href="/about">about</a>
+        <a href="/questions">ask</a>
         <a href="/messages">...</a>
       </div>
     </div>
@@ -45,6 +46,8 @@
           <div class="coming" data-content="home.coming">coming 2027</div>
           <h1 data-content="home.title">avant-garde</h1>
           <p class="description" data-content="home.description">a mixtape by connor</p>
+
+          <div class="countdown" id="countdown" hidden></div>
         </div>
 
         <div class="placeholder-cover" data-cover="home">
@@ -59,11 +62,17 @@
 
     <div class="footer-content">
       <div class="footer-name" data-content="site.footerName">connor.fm</div>
+      <div class="now-listening" data-now-listening hidden></div>
       <div class="footer-year" data-content="site.footerYear">© 2026</div>
     </div>
   </footer>
 
   <script src="/site.js"></script>
+
+  <script>
+
+    contentReady.then(data => startCountdown(document.getElementById("countdown"), data?.home));
+  </script>
 
 </body>
 </html>

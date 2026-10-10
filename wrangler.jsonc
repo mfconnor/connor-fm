@@ -12,5 +12,21 @@
       "binding": "CONNOR_DATA",
       "id": "0cd55b70587548b28b263bd00db73d23"
     }
+  ],
+  // Database for stats, access codes, comments and questions.
+  // Created automatically by Cloudflare on deploy (free plan: SQLite).
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "DATABASE",
+        "class_name": "Database"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["Database"]
+    }
   ]
 }

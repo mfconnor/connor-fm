@@ -1,9 +1,17 @@
 // ==========================================
 // connor.fm — Cloudflare Worker
 //
-// Handles everything under /api/*.
+// Handles /api/* and /media/*.
 // Everything else is served from the static assets.
+//
+// Storage:
+//   KV (CONNOR_DATA)     — page content, uploads, admin sessions
+//   Database (_database) — stats, access codes, comments, questions
 // ==========================================
+
+import { Database } from "./_database.js";
+
+export { Database };
 
 // Everything that can be edited in the admin panel.
 // Each key is stored in KV as "content:<key>".
@@ -16,7 +24,9 @@
 const SCHEMA = {
   site: {
     footerName: "text",
-    footerYear: "text"
+    footerYear: "text",
+    nowListening: "text",
+    nowListeningLink: "url"
   },
 
   home: {
@@ -25,7 +35,11 @@ const SCHEMA = {
     title: "text",
     description: "long",
     coverImage: "url",
-    coverText: "text"
+    coverText: "text",
+    countdownAt: "date",
+    countdownLabel: "text",
+    countdownDone: "text",
+    countdownLink: "url"
   },
 
   music: {
@@ -71,7 +85,14 @@ const SCHEMA = {
     intro: "long"
   },
 
-  messages: listOf({ id: "id", title: "text", text: "long", status: "status", publishAt: "date" })
+  messages: listOf({ id: "id", title: "text", text: "long", status: "status", publishAt: "date" }),
+
+  questionsPage: {
+    label: "text",
+    title: "text",
+    intro: "long",
+    placeholder: "text"
+  }
 };
 
 const CONTENT_KEYS = Object.keys(SCHEMA);
@@ -82,8 +103,13 @@ const PBKDF2_ITERATIONS = 100000; // maximum supported by Workers
 
 const RATE_LIMITS = {
   login: { max: 10, window: 15 * 60 },
-  code: { max: 20, window: 15 * 60 }
+  code: { max: 20, window: 15 * 60 },
+  question: { max: 5, window: 60 * 60 },
+  comment: { max: 20, window: 15 * 60 }
 };
+
+// Pages that are counted in the stats.
+const PAGES = ["/", "/music", "/archive", "/about", "/messages", "/questions"];
 
 const LISTEN_TTL = 60 * 60 * 6; // listening-room access lasts 6 hours
 
@@ -148,6 +174,24 @@ async function handleApi(request, env, url) {
       POST: () => openListeningRoom(request, env)
     },
 
+    "/api/listening-room/comments": {
+      GET: () => listRoomComments(request, env),
+      POST: () => addRoomComment(request, env)
+    },
+
+    "/api/listening-room/event": {
+      POST: () => logRoomEvent(request, env)
+    },
+
+    "/api/hit": {
+      POST: () => countHit(request, env)
+    },
+
+    "/api/questions": {
+      GET: async () => json({ success: true, questions: await db(env).listQuestions(true) }),
+      POST: () => askQuestion(request, env)
+    },
+
     "/api/admin/login": {
       POST: () => login(request, env)
     },
@@ -169,9 +213,32 @@ async function handleApi(request, env, url) {
       POST: requireAdmin(request, env, () => saveContent(request, env))
     },
 
-    "/api/admin/listening-code": {
-      GET: requireAdmin(request, env, () => getListeningCode(env)),
-      POST: requireAdmin(request, env, () => saveListeningCode(request, env))
+    "/api/admin/codes": {
+      GET: requireAdmin(request, env, () => listCodes(env)),
+      POST: requireAdmin(request, env, () => createCode(request, env)),
+      PATCH: requireAdmin(request, env, () => updateCode(request, env)),
+      DELETE: requireAdmin(request, env, () => deleteById(url, id => db(env).deleteCode(id)))
+    },
+
+    "/api/admin/codes/activity": {
+      GET: requireAdmin(request, env, async () =>
+        json({ success: true, ...(await db(env).codeActivity(url.searchParams.get("id") || "")) })
+      )
+    },
+
+    "/api/admin/comments": {
+      GET: requireAdmin(request, env, async () => json({ success: true, comments: await db(env).listComments(true) })),
+      DELETE: requireAdmin(request, env, () => deleteById(url, id => db(env).deleteComment(id)))
+    },
+
+    "/api/admin/questions": {
+      GET: requireAdmin(request, env, async () => json({ success: true, questions: await db(env).listQuestions(false) })),
+      PATCH: requireAdmin(request, env, () => updateQuestion(request, env)),
+      DELETE: requireAdmin(request, env, () => deleteById(url, id => db(env).deleteQuestion(id)))
+    },
+
+    "/api/admin/stats": {
+      GET: requireAdmin(request, env, () => getStats(env, url))
     },
 
     "/api/admin/media": {
@@ -260,27 +327,33 @@ function publishedMessages(messages) {
 
 // ==========================================
 // LISTENING ROOM
+//
+// Every person gets their own access code (admin → listening room).
+// Entering a code opens a session (cookie), which is used for the
+// private mp3s, comments and to see who listened to what.
 // ==========================================
+
+function db(env) {
+  return env.DATABASE.get(env.DATABASE.idFromName("main"));
+}
+
 
 async function openListeningRoom(request, env) {
   if (!(await withinRateLimit(request, env, "code"))) {
     return json({ success: false, error: "Too many attempts. Try again later." }, 429);
   }
 
+  await importLegacyCode(env);
+
   const body = await readJson(request);
-  const code = typeof body?.code === "string" ? body.code.trim() : "";
-
-  const storedCode = await env.CONNOR_DATA.get("listening_code");
-
-  if (!storedCode || !code || !(await safeEqual(code, storedCode))) {
-    return json({ success: false, error: "Invalid access code." }, 401);
-  }
-
-  // Remember the access in a cookie, so the audio files can be
-  // loaded and the room stays open after a reload.
+  const code = normalizeCode(body?.code);
   const token = crypto.randomUUID();
 
-  await env.CONNOR_DATA.put(`listen:${token}`, storedCode, { expirationTtl: LISTEN_TTL });
+  const codeId = code && (await db(env).unlock(code, token, LISTEN_TTL));
+
+  if (!codeId) {
+    return json({ success: false, error: "Invalid access code." }, 401);
+  }
 
   return json(
     { success: true, tracklist: await readTracklist(env) },
@@ -291,7 +364,7 @@ async function openListeningRoom(request, env) {
 
 
 async function getListeningRoom(request, env) {
-  if (!(await hasListeningAccess(request, env))) {
+  if (!(await listeningCodeId(request, env))) {
     return json({ success: false, error: "Access code required." }, 401);
   }
 
@@ -306,39 +379,254 @@ async function readTracklist(env) {
 }
 
 
-// Access is only valid while the code it was opened with is still the current code.
-async function hasListeningAccess(request, env) {
+// The id of the access code behind this visitor's session (or null).
+// Paused or deleted codes lose access immediately.
+async function listeningCodeId(request, env) {
   const token = getCookie(request, "connor_listen");
 
-  if (!token) {
-    return false;
+  return token ? db(env).sessionCode(token) : null;
+}
+
+
+async function hasListeningAccess(request, env) {
+  return Boolean(await listeningCodeId(request, env));
+}
+
+
+// Tracks are identified by their mp3 link, so comments and plays
+// stay with the right song when the tracklist is reordered.
+async function findTrack(env, key) {
+  const tracks = await readTracklist(env);
+
+  return typeof key === "string" && key ? tracks.find(track => track.audio === key) : null;
+}
+
+
+async function logRoomEvent(request, env) {
+  const codeId = await listeningCodeId(request, env);
+
+  if (!codeId) {
+    return json({ success: false, error: "Access code required." }, 401);
   }
 
-  const [codeUsed, currentCode] = await Promise.all([
-    env.CONNOR_DATA.get(`listen:${token}`),
-    env.CONNOR_DATA.get("listening_code")
-  ]);
-
-  return Boolean(codeUsed) && codeUsed === currentCode;
-}
-
-
-async function getListeningCode(env) {
-  const code = await env.CONNOR_DATA.get("listening_code");
-
-  return json({ success: true, code: code || "" });
-}
-
-
-async function saveListeningCode(request, env) {
   const body = await readJson(request);
-  const code = typeof body?.code === "string" ? body.code.trim() : "";
+  const track = await findTrack(env, body?.track);
 
-  if (code.length < 4 || code.length > 32) {
-    return json({ success: false, error: "Code must contain between 4 and 32 characters." }, 400);
+  if (!track || !["play", "complete"].includes(body?.type)) {
+    return json({ success: false, error: "Invalid event." }, 400);
   }
 
-  await env.CONNOR_DATA.put("listening_code", code);
+  await db(env).logEvent(body.type, codeId, track.audio, track.title || "untitled");
+
+  return json({ success: true });
+}
+
+
+async function listRoomComments(request, env) {
+  if (!(await hasListeningAccess(request, env))) {
+    return json({ success: false, error: "Access code required." }, 401);
+  }
+
+  return json({ success: true, comments: await db(env).listComments(false) });
+}
+
+
+async function addRoomComment(request, env) {
+  const codeId = await listeningCodeId(request, env);
+
+  if (!codeId) {
+    return json({ success: false, error: "Access code required." }, 401);
+  }
+
+  if (!(await withinRateLimit(request, env, "comment"))) {
+    return json({ success: false, error: "Too many comments. Try again later." }, 429);
+  }
+
+  const body = await readJson(request);
+  const track = await findTrack(env, body?.track);
+  const message = text(body?.text, 500).trim();
+  const at = Number(body?.at);
+
+  if (!track || !message) {
+    return json({ success: false, error: "Write something first." }, 400);
+  }
+
+  const comment = await db(env).addComment({
+    track: track.audio,
+    at: Number.isFinite(at) && at >= 0 ? Math.round(at * 10) / 10 : null,
+    name: text(body?.name, 40).trim(),
+    text: message,
+    codeId
+  });
+
+  return json({ success: true, comment });
+}
+
+
+// ---------- access codes (admin) ----------
+
+// Lowercase, so codes are not case-sensitive.
+function normalizeCode(value) {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+
+function randomCode() {
+  const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(8));
+
+  return Array.from(bytes, byte => alphabet[byte % alphabet.length]).join("");
+}
+
+
+// Before codes per person existed there was one shared code in KV.
+// It is taken over once as a code called "general".
+async function importLegacyCode(env) {
+  const legacy = await env.CONNOR_DATA.get("listening_code");
+
+  if (!legacy || (await env.CONNOR_DATA.get("listening_code_imported"))) {
+    return;
+  }
+
+  await db(env).createCode("general", normalizeCode(legacy));
+  await env.CONNOR_DATA.put("listening_code_imported", "1");
+}
+
+
+async function listCodes(env) {
+  await importLegacyCode(env);
+
+  return json({ success: true, codes: await db(env).listCodes() });
+}
+
+
+async function createCode(request, env) {
+  const body = await readJson(request);
+  const label = text(body?.label, 60).trim();
+  const code = normalizeCode(body?.code) || randomCode();
+
+  if (!label) {
+    return json({ success: false, error: "Give the code a name (who is it for?)." }, 400);
+  }
+
+  if (code.length < 4 || code.length > 32 || !/^[a-z0-9-]+$/.test(code)) {
+    return json({ success: false, error: "Codes use 4–32 letters, numbers or dashes." }, 400);
+  }
+
+  const result = await db(env).createCode(label, code);
+
+  if (result.error) {
+    return json({ success: false, error: result.error }, 409);
+  }
+
+  return listCodes(env);
+}
+
+
+async function updateCode(request, env) {
+  const body = await readJson(request);
+
+  if (typeof body?.id !== "string") {
+    return json({ success: false, error: "Invalid code." }, 400);
+  }
+
+  await db(env).updateCode(body.id, {
+    label: typeof body.label === "string" ? text(body.label, 60).trim() : undefined,
+    active: typeof body.active === "boolean" ? body.active : undefined
+  });
+
+  return listCodes(env);
+}
+
+
+async function deleteById(url, remove) {
+  const id = url.searchParams.get("id");
+
+  if (!id) {
+    return json({ success: false, error: "Missing id." }, 400);
+  }
+
+  await remove(id);
+
+  return json({ success: true });
+}
+
+
+// ==========================================
+// STATS
+//
+// No cookies, no IP addresses stored. Unique visitors are
+// counted with a daily hash of IP + browser + secret salt.
+// ==========================================
+
+async function countHit(request, env) {
+  const body = await readJson(request);
+  const userAgent = request.headers.get("User-Agent") || "";
+
+  let path = typeof body?.path === "string" ? body.path : "";
+  path = path.replace(/\.html$/, "").replace(/(.)\/$/, "$1").replace(/^\/index$/, "/");
+
+  if (!PAGES.includes(path) || /bot|crawl|spider|slurp|preview|headless/i.test(userAgent)) {
+    return new Response(null, { status: 204 });
+  }
+
+  let salt = await env.CONNOR_DATA.get("stats_salt");
+
+  if (!salt) {
+    salt = crypto.randomUUID();
+    await env.CONNOR_DATA.put("stats_salt", salt);
+  }
+
+  const ip = request.headers.get("CF-Connecting-IP") || "";
+  const day = new Date().toISOString().slice(0, 10);
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${salt}|${day}|${ip}|${userAgent}`));
+
+  await db(env).hit(path, bytesToBase64(new Uint8Array(digest)).slice(0, 22));
+
+  return new Response(null, { status: 204 });
+}
+
+
+async function getStats(env, url) {
+  const days = Math.min(Math.max(Number(url.searchParams.get("days")) || 30, 1), 365);
+
+  return json({ success: true, days, ...(await db(env).stats(days)) });
+}
+
+
+// ==========================================
+// QUESTIONS
+// ==========================================
+
+async function askQuestion(request, env) {
+  if (!(await withinRateLimit(request, env, "question"))) {
+    return json({ success: false, error: "Too many questions. Try again later." }, 429);
+  }
+
+  const body = await readJson(request);
+  const question = text(body?.text, 500).trim();
+
+  if (question.length < 3) {
+    return json({ success: false, error: "Write a question first." }, 400);
+  }
+
+  await db(env).addQuestion(question);
+
+  return json({ success: true });
+}
+
+
+async function updateQuestion(request, env) {
+  const body = await readJson(request);
+
+  if (typeof body?.id !== "string") {
+    return json({ success: false, error: "Invalid question." }, 400);
+  }
+
+  await db(env).updateQuestion(body.id, {
+    answer: typeof body.answer === "string" ? text(body.answer, LIMITS.longText) : undefined,
+    published: typeof body.published === "boolean" ? body.published : undefined
+  });
 
   return json({ success: true });
 }
@@ -821,26 +1109,15 @@ function base64ToBytes(value) {
 // ==========================================
 // RATE LIMITING
 //
-// Simple per-IP counter in KV. Not exact (KV is
-// eventually consistent), but enough to stop
-// someone from guessing passwords or codes.
+// Per-IP counters in the database (exact, and it keeps
+// the KV write limit free for content).
 // ==========================================
 
 async function withinRateLimit(request, env, scope) {
   const { max, window } = RATE_LIMITS[scope];
-
   const ip = request.headers.get("CF-Connecting-IP") || "unknown";
-  const key = `ratelimit:${scope}:${ip}`;
 
-  const count = Number(await env.CONNOR_DATA.get(key)) || 0;
-
-  if (count >= max) {
-    return false;
-  }
-
-  await env.CONNOR_DATA.put(key, String(count + 1), { expirationTtl: window });
-
-  return true;
+  return db(env).rateLimit(`${scope}:${ip}`, max, window);
 }
 
 

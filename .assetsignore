@@ -5,4 +5,8 @@
 .assetsignore
 wrangler.jsonc
 _worker.js
+_database.js
 README.md
+node_modules
+.wrangler
+.gitignore
