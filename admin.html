@@ -769,6 +769,15 @@
 
     /* STATS */
 
+    .notice {
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--warning);
+      border: 1px solid var(--line-strong);
+      padding: 12px 14px;
+      margin-bottom: 22px;
+    }
+
     .range-buttons {
       display: flex;
       gap: 6px;
@@ -1435,7 +1444,7 @@ const TABS = [
   {
     id: "stats",
     title: "stats",
-    intro: "Page views and plays. No cookies, no tracking across sites — visitors are counted anonymously per day.",
+    intro: "Page views and plays. No cookies, no tracking across sites — visitors are counted anonymously per day. Page views are saved every few minutes, so the newest ones can take a moment to show up.",
     groups: [
       {
         title: "overview",
@@ -2916,9 +2925,13 @@ function renderStats() {
 }
 
 
-function renderStatsOutput({ days, daily, pages, tracks, unlocks }) {
+function renderStatsOutput({ days, daily, pages, tracks, unlocks, limited }) {
 
   const wrapper = el("div");
+
+  if (limited) {
+    wrapper.append(el("div", { class: "notice" }, "On some days the free plan's limit for stats was reached — views after that point were not counted."));
+  }
 
   // Fill in days without views so the chart has no gaps.
   const byDay = Object.fromEntries(daily.map(row => [row.day, row]));
@@ -2937,8 +2950,8 @@ function renderStatsOutput({ days, daily, pages, tracks, unlocks }) {
   [
     ["page views", sum("views")],
     ["visitors", sum("visitors")],
-    ["room unlocks", unlocks],
-    ["plays", plays]
+    ["room unlocks · all time", unlocks],
+    ["plays · all time", plays]
   ].forEach(([label, value]) => {
     const tile = el("div", { class: "tile" });
     tile.append(el("div", { class: "tile-value" }, value.toLocaleString()), el("div", { class: "tile-label" }, label));
@@ -2955,7 +2968,7 @@ function renderStatsOutput({ days, daily, pages, tracks, unlocks }) {
   );
 
   wrapper.append(
-    el("div", { class: "detail-label" }, "listening room"),
+    el("div", { class: "detail-label" }, "listening room · all time"),
     tracks.length
       ? table(
           ["track", "plays", "completed", "listeners"],
