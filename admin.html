@@ -7,19 +7,31 @@
   <title>admin — connor.fm</title>
 
   <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#080808">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 
   <style>
+    /* Same colors and type as the public site (style.css). */
+
     :root {
-      --background: #e8e3d4;
-      --surface: #efebdf;
-      --text: #171714;
-      --muted: rgba(23, 23, 20, .55);
-      --line: rgba(23, 23, 20, .3);
-      --line-light: rgba(23, 23, 20, .15);
-      --error: #8b2929;
-      --success: #35633c;
-      --warning: #8a6824;
+      color-scheme: dark;
+
+      --background: #080808;
+      --surface: #10100f;
+      --surface-light: #151512;
+
+      --text: #e8e8e3;
+      --muted: #8c8c87;
+      --faint: #55554f;
+
+      --khaki: #9a9865;
+
+      --line: #242420;
+      --line-strong: #33332d;
+
+      --error: #c27070;
+      --success: #9a9865;
+      --warning: #c9a35a;
     }
 
     * {
@@ -50,29 +62,55 @@
       font: inherit;
     }
 
+    ::selection {
+      background: var(--khaki);
+      color: var(--background);
+    }
+
+
+    /* BUTTONS — like the unlock button on the music page */
+
     button {
       cursor: pointer;
-      border: 1px solid var(--text);
-      background: var(--text);
+      border: 1px solid var(--khaki);
+      background: var(--khaki);
       color: var(--background);
-      padding: 11px 16px;
+      padding: 12px 18px;
+      font-family: monospace;
       font-size: 12px;
+      transition: opacity .2s ease, color .2s ease, border-color .2s ease;
+    }
+
+    button:hover {
+      opacity: .8;
     }
 
     button:disabled {
-      opacity: .5;
+      opacity: .4;
       cursor: wait;
     }
 
     button.secondary {
       background: transparent;
+      border-color: var(--line-strong);
       color: var(--text);
     }
 
+    button.secondary:hover {
+      opacity: 1;
+      border-color: var(--khaki);
+      color: var(--khaki);
+    }
+
     button.danger {
-      border-color: var(--error);
       background: transparent;
+      border-color: var(--line-strong);
       color: var(--error);
+    }
+
+    button.danger:hover {
+      opacity: 1;
+      border-color: var(--error);
     }
 
     button.small {
@@ -81,25 +119,28 @@
     }
 
     .container {
-      width: min(1100px, calc(100% - 32px));
-      margin: auto;
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 32px;
     }
 
     .small {
-      font-size: 11px;
+      font-size: 12px;
       color: var(--muted);
+      line-height: 1.5;
     }
 
     .mono {
       font-family: monospace;
+      letter-spacing: .08em;
     }
 
 
-    /* HEADER */
+    /* HEADER — like the site navigation */
 
     header {
-      border-bottom: 1px solid var(--line);
-      padding: 22px 0;
+      padding: 24px 0 20px;
     }
 
     .header-inner {
@@ -110,49 +151,81 @@
     }
 
     .brand {
-      font-size: 13px;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .site-name {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      transition: color .2s ease;
+    }
+
+    .site-name:hover {
+      color: var(--khaki);
+    }
+
+    .brand-sub {
+      color: var(--khaki);
+      font-size: 14px;
     }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 18px;
-      font-size: 12px;
+      gap: 24px;
+      font-size: 14px;
     }
 
     .header-actions a {
       color: var(--muted);
       text-decoration: none;
+      transition: color .2s ease;
     }
 
     .header-actions a:hover {
-      color: var(--text);
+      color: var(--khaki);
     }
 
     #logoutButton {
       display: none;
     }
 
+    .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 0 32px;
+    }
+
 
     /* LOGIN */
 
     .login {
-      max-width: 460px;
-      padding: 70px 0 100px;
+      max-width: 450px;
+      padding: 85px 0 120px;
     }
 
     h1 {
-      font-size: clamp(42px, 8vw, 76px);
-      font-weight: 400;
-      letter-spacing: -.06em;
-      line-height: .95;
-      margin: 10px 0 30px;
+      font-size: clamp(56px, 8vw, 110px);
+      font-weight: 600;
+      letter-spacing: -.07em;
+      line-height: .85;
+      margin: 40px 0 45px;
+    }
+
+    .login form {
+      border-top: 1px solid var(--line);
+      padding-top: 28px;
     }
 
     .login button {
       width: 100%;
       margin-top: 12px;
-      padding: 13px;
+      padding: 15px;
     }
 
     .login .status {
@@ -165,14 +238,14 @@
 
     #dashboard {
       display: none;
-      grid-template-columns: 190px 1fr;
-      gap: 60px;
-      padding: 50px 0 0;
+      grid-template-columns: 200px 1fr;
+      gap: 70px;
+      padding: 60px 0 0;
     }
 
     .tabs {
       position: sticky;
-      top: 20px;
+      top: 24px;
       align-self: start;
       display: flex;
       flex-direction: column;
@@ -186,22 +259,28 @@
       background: transparent;
       color: var(--muted);
       border: 0;
-      border-bottom: 1px solid var(--line-light);
-      padding: 13px 0;
-      font-size: 13px;
+      border-bottom: 1px solid var(--line);
+      padding: 14px 0;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 14px;
       text-align: left;
+      transition: color .2s ease;
     }
 
-    .tabs button:hover,
+    .tabs button:hover {
+      opacity: 1;
+      color: var(--khaki);
+    }
+
     .tabs button.active {
-      color: var(--text);
+      color: var(--khaki);
     }
 
     .tabs button .num {
       font-family: monospace;
-      font-size: 10px;
-      margin-right: 10px;
-      opacity: .7;
+      font-size: 11px;
+      margin-right: 12px;
+      color: var(--faint);
     }
 
     .tabs button .dot {
@@ -228,27 +307,28 @@
     }
 
     .panel-head h1 {
-      margin-bottom: 0;
+      margin: 30px 0 0;
     }
 
     .panel-intro {
-      font-size: 13px;
+      font-size: 15px;
       color: var(--muted);
-      margin: 18px 0 40px;
+      margin: 28px 0 55px;
       max-width: 560px;
-      line-height: 1.5;
+      line-height: 1.65;
     }
 
     .view-link {
-      font-size: 12px;
+      font-size: 14px;
       color: var(--muted);
       text-decoration: none;
       white-space: nowrap;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
+      transition: color .2s ease;
     }
 
     .view-link:hover {
-      color: var(--text);
+      color: var(--khaki);
     }
 
 
@@ -256,17 +336,18 @@
 
     .group {
       border-top: 1px solid var(--line);
-      padding: 28px 0 10px;
+      padding: 32px 0 14px;
     }
 
     .group-head {
-      margin-bottom: 22px;
+      margin-bottom: 26px;
     }
 
     h2 {
-      font-size: 22px;
-      font-weight: 400;
-      margin: 0 0 6px;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -.05em;
+      margin: 0 0 8px;
     }
 
     .fields {
@@ -277,7 +358,7 @@
 
     .field {
       grid-column: 1 / -1;
-      margin-bottom: 18px;
+      margin-bottom: 22px;
     }
 
     .field.half {
@@ -286,138 +367,63 @@
 
     label {
       display: block;
+      font-family: monospace;
       font-size: 11px;
       color: var(--muted);
-      margin: 0 0 7px;
+      margin: 0 0 10px;
     }
 
     .hint {
+      font-family: monospace;
       font-size: 11px;
-      color: var(--muted);
-      margin-top: 6px;
-      line-height: 1.4;
+      color: var(--faint);
+      margin-top: 8px;
+      line-height: 1.5;
     }
 
     input,
     textarea,
     select {
       width: 100%;
-      background: transparent;
-      border: 1px solid rgba(23, 23, 20, .35);
-      padding: 12px;
-      color: inherit;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      padding: 14px 15px;
+      color: var(--text);
+      font-size: 14px;
       outline: none;
       border-radius: 0;
+      transition: border-color .2s ease;
     }
 
     textarea {
-      min-height: 110px;
+      min-height: 120px;
       resize: vertical;
-      line-height: 1.5;
+      line-height: 1.6;
     }
 
     input:focus,
     textarea:focus,
     select:focus {
-      border-color: var(--text);
+      border-color: var(--khaki);
     }
 
     input::placeholder,
     textarea::placeholder {
-      color: rgba(23, 23, 20, .35);
+      color: var(--faint);
+    }
+
+    input[type="password"],
+    #listeningCode {
+      font-family: monospace;
     }
 
     .preview {
       display: none;
-      width: 120px;
-      height: 120px;
+      width: 140px;
+      height: 140px;
       object-fit: cover;
       border: 1px solid var(--line);
-      margin-top: 10px;
-    }
-
-
-    /* LISTS */
-
-    .list-items {
-      margin-bottom: 14px;
-    }
-
-    .list-item {
-      border: 1px solid var(--line);
-      margin-bottom: 10px;
-      background: var(--surface);
-    }
-
-    .list-item-head {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 14px;
-      cursor: pointer;
-    }
-
-    .list-item-index {
-      font-family: monospace;
-      font-size: 10px;
-      color: var(--muted);
-      width: 22px;
-    }
-
-    .list-item-title {
-      flex: 1;
-      min-width: 0;
-      font-size: 15px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .list-item-actions {
-      display: flex;
-      gap: 6px;
-    }
-
-    .list-item-body {
-      display: none;
-      border-top: 1px solid var(--line-light);
-      padding: 18px 14px 4px;
-    }
-
-    .list-item.open .list-item-body {
-      display: block;
-    }
-
-    .badge {
-      font-family: monospace;
-      font-size: 9px;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      border: 1px solid var(--line);
-      padding: 4px 6px;
-      white-space: nowrap;
-    }
-
-    .badge.live {
-      border-color: var(--success);
-      color: var(--success);
-    }
-
-    .badge.scheduled {
-      border-color: var(--warning);
-      color: var(--warning);
-    }
-
-    .badge.draft {
-      color: var(--muted);
-    }
-
-    .empty {
-      font-size: 12px;
-      color: var(--muted);
-      border: 1px dashed var(--line);
-      padding: 18px 14px;
-      margin-bottom: 14px;
+      margin-top: 12px;
     }
 
 
@@ -425,16 +431,20 @@
 
     .file-row {
       display: flex;
-      gap: 8px;
     }
 
     .file-row input {
       flex: 1;
       min-width: 0;
+      border-right: 0;
     }
 
     .file-row button {
       white-space: nowrap;
+    }
+
+    .file-row button + button {
+      border-left: 0;
     }
 
     .file-input {
@@ -443,8 +453,8 @@
 
     .progress {
       height: 2px;
-      background: var(--line-light);
-      margin-top: 8px;
+      background: var(--line);
+      margin-top: 10px;
       display: none;
     }
 
@@ -455,7 +465,7 @@
     .progress div {
       height: 100%;
       width: 0;
-      background: var(--text);
+      background: var(--khaki);
       transition: width .2s ease;
     }
 
@@ -463,45 +473,143 @@
       display: block;
       width: 100%;
       height: 36px;
-      margin-top: 10px;
+      margin-top: 12px;
     }
 
     .file-row.dragging input {
-      border-color: var(--text);
+      border-color: var(--khaki);
       border-style: dashed;
+    }
+
+
+    /* LISTS */
+
+    .list-items {
+      margin-bottom: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .list-item {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .list-item.open {
+      background: var(--surface);
+    }
+
+    .list-item-head {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 12px;
+      cursor: pointer;
+    }
+
+    .list-item-index {
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--muted);
+      width: 24px;
+    }
+
+    .list-item-title {
+      flex: 1;
+      min-width: 0;
+      font-size: 17px;
+      letter-spacing: -.02em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: color .2s ease;
+    }
+
+    .list-item-head:hover .list-item-title,
+    .list-item.open .list-item-title {
+      color: var(--khaki);
+    }
+
+    .list-item-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .list-item-body {
+      display: none;
+      border-top: 1px solid var(--line);
+      padding: 22px 12px 6px;
+    }
+
+    .list-item.open .list-item-body {
+      display: block;
+    }
+
+    .badge {
+      font-family: monospace;
+      font-size: 10px;
+      letter-spacing: .08em;
+      border: 1px solid var(--line-strong);
+      color: var(--muted);
+      padding: 4px 7px;
+      white-space: nowrap;
+    }
+
+    .badge.live {
+      border-color: var(--khaki);
+      color: var(--khaki);
+    }
+
+    .badge.scheduled {
+      border-color: var(--warning);
+      color: var(--warning);
+    }
+
+    .badge.draft {
+      color: var(--faint);
+    }
+
+    .empty {
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 22px 0;
+      border-bottom: 1px solid var(--line);
     }
 
 
     /* MEDIA LIBRARY */
 
     .media-summary {
+      font-family: monospace;
       font-size: 12px;
       color: var(--muted);
-      margin-bottom: 18px;
+      margin-bottom: 22px;
+    }
+
+    #mediaList {
+      border-top: 1px solid var(--line);
     }
 
     .media-item {
       display: grid;
       grid-template-columns: 56px 1fr auto;
-      gap: 14px;
+      gap: 18px;
       align-items: center;
-      border: 1px solid var(--line);
-      background: var(--surface);
-      padding: 10px;
-      margin-bottom: 8px;
+      border-bottom: 1px solid var(--line);
+      padding: 14px 0;
     }
 
     .media-thumb {
       width: 56px;
       height: 56px;
       object-fit: cover;
-      border: 1px solid var(--line-light);
+      background: var(--surface);
+      border: 1px solid var(--line);
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: monospace;
       font-size: 10px;
-      color: var(--muted);
+      color: var(--khaki);
     }
 
     .media-info {
@@ -509,16 +617,17 @@
     }
 
     .media-name {
-      font-size: 14px;
+      font-size: 15px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
     .media-meta {
+      font-family: monospace;
       font-size: 11px;
       color: var(--muted);
-      margin-top: 4px;
+      margin-top: 6px;
     }
 
     .media-meta .unused {
@@ -533,16 +642,17 @@
       bottom: 0;
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 18px;
       background: var(--background);
       border-top: 1px solid var(--line);
-      padding: 16px 0 22px;
-      margin-top: 20px;
+      padding: 18px 0 24px;
+      margin-top: 24px;
       z-index: 2;
     }
 
     .status {
-      font-size: 12px;
+      font-family: monospace;
+      font-size: 11px;
       color: var(--muted);
     }
 
@@ -569,26 +679,55 @@
     /* MOBILE */
 
     @media (max-width: 760px) {
+      .container {
+        padding: 0 20px;
+      }
+
+      header {
+        padding: 20px 0 18px;
+      }
+
+      .divider {
+        margin: 0 20px;
+      }
+
+      .header-actions {
+        gap: 16px;
+        font-size: 13px;
+      }
+
+      h1 {
+        font-size: 18vw;
+      }
+
       #dashboard {
         grid-template-columns: 1fr;
-        gap: 30px;
-        padding-top: 25px;
+        gap: 10px;
+        padding-top: 20px;
       }
 
       .tabs {
-        position: static;
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        background: var(--background);
         flex-direction: row;
         overflow-x: auto;
         border-top: 0;
         border-bottom: 1px solid var(--line);
-        gap: 20px;
+        gap: 22px;
         scrollbar-width: none;
+      }
+
+      .tabs::-webkit-scrollbar {
+        display: none;
       }
 
       .tabs button {
         border-bottom: 0;
         white-space: nowrap;
         gap: 6px;
+        font-size: 13px;
       }
 
       .tabs button .num {
@@ -602,6 +741,15 @@
       .panel-head {
         flex-direction: column;
         align-items: flex-start;
+        gap: 14px;
+      }
+
+      .panel {
+        padding-top: 24px;
+      }
+
+      .panel-intro {
+        margin-bottom: 40px;
       }
 
       .list-item-head {
@@ -610,6 +758,16 @@
 
       .file-row {
         flex-wrap: wrap;
+      }
+
+      .file-row input {
+        flex-basis: 100%;
+        border-right: 1px solid var(--line);
+        border-bottom: 0;
+      }
+
+      .file-row button {
+        flex: 1;
       }
 
       .media-item {
@@ -627,7 +785,10 @@
 
 <header>
   <div class="container header-inner">
-    <div class="brand">connor.fm / admin</div>
+    <div class="brand">
+      <a href="/" class="site-name">connor.fm</a>
+      <span class="brand-sub">admin</span>
+    </div>
 
     <div class="header-actions">
       <a href="/" target="_blank" rel="noopener">view site ↗</a>
@@ -635,6 +796,8 @@
     </div>
   </div>
 </header>
+
+<div class="divider"></div>
 
 <main class="container">
 
@@ -1577,7 +1740,7 @@ function renderMediaLibrary() {
 
   const wrapper = el("div");
   const summary = el("div", { class: "media-summary" }, "loading files…");
-  const list = el("div");
+  const list = el("div", { id: "mediaList" });
 
   wrapper.append(summary, list);
 
