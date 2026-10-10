@@ -6,250 +6,189 @@
 
   <title>archive — connor.fm</title>
 
+  <meta name="description" content="connor.fm — a personal space for music, ideas and unfinished things by connor.">
+  <meta name="theme-color" content="#080808">
+
+  <meta property="og:title" content="archive — connor.fm">
+  <meta property="og:description" content="connor.fm — a personal space for music, ideas and unfinished things by connor.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="connor.fm">
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/style.css">
 </head>
 
 <body>
 
   <nav>
-
     <div class="nav-inner">
-
-      <a href="/" class="site-name">
-        connor.fm
-      </a>
+      <a href="/" class="site-name">connor.fm</a>
 
       <div class="nav-links">
-
-        <a href="/music">
-          music
-        </a>
-
-        <a href="/archive" class="active">
-          archive
-        </a>
-
-        <a href="/about">
-          about
-        </a>
-
-        <a href="#">
-          ...
-        </a>
-
+        <a href="/music">music</a>
+        <a href="/archive" class="active">archive</a>
+        <a href="/about">about</a>
+        <a href="/messages">...</a>
       </div>
-
     </div>
-
   </nav>
 
-
   <div class="nav-divider"></div>
-
 
   <main>
 
     <section class="page">
+      <div class="section-label" data-content="archivePage.label">03 / archive</div>
 
-      <div class="section-label">
-        03 / archive
+      <div class="archive-list" id="archiveList">
+        <div class="archive-empty">loading archive...</div>
       </div>
 
-
-      <div
-        id="archive-list"
-        class="archive-list"
-      >
-
-        <div class="archive-empty">
-          loading archive...
-        </div>
-
-      </div>
-
-
-      <div class="archive-note">
-
+      <div class="archive-note" data-content="archivePage.note">
         a small archive of projects, ideas, releases and things
         that would otherwise disappear into the internet.
-
       </div>
-
 
       <div class="music-bottom">
-
-        <span>
-          a record of things that happened
-        </span>
-
-        <span>
-          connor.fm/archive
-        </span>
-
+        <span data-content="archivePage.footerLeft">a record of things that happened</span>
+        <span data-content="archivePage.footerRight">connor.fm/archive</span>
       </div>
-
     </section>
-
   </main>
 
-
   <footer>
-
     <div class="footer-divider"></div>
 
     <div class="footer-content">
-
-      <div class="footer-name">
-        connor.fm
-      </div>
-
-      <div class="footer-year">
-        © 2026
-      </div>
-
+      <div class="footer-name" data-content="site.footerName">connor.fm</div>
+      <div class="footer-year" data-content="site.footerYear">© 2026</div>
     </div>
-
   </footer>
 
+  <script src="/site.js"></script>
 
   <script>
 
-    async function loadArchive() {
-
-      const archiveList =
-        document.getElementById("archive-list");
+    const archiveList = document.getElementById("archiveList");
 
 
-      try {
-
-        const response = await fetch(
-          "/api/content",
-          {
-            method: "GET",
-            cache: "no-store"
-          }
-        );
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            "Failed to load archive."
-          );
-
-        }
-
-
-        const data =
-          await response.json();
-
-
-        let archive =
-          data.archive;
-
-
-        if (!Array.isArray(archive)) {
-
-          archive = [];
-
-        }
-
-
-        if (archive.length === 0) {
-
-          archiveList.innerHTML = `
-
-            <div class="archive-empty">
-              nothing here yet.
-            </div>
-
-          `;
-
-          return;
-
-        }
-
-
-        archiveList.innerHTML = "";
-
-
-        archive.forEach(entry => {
-
-          const item =
-            document.createElement("div");
-
-          /*
-            Wichtig:
-            style.css erwartet .archive-item,
-            nicht .archive-entry.
-          */
-
-          item.className =
-            "archive-item";
-
-
-          const year =
-            document.createElement("span");
-
-          year.className =
-            "archive-year";
-
-          year.textContent =
-            entry.year || "";
-
-
-          const title =
-            document.createElement("span");
-
-          title.className =
-            "archive-title";
-
-          title.textContent =
-            entry.title || "";
-
-
-          const type =
-            document.createElement("span");
-
-          type.className =
-            "archive-type";
-
-          type.textContent =
-            entry.type || "";
-
-
-          item.appendChild(year);
-
-          item.appendChild(title);
-
-          item.appendChild(type);
-
-
-          archiveList.appendChild(item);
-
-        });
-
-
-      } catch (error) {
-
-        console.error(error);
-
-
-        archiveList.innerHTML = `
-
-          <div class="archive-empty">
-            archive temporarily unavailable.
-          </div>
-
-        `;
-
+    contentReady.then(data => {
+      if (!data) {
+        showEmpty(archiveList, "archive temporarily unavailable.");
+        return;
       }
 
+      if (!Array.isArray(data.archive) || data.archive.length === 0) {
+        showEmpty(archiveList, "nothing here yet.");
+        return;
+      }
+
+      archiveList.replaceChildren(...data.archive.map(renderEntry));
+    });
+
+
+    function renderEntry(entry) {
+      const item = createElement("div", "archive-item");
+      const main = createElement("div", "archive-main");
+
+      if (entry.image) {
+        const image = createElement("img", "archive-image");
+        image.src = entry.image;
+        image.alt = "";
+        image.loading = "lazy";
+        main.append(image);
+      }
+
+      const title = createElement(entry.link ? "a" : "span", "archive-title", entry.title || "");
+
+      if (entry.link) {
+        title.href = entry.link;
+
+        if (!entry.link.startsWith("/")) {
+          title.target = "_blank";
+          title.rel = "noopener noreferrer";
+          title.append(createElement("span", "archive-arrow", " ↗"));
+        }
+      }
+
+      main.append(title);
+
+      const side = createElement("div", "archive-side");
+      side.append(createElement("span", "archive-type", entry.type || ""));
+
+      if (entry.audio) {
+        side.append(snippetButton(entry.audio));
+      }
+
+      item.append(createElement("span", "archive-year", entry.year || ""), main, side);
+
+      return item;
     }
 
 
-    loadArchive();
+    // ---------- snippets (one at a time) ----------
 
+    const snippet = new Audio();
+    let activeButton = null;
+
+
+    function snippetButton(src) {
+      const button = createElement("button", "snippet-button");
+      button.type = "button";
+      button.dataset.src = src;
+      setSnippetState(button, false);
+
+      button.addEventListener("click", () => {
+        if (activeButton === button) {
+          if (snippet.paused) {
+            snippet.play().catch(() => {});
+          } else {
+            snippet.pause();
+          }
+
+          return;
+        }
+
+        if (activeButton) {
+          setSnippetState(activeButton, false);
+        }
+
+        activeButton = button;
+        snippet.src = src;
+        snippet.play().catch(() => {});
+      });
+
+      return button;
+    }
+
+
+    function setSnippetState(button, playing, time) {
+      button.replaceChildren(
+        icon(playing ? "pause" : "play"),
+        createElement("span", "", time || "snippet")
+      );
+
+      button.classList.toggle("playing", playing);
+      button.setAttribute("aria-label", playing ? "pause snippet" : "play snippet");
+    }
+
+
+    const updateSnippet = () => {
+      if (activeButton) {
+        setSnippetState(
+          activeButton,
+          !snippet.paused,
+          `${formatTime(snippet.currentTime)} / ${formatTime(snippet.duration)}`
+        );
+      }
+    };
+
+    ["play", "pause", "timeupdate"].forEach(name => snippet.addEventListener(name, updateSnippet));
+
+    snippet.addEventListener("ended", () => {
+      setSnippetState(activeButton, false);
+      activeButton = null;
+    });
   </script>
 
 </body>

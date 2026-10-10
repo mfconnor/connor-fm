@@ -1,538 +1,870 @@
+// ==========================================
+// connor.fm — Cloudflare Worker
+//
+// Handles everything under /api/*.
+// Everything else is served from the static assets.
+// ==========================================
+
+// Everything that can be edited in the admin panel.
+// Each key is stored in KV as "content:<key>".
+//
+// Field types:
+//   text  — single line       long  — multi-line text
+//   url   — http(s) or /path  id / status / date — used by messages
+//   listOf(...)               — list of objects
+
+const SCHEMA = {
+  site: {
+    footerName: "text",
+    footerYear: "text"
+  },
+
+  home: {
+    label: "text",
+    coming: "text",
+    title: "text",
+    description: "long",
+    coverImage: "url",
+    coverText: "text"
+  },
+
+  music: {
+    label: "text",
+    lockedLabel: "text",
+    title: "text",
+    type: "text",
+    year: "text",
+    tracks: "text",
+    status: "text",
+    description: "long",
+    coverImage: "url",
+    coverText: "text",
+    accessLabel: "text",
+    accessDescription: "long",
+    roomLabel: "text",
+    roomTitle: "text",
+    footerLeft: "text",
+    footerRight: "text",
+    tracklist: listOf({ title: "text", duration: "text", audio: "url" })
+  },
+
+  archivePage: {
+    label: "text",
+    note: "long",
+    footerLeft: "text",
+    footerRight: "text"
+  },
+
+  archive: listOf({ year: "text", title: "text", type: "text", link: "url", image: "url", audio: "url" }),
+
+  about: {
+    label: "text",
+    title: "text",
+    intro: "long",
+    description: "long",
+    facts: listOf({ label: "text", value: "text" })
+  },
+
+  messagesPage: {
+    label: "text",
+    title: "text",
+    intro: "long"
+  },
+
+  messages: listOf({ id: "id", title: "text", text: "long", status: "status", publishAt: "date" })
+};
+
+const CONTENT_KEYS = Object.keys(SCHEMA);
+
+const SESSION_TTL = 60 * 60 * 24; // 24 hours
+
+const PBKDF2_ITERATIONS = 100000; // maximum supported by Workers
+
+const RATE_LIMITS = {
+  login: { max: 10, window: 15 * 60 },
+  code: { max: 20, window: 15 * 60 }
+};
+
+const LISTEN_TTL = 60 * 60 * 6; // listening-room access lasts 6 hours
+
+// Uploads are stored in KV (max. 25 MB per value).
+const MEDIA_MAX_SIZE = 25 * 1024 * 1024;
+
+const MEDIA_TYPES = {
+  "audio/mpeg": "mp3",
+  "audio/mp3": "mp3",
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif"
+};
+
+const LIMITS = {
+  shortText: 200,
+  longText: 5000,
+  listItems: 200
+};
+
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // ==========================================
-    // API TEST
-    // ==========================================
-
-    if (url.pathname === "/api/test") {
-      return json({
-        success: true,
-        message: "Connor.fm API works.",
-        kv: !!env.CONNOR_DATA
-      });
+    if (url.pathname.startsWith("/media/")) {
+      return serveMedia(request, env, url);
     }
 
-    // ==========================================
-    // ADMIN LOGIN
-    // ==========================================
-
-    if (
-      url.pathname === "/api/admin/login" &&
-      request.method === "POST"
-    ) {
-      try {
-        const { password } = await request.json();
-
-        const storedPassword =
-          await env.CONNOR_DATA.get("admin_password");
-
-        if (!storedPassword || password !== storedPassword) {
-          return json(
-            {
-              success: false,
-              error: "Wrong password."
-            },
-            401
-          );
-        }
-
-        const token = crypto.randomUUID();
-
-        await env.CONNOR_DATA.put(
-          `session:${token}`,
-          "1",
-          {
-            expirationTtl: 86400
-          }
-        );
-
-        return new Response(
-          JSON.stringify({
-            success: true
-          }),
-          {
-            status: 200,
-            headers: {
-              "Content-Type": "application/json",
-              "Cache-Control": "no-store",
-              "Set-Cookie":
-                `connor_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=86400`
-            }
-          }
-        );
-      } catch {
-        return json(
-          {
-            success: false,
-            error: "Invalid request."
-          },
-          400
-        );
-      }
+    if (!url.pathname.startsWith("/api/")) {
+      return env.ASSETS.fetch(request);
     }
 
-    // ==========================================
-    // ADMIN LOGOUT
-    // ==========================================
+    try {
+      return await handleApi(request, env, url);
+    } catch (error) {
+      console.error(`${request.method} ${url.pathname} failed:`, error);
 
-    if (
-      url.pathname === "/api/admin/logout" &&
-      request.method === "POST"
-    ) {
-      const token = getSessionToken(request);
-
-      if (token) {
-        await env.CONNOR_DATA.delete(`session:${token}`);
-      }
-
-      return new Response(
-        JSON.stringify({
-          success: true
-        }),
-        {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-store",
-            "Set-Cookie":
-              "connor_session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0"
-          }
-        }
-      );
+      return json({ success: false, error: "Something went wrong." }, 500);
     }
-
-    // ==========================================
-    // ADMIN AUTH CHECK
-    // ==========================================
-
-    if (url.pathname === "/api/admin/check") {
-      const authenticated =
-        await isAuthenticated(request, env);
-
-      return json({
-        authenticated
-      });
-    }
-
-    // ==========================================
-    // CHANGE ADMIN PASSWORD
-    // ==========================================
-
-    if (
-      url.pathname === "/api/admin/password" &&
-      request.method === "POST"
-    ) {
-      if (!(await isAuthenticated(request, env))) {
-        return json(
-          {
-            success: false,
-            error: "Unauthorized."
-          },
-          401
-        );
-      }
-
-      try {
-        const {
-          currentPassword,
-          newPassword
-        } = await request.json();
-
-        const storedPassword =
-          await env.CONNOR_DATA.get("admin_password");
-
-        if (currentPassword !== storedPassword) {
-          return json(
-            {
-              success: false,
-              error: "Current password is incorrect."
-            },
-            401
-          );
-        }
-
-        if (
-          !newPassword ||
-          typeof newPassword !== "string" ||
-          newPassword.length < 12
-        ) {
-          return json(
-            {
-              success: false,
-              error:
-                "New password must contain at least 12 characters."
-            },
-            400
-          );
-        }
-
-        await env.CONNOR_DATA.put(
-          "admin_password",
-          newPassword
-        );
-
-        const token = getSessionToken(request);
-
-        if (token) {
-          await env.CONNOR_DATA.delete(
-            `session:${token}`
-          );
-        }
-
-        return new Response(
-          JSON.stringify({
-            success: true
-          }),
-          {
-            status: 200,
-            headers: {
-              "Content-Type": "application/json",
-              "Cache-Control": "no-store",
-              "Set-Cookie":
-                "connor_session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0"
-            }
-          }
-        );
-      } catch {
-        return json(
-          {
-            success: false,
-            error: "Invalid request."
-          },
-          400
-        );
-      }
-    }
-
-    // ==========================================
-    // LISTENING ROOM CODE — GET
-    // ==========================================
-
-    if (
-      url.pathname === "/api/listening-code" &&
-      request.method === "GET"
-    ) {
-      if (!(await isAuthenticated(request, env))) {
-        return json(
-          {
-            success: false,
-            error: "Unauthorized."
-          },
-          401
-        );
-      }
-
-      const code =
-        await env.CONNOR_DATA.get("listening_code");
-
-      return json({
-        success: true,
-        code: code || ""
-      });
-    }
-
-    // ==========================================
-    // LISTENING ROOM CODE — SAVE
-    // ==========================================
-
-    if (
-      url.pathname === "/api/listening-code" &&
-      request.method === "POST"
-    ) {
-      if (!(await isAuthenticated(request, env))) {
-        return json(
-          {
-            success: false,
-            error: "Unauthorized."
-          },
-          401
-        );
-      }
-
-      try {
-        const { code } = await request.json();
-
-        if (
-          !code ||
-          typeof code !== "string" ||
-          code.length < 4 ||
-          code.length > 32
-        ) {
-          return json(
-            {
-              success: false,
-              error:
-                "Code must contain between 4 and 32 characters."
-            },
-            400
-          );
-        }
-
-        await env.CONNOR_DATA.put(
-          "listening_code",
-          code
-        );
-
-        return json({
-          success: true
-        });
-      } catch {
-        return json(
-          {
-            success: false,
-            error: "Invalid request."
-          },
-          400
-        );
-      }
-    }
-
-    // ==========================================
-    // PUBLIC LISTENING ROOM CHECK
-    // ==========================================
-
-    if (
-      url.pathname === "/api/listening-code/check" &&
-      request.method === "POST"
-    ) {
-      try {
-        const { code } = await request.json();
-
-        const storedCode =
-          await env.CONNOR_DATA.get("listening_code");
-
-        if (!storedCode || code !== storedCode) {
-          return json(
-            {
-              success: false
-            },
-            401
-          );
-        }
-
-        return json({
-          success: true
-        });
-      } catch {
-        return json(
-          {
-            success: false
-          },
-          400
-        );
-      }
-    }
-
-    // ==========================================
-    // GET SITE CONTENT
-    // ==========================================
-
-    if (
-      url.pathname === "/api/content" &&
-      request.method === "GET"
-    ) {
-      try {
-        const data = await getContent(env);
-
-        return json(
-          {
-            success: true,
-            ...data
-          },
-          200,
-          true
-        );
-      } catch (error) {
-        console.error("GET /api/content failed:", error);
-
-        return json(
-          {
-            success: false,
-            error: "Could not load content."
-          },
-          500,
-          true
-        );
-      }
-    }
-
-    // ==========================================
-    // SAVE SITE CONTENT
-    // ==========================================
-
-    if (
-      url.pathname === "/api/content" &&
-      request.method === "POST"
-    ) {
-      if (!(await isAuthenticated(request, env))) {
-        return json(
-          {
-            success: false,
-            error: "Unauthorized."
-          },
-          401,
-          true
-        );
-      }
-
-      try {
-        const body = await request.json();
-
-        if (!body || typeof body !== "object") {
-          return json(
-            {
-              success: false,
-              error: "Invalid content."
-            },
-            400,
-            true
-          );
-        }
-
-        const allowed = [
-          "about",
-          "music",
-          "archive",
-          "messages"
-        ];
-
-        for (const key of allowed) {
-          if (body[key] !== undefined) {
-            await env.CONNOR_DATA.put(
-              `content:${key}`,
-              JSON.stringify(body[key])
-            );
-          }
-        }
-
-        // Read the data back immediately.
-        // This confirms that the save actually reached KV.
-        const savedData = await getContent(env);
-
-        return json(
-          {
-            success: true,
-            ...savedData
-          },
-          200,
-          true
-        );
-      } catch (error) {
-        console.error("POST /api/content failed:", error);
-
-        return json(
-          {
-            success: false,
-            error: "Invalid content."
-          },
-          400,
-          true
-        );
-      }
-    }
-
-    // ==========================================
-    // STATIC WEBSITE
-    // ==========================================
-
-    return env.ASSETS.fetch(request);
   }
 };
 
 
 // ==========================================
-// HELPERS
+// ROUTER
 // ==========================================
 
-function json(data, status = 200, noCache = true) {
-  const headers = {
-    "Content-Type": "application/json"
+async function handleApi(request, env, url) {
+  const routes = {
+    "/api/test": {
+      GET: () => json({ success: true, message: "connor.fm API works." })
+    },
+
+    "/api/content": {
+      GET: () => getPublicContent(env)
+    },
+
+    "/api/listening-room": {
+      GET: () => getListeningRoom(request, env),
+      POST: () => openListeningRoom(request, env)
+    },
+
+    "/api/admin/login": {
+      POST: () => login(request, env)
+    },
+
+    "/api/admin/logout": {
+      POST: () => logout(request, env)
+    },
+
+    "/api/admin/check": {
+      GET: async () => json({ authenticated: await isAuthenticated(request, env) })
+    },
+
+    "/api/admin/password": {
+      POST: requireAdmin(request, env, () => changePassword(request, env))
+    },
+
+    "/api/admin/content": {
+      GET: requireAdmin(request, env, () => getAdminContent(env)),
+      POST: requireAdmin(request, env, () => saveContent(request, env))
+    },
+
+    "/api/admin/listening-code": {
+      GET: requireAdmin(request, env, () => getListeningCode(env)),
+      POST: requireAdmin(request, env, () => saveListeningCode(request, env))
+    },
+
+    "/api/admin/media": {
+      GET: requireAdmin(request, env, () => listMedia(env)),
+      POST: requireAdmin(request, env, () => uploadMedia(request, env, url)),
+      DELETE: requireAdmin(request, env, () => deleteMedia(env, url))
+    }
   };
 
-  if (noCache) {
-    headers["Cache-Control"] =
-      "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0";
+  const route = routes[url.pathname];
 
-    headers["Pragma"] = "no-cache";
-
-    headers["Expires"] = "0";
+  if (!route) {
+    return json({ success: false, error: "Not found." }, 404);
   }
 
-  return new Response(
-    JSON.stringify(data),
-    {
-      status,
-      headers
+  const handler = route[request.method];
+
+  if (!handler) {
+    return json({ success: false, error: "Method not allowed." }, 405);
+  }
+
+  return handler();
+}
+
+
+function requireAdmin(request, env, handler) {
+  return async () => {
+    if (!(await isAuthenticated(request, env))) {
+      return json({ success: false, error: "Unauthorized." }, 401);
     }
-  );
+
+    return handler();
+  };
 }
 
 
 // ==========================================
-// SESSION
+// PUBLIC CONTENT
 // ==========================================
 
-function getSessionToken(request) {
-  const cookie =
-    request.headers.get("Cookie") || "";
+async function getPublicContent(env) {
+  const content = await readContent(env);
 
-  const match = cookie.match(
-    /(?:^|;\s*)connor_session=([^;]+)/
+  const music = content.music ? { ...content.music } : null;
+
+  // The tracklist is only revealed inside the listening room.
+  if (music) {
+    delete music.tracklist;
+  }
+
+  return json({
+    success: true,
+    ...content,
+    music,
+    archive: content.archive || [],
+    messages: publishedMessages(content.messages || [])
+  });
+}
+
+
+function publishedMessages(messages) {
+  const now = Date.now();
+
+  return messages
+    .filter(message => {
+      if (message.status === "live") {
+        return true;
+      }
+
+      if (message.status === "scheduled" && message.publishAt) {
+        const time = Date.parse(message.publishAt);
+        return !Number.isNaN(time) && time <= now;
+      }
+
+      return false;
+    })
+    .map(message => ({
+      id: message.id,
+      title: message.title,
+      text: message.text,
+      publishAt: message.publishAt
+    }))
+    .sort((a, b) => (Date.parse(b.publishAt) || 0) - (Date.parse(a.publishAt) || 0));
+}
+
+
+// ==========================================
+// LISTENING ROOM
+// ==========================================
+
+async function openListeningRoom(request, env) {
+  if (!(await withinRateLimit(request, env, "code"))) {
+    return json({ success: false, error: "Too many attempts. Try again later." }, 429);
+  }
+
+  const body = await readJson(request);
+  const code = typeof body?.code === "string" ? body.code.trim() : "";
+
+  const storedCode = await env.CONNOR_DATA.get("listening_code");
+
+  if (!storedCode || !code || !(await safeEqual(code, storedCode))) {
+    return json({ success: false, error: "Invalid access code." }, 401);
+  }
+
+  // Remember the access in a cookie, so the audio files can be
+  // loaded and the room stays open after a reload.
+  const token = crypto.randomUUID();
+
+  await env.CONNOR_DATA.put(`listen:${token}`, storedCode, { expirationTtl: LISTEN_TTL });
+
+  return json(
+    { success: true, tracklist: await readTracklist(env) },
+    200,
+    { "Set-Cookie": `connor_listen=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${LISTEN_TTL}` }
   );
+}
+
+
+async function getListeningRoom(request, env) {
+  if (!(await hasListeningAccess(request, env))) {
+    return json({ success: false, error: "Access code required." }, 401);
+  }
+
+  return json({ success: true, tracklist: await readTracklist(env) });
+}
+
+
+async function readTracklist(env) {
+  const music = await readKey(env, "music");
+
+  return Array.isArray(music?.tracklist) ? music.tracklist : [];
+}
+
+
+// Access is only valid while the code it was opened with is still the current code.
+async function hasListeningAccess(request, env) {
+  const token = getCookie(request, "connor_listen");
+
+  if (!token) {
+    return false;
+  }
+
+  const [codeUsed, currentCode] = await Promise.all([
+    env.CONNOR_DATA.get(`listen:${token}`),
+    env.CONNOR_DATA.get("listening_code")
+  ]);
+
+  return Boolean(codeUsed) && codeUsed === currentCode;
+}
+
+
+async function getListeningCode(env) {
+  const code = await env.CONNOR_DATA.get("listening_code");
+
+  return json({ success: true, code: code || "" });
+}
+
+
+async function saveListeningCode(request, env) {
+  const body = await readJson(request);
+  const code = typeof body?.code === "string" ? body.code.trim() : "";
+
+  if (code.length < 4 || code.length > 32) {
+    return json({ success: false, error: "Code must contain between 4 and 32 characters." }, 400);
+  }
+
+  await env.CONNOR_DATA.put("listening_code", code);
+
+  return json({ success: true });
+}
+
+
+// ==========================================
+// ADMIN — AUTH
+// ==========================================
+
+async function login(request, env) {
+  if (!(await withinRateLimit(request, env, "login"))) {
+    return json({ success: false, error: "Too many attempts. Try again later." }, 429);
+  }
+
+  const body = await readJson(request);
+  const password = typeof body?.password === "string" ? body.password : "";
+
+  if (!password || !(await verifyAdminPassword(env, password))) {
+    return json({ success: false, error: "Wrong password." }, 401);
+  }
+
+  const token = crypto.randomUUID();
+
+  await env.CONNOR_DATA.put(`session:${token}`, "1", { expirationTtl: SESSION_TTL });
+
+  return json({ success: true }, 200, {
+    "Set-Cookie": sessionCookie(token, SESSION_TTL)
+  });
+}
+
+
+async function logout(request, env) {
+  const token = getSessionToken(request);
+
+  if (token) {
+    await env.CONNOR_DATA.delete(`session:${token}`);
+  }
+
+  return json({ success: true }, 200, {
+    "Set-Cookie": sessionCookie("", 0)
+  });
+}
+
+
+async function changePassword(request, env) {
+  const body = await readJson(request);
+
+  const currentPassword = typeof body?.currentPassword === "string" ? body.currentPassword : "";
+  const newPassword = typeof body?.newPassword === "string" ? body.newPassword : "";
+
+  if (!(await verifyAdminPassword(env, currentPassword))) {
+    return json({ success: false, error: "Current password is incorrect." }, 401);
+  }
+
+  if (newPassword.length < 12) {
+    return json({ success: false, error: "New password must contain at least 12 characters." }, 400);
+  }
+
+  await env.CONNOR_DATA.put("admin_password", await hashPassword(newPassword));
+
+  const token = getSessionToken(request);
+
+  if (token) {
+    await env.CONNOR_DATA.delete(`session:${token}`);
+  }
+
+  return json({ success: true }, 200, {
+    "Set-Cookie": sessionCookie("", 0)
+  });
+}
+
+
+function sessionCookie(token, maxAge) {
+  return `connor_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${maxAge}`;
+}
+
+
+function getSessionToken(request) {
+  return getCookie(request, "connor_session");
+}
+
+
+function getCookie(request, name) {
+  const cookie = request.headers.get("Cookie") || "";
+  const match = cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
 
   return match ? match[1] : null;
 }
 
 
 async function isAuthenticated(request, env) {
-  const token =
-    getSessionToken(request);
+  const token = getSessionToken(request);
 
   if (!token) {
     return false;
   }
 
-  const session =
-    await env.CONNOR_DATA.get(
-      `session:${token}`
-    );
-
-  return session === "1";
+  return (await env.CONNOR_DATA.get(`session:${token}`)) === "1";
 }
 
 
 // ==========================================
-// CONTENT
+// ADMIN — CONTENT
 // ==========================================
 
-async function getContent(env) {
-  const keys = [
-    "about",
-    "music",
-    "archive",
-    "messages"
-  ];
+async function getAdminContent(env) {
+  const content = await readContent(env);
 
-  const result = {};
+  return json({ success: true, ...content });
+}
 
-  for (const key of keys) {
-    const value =
-      await env.CONNOR_DATA.get(
-        `content:${key}`
-      );
 
-    if (value) {
-      try {
-        result[key] = JSON.parse(value);
-      } catch {
-        result[key] = null;
-      }
-    } else {
-      result[key] = null;
+async function saveContent(request, env) {
+  const body = await readJson(request);
+
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return json({ success: false, error: "Invalid content." }, 400);
+  }
+
+  for (const key of CONTENT_KEYS) {
+    if (body[key] !== undefined) {
+      await env.CONNOR_DATA.put(`content:${key}`, JSON.stringify(sanitize(SCHEMA[key], body[key])));
     }
   }
 
+  // Read the data back so the admin panel shows what was actually stored.
+  return getAdminContent(env);
+}
+
+
+async function readContent(env) {
+  const values = await Promise.all(CONTENT_KEYS.map(key => readKey(env, key)));
+  const result = Object.fromEntries(CONTENT_KEYS.map((key, index) => [key, values[index]]));
+
+  // Older versions stored the about facts as fixed fields.
+  const about = result.about;
+
+  if (about && !Array.isArray(about.facts)) {
+    about.facts = [
+      ["name", about.name],
+      ["currently", about.currently],
+      ["working on", about.working],
+      ["website", about.website]
+    ]
+      .filter(([, value]) => value)
+      .map(([label, value]) => ({ label, value }));
+  }
+
   return result;
+}
+
+
+async function readKey(env, key) {
+  const value = await env.CONNOR_DATA.get(`content:${key}`);
+
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+
+// ==========================================
+// SANITIZING
+// ==========================================
+
+function listOf(item) {
+  return { $list: item };
+}
+
+
+const FIELD_TYPES = {
+  text: value => text(value),
+  long: value => text(value, LIMITS.longText),
+  url: value => safeLink(value),
+  id: value => text(value, 64) || crypto.randomUUID(),
+  status: value => (["draft", "live", "scheduled"].includes(value) ? value : "draft"),
+  date: value => {
+    const date = text(value, 40);
+    return date && !Number.isNaN(Date.parse(date)) ? new Date(date).toISOString() : null;
+  }
+};
+
+
+// Keeps only the fields described in the schema,
+// with the right types and lengths.
+function sanitize(schema, value) {
+  if (typeof schema === "string") {
+    return FIELD_TYPES[schema](value);
+  }
+
+  if (schema.$list) {
+    return Array.isArray(value)
+      ? value
+          .filter(item => item && typeof item === "object")
+          .slice(0, LIMITS.listItems)
+          .map(item => sanitize(schema.$list, item))
+      : [];
+  }
+
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+
+  return Object.fromEntries(
+    Object.entries(schema).map(([key, type]) => [key, sanitize(type, source[key])])
+  );
+}
+
+
+function text(value, max = LIMITS.shortText) {
+  return typeof value === "string" ? value.slice(0, max) : "";
+}
+
+
+// Only allow http(s) links and site-relative paths.
+function safeLink(value) {
+  const link = text(value, 500).trim();
+
+  if (!link) {
+    return "";
+  }
+
+  if (link.startsWith("/") && !link.startsWith("//")) {
+    return link;
+  }
+
+  try {
+    const url = new URL(link);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.href : "";
+  } catch {
+    return "";
+  }
+}
+
+
+// ==========================================
+// MEDIA (mp3 + images)
+//
+// Stored in KV as "media:<id>" with metadata.
+// Files uploaded as "private" (listening room) are
+// only served with listening-room access or as admin.
+// ==========================================
+
+async function uploadMedia(request, env, url) {
+  const type = (request.headers.get("Content-Type") || "").split(";")[0].trim().toLowerCase();
+  const extension = MEDIA_TYPES[type];
+
+  if (!extension) {
+    return json({ success: false, error: "Only mp3, jpg, png, webp and gif files are allowed." }, 415);
+  }
+
+  const size = Number(request.headers.get("Content-Length")) || 0;
+
+  if (size > MEDIA_MAX_SIZE) {
+    return json({ success: false, error: "File is too big (max. 25 MB)." }, 413);
+  }
+
+  const data = await request.arrayBuffer();
+
+  if (data.byteLength === 0 || data.byteLength > MEDIA_MAX_SIZE) {
+    return json({ success: false, error: "File is empty or too big (max. 25 MB)." }, 413);
+  }
+
+  const id = `${crypto.randomUUID()}.${extension}`;
+
+  const metadata = {
+    name: (url.searchParams.get("name") || id).slice(0, 120),
+    type: type === "audio/mp3" ? "audio/mpeg" : type,
+    size: data.byteLength,
+    private: url.searchParams.get("private") === "1",
+    uploaded: new Date().toISOString()
+  };
+
+  await env.CONNOR_DATA.put(`media:${id}`, data, { metadata });
+
+  return json({ success: true, file: { id, url: `/media/${id}`, ...metadata } });
+}
+
+
+async function listMedia(env) {
+  const files = [];
+  let cursor;
+
+  do {
+    const page = await env.CONNOR_DATA.list({ prefix: "media:", cursor });
+
+    page.keys.forEach(key => {
+      const id = key.name.slice("media:".length);
+      files.push({ id, url: `/media/${id}`, ...(key.metadata || {}) });
+    });
+
+    cursor = page.list_complete ? null : page.cursor;
+  } while (cursor);
+
+  files.sort((a, b) => String(b.uploaded).localeCompare(String(a.uploaded)));
+
+  return json({ success: true, files });
+}
+
+
+async function deleteMedia(env, url) {
+  const id = url.searchParams.get("id") || "";
+
+  if (!/^[\w-]+\.\w+$/.test(id)) {
+    return json({ success: false, error: "Invalid file." }, 400);
+  }
+
+  await env.CONNOR_DATA.delete(`media:${id}`);
+
+  return json({ success: true });
+}
+
+
+async function serveMedia(request, env, url) {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return new Response("Method not allowed.", { status: 405 });
+  }
+
+  const id = url.pathname.slice("/media/".length);
+
+  if (!/^[\w-]+\.\w+$/.test(id)) {
+    return new Response("Not found.", { status: 404 });
+  }
+
+  const { value, metadata } = await env.CONNOR_DATA.getWithMetadata(`media:${id}`, { type: "arrayBuffer" });
+
+  if (!value) {
+    return new Response("Not found.", { status: 404 });
+  }
+
+  if (metadata?.private && !(await hasListeningAccess(request, env)) && !(await isAuthenticated(request, env))) {
+    return new Response("Access code required.", { status: 403 });
+  }
+
+  const headers = {
+    "Content-Type": metadata?.type || "application/octet-stream",
+    "Accept-Ranges": "bytes",
+    "X-Content-Type-Options": "nosniff",
+    // File ids never change, so public files can be cached forever.
+    "Cache-Control": metadata?.private ? "private, no-store" : "public, max-age=31536000, immutable"
+  };
+
+  const total = value.byteLength;
+  const range = parseRange(request.headers.get("Range"), total);
+
+  // Range requests are needed to skip around in audio files.
+  if (range === "invalid") {
+    return new Response(null, { status: 416, headers: { ...headers, "Content-Range": `bytes */${total}` } });
+  }
+
+  if (range) {
+    const [start, end] = range;
+
+    return new Response(request.method === "HEAD" ? null : value.slice(start, end + 1), {
+      status: 206,
+      headers: {
+        ...headers,
+        "Content-Range": `bytes ${start}-${end}/${total}`,
+        "Content-Length": String(end - start + 1)
+      }
+    });
+  }
+
+  return new Response(request.method === "HEAD" ? null : value, {
+    headers: { ...headers, "Content-Length": String(total) }
+  });
+}
+
+
+function parseRange(header, total) {
+  const match = /^bytes=(\d*)-(\d*)$/.exec(header || "");
+
+  if (!match || (!match[1] && !match[2])) {
+    return null;
+  }
+
+  let start;
+  let end;
+
+  if (!match[1]) {
+    // "bytes=-500" means the last 500 bytes.
+    start = Math.max(0, total - Number(match[2]));
+    end = total - 1;
+  } else {
+    start = Number(match[1]);
+    end = match[2] ? Math.min(Number(match[2]), total - 1) : total - 1;
+  }
+
+  return start > end || start >= total ? "invalid" : [start, end];
+}
+
+
+// ==========================================
+// PASSWORDS
+//
+// Stored as "pbkdf2$<iterations>$<salt>$<hash>".
+// A password that was put into KV as plain text
+// still works and is upgraded to a hash on the
+// first successful login.
+// ==========================================
+
+async function verifyAdminPassword(env, password) {
+  const stored = await env.CONNOR_DATA.get("admin_password");
+
+  if (!stored || !password) {
+    return false;
+  }
+
+  if (!stored.startsWith("pbkdf2$")) {
+    const valid = await safeEqual(password, stored);
+
+    if (valid) {
+      await env.CONNOR_DATA.put("admin_password", await hashPassword(password));
+    }
+
+    return valid;
+  }
+
+  const [, iterations, salt, hash] = stored.split("$");
+  const candidate = await pbkdf2(password, base64ToBytes(salt), Number(iterations));
+
+  return safeEqual(bytesToBase64(candidate), hash);
+}
+
+
+async function hashPassword(password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const hash = await pbkdf2(password, salt, PBKDF2_ITERATIONS);
+
+  return `pbkdf2$${PBKDF2_ITERATIONS}$${bytesToBase64(salt)}$${bytesToBase64(hash)}`;
+}
+
+
+async function pbkdf2(password, salt, iterations) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(password),
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", hash: "SHA-256", salt, iterations },
+    key,
+    256
+  );
+
+  return new Uint8Array(bits);
+}
+
+
+// Compares two strings without leaking timing information.
+async function safeEqual(a, b) {
+  const encoder = new TextEncoder();
+
+  const [hashA, hashB] = await Promise.all([
+    crypto.subtle.digest("SHA-256", encoder.encode(a)),
+    crypto.subtle.digest("SHA-256", encoder.encode(b))
+  ]);
+
+  return crypto.subtle.timingSafeEqual(hashA, hashB);
+}
+
+
+function bytesToBase64(bytes) {
+  return btoa(String.fromCharCode(...bytes));
+}
+
+
+function base64ToBytes(value) {
+  return Uint8Array.from(atob(value), char => char.charCodeAt(0));
+}
+
+
+// ==========================================
+// RATE LIMITING
+//
+// Simple per-IP counter in KV. Not exact (KV is
+// eventually consistent), but enough to stop
+// someone from guessing passwords or codes.
+// ==========================================
+
+async function withinRateLimit(request, env, scope) {
+  const { max, window } = RATE_LIMITS[scope];
+
+  const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+  const key = `ratelimit:${scope}:${ip}`;
+
+  const count = Number(await env.CONNOR_DATA.get(key)) || 0;
+
+  if (count >= max) {
+    return false;
+  }
+
+  await env.CONNOR_DATA.put(key, String(count + 1), { expirationTtl: window });
+
+  return true;
+}
+
+
+// ==========================================
+// HELPERS
+// ==========================================
+
+async function readJson(request) {
+  try {
+    return await request.json();
+  } catch {
+    return null;
+  }
+}
+
+
+function json(data, status = 200, extraHeaders = {}) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+      ...extraHeaders
+    }
+  });
 }

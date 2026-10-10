@@ -6,299 +6,459 @@
 
   <title>music — connor.fm</title>
 
+  <meta name="description" content="connor.fm — a personal space for music, ideas and unfinished things by connor.">
+  <meta name="theme-color" content="#080808">
+
+  <meta property="og:title" content="music — connor.fm">
+  <meta property="og:description" content="connor.fm — a personal space for music, ideas and unfinished things by connor.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="connor.fm">
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/style.css">
 </head>
 
 <body>
 
   <nav>
-
     <div class="nav-inner">
-
-      <a href="/" class="site-name">
-        connor.fm
-      </a>
+      <a href="/" class="site-name">connor.fm</a>
 
       <div class="nav-links">
-
-        <a href="/music" class="active">
-          music
-        </a>
-
-        <a href="/archive">
-          archive
-        </a>
-
-        <a href="/about">
-          about
-        </a>
-
-        <a href="#">
-          ...
-        </a>
-
+        <a href="/music" class="active">music</a>
+        <a href="/archive">archive</a>
+        <a href="/about">about</a>
+        <a href="/messages">...</a>
       </div>
-
     </div>
-
   </nav>
 
-
   <div class="nav-divider"></div>
-
 
   <main>
 
     <section class="page">
-
-      <div class="section-label">
-        02 / music
-      </div>
-
+      <div class="section-label" data-content="music.label">02 / music</div>
 
       <div class="music-intro">
-
-
-        <div class="cover">
+        <div class="cover" data-cover="music">
           <span>?</span>
         </div>
 
-
         <div class="project-info">
+          <div class="project-status" data-content="music.lockedLabel">currently locked</div>
 
-          <div class="project-status">
-            currently locked
-          </div>
+          <h1 class="project-title" data-content="music.title">avant-garde</h1>
 
-
-          <h1 class="project-title">
-            avant-garde
-          </h1>
-
-
-          <div class="project-meta">
+          <div class="project-meta" id="musicMeta">
             mixtape / 2027<br>
             10 tracks / 01 instrumental<br>
             status: unreleased
           </div>
 
-
-          <p class="project-description">
+          <p class="project-description" data-content="music.description">
             the next mixtape by connor. the listening room
             will open when the project is ready.
           </p>
 
+          <div class="access-box" id="accessBox">
+            <div class="access-label" data-content="music.accessLabel">access required</div>
 
-          <div class="access-box">
-
-            <div class="access-label">
-              access required
-            </div>
-
-
-            <p class="access-description">
+            <p class="access-description" data-content="music.accessDescription">
               enter your access code to enter the listening room.
             </p>
 
-
             <form class="code-form" id="codeForm">
-
               <input
                 class="code-input"
                 id="codeInput"
                 type="text"
                 placeholder="access code"
                 autocomplete="off"
+                aria-label="access code"
+                required
               >
 
-
-              <button
-                class="unlock-button"
-                type="submit"
-              >
-                unlock →
-              </button>
-
+              <button class="unlock-button" type="submit">unlock →</button>
             </form>
 
-
-            <div class="error" id="codeError">
-              invalid access code
-            </div>
-
+            <div class="error" id="codeError" role="alert"></div>
           </div>
-
         </div>
-
       </div>
 
-
-      <!-- LISTENING ROOM -->
-
-      <div
-        class="listening-room"
-        id="listeningRoom"
-      >
-
-        <div class="room-label">
-          access granted
-        </div>
-
-
-        <h2 class="room-title">
-          listening room
-        </h2>
-
-
-        <div class="track-list">
-
-          <div class="track">
-            <span class="track-num">01</span>
-            <span>untitled</span>
-            <span class="track-time">—</span>
-          </div>
-
-
-          <div class="track">
-            <span class="track-num">02</span>
-            <span>untitled</span>
-            <span class="track-time">—</span>
-          </div>
-
-
-          <div class="track">
-            <span class="track-num">03</span>
-            <span>untitled</span>
-            <span class="track-time">—</span>
-          </div>
-
-
-          <div class="track">
-            <span class="track-num">04</span>
-            <span>untitled</span>
-            <span class="track-time">—</span>
-          </div>
-
-
-          <div class="track">
-            <span class="track-num">05</span>
-            <span>untitled</span>
-            <span class="track-time">—</span>
-          </div>
-
-
-          <div class="track">
-            <span class="track-num">06</span>
-            <span>untitled</span>
-            <span class="track-time">—</span>
-          </div>
-
-
-          <div class="track">
-            <span class="track-num">07</span>
-            <span>untitled</span>
-            <span class="track-time">—</span>
-          </div>
-
-
-          <div class="track">
-            <span class="track-num">08</span>
-            <span>untitled</span>
-            <span class="track-time">—</span>
-          </div>
-
-
-          <div class="track">
-            <span class="track-num">09</span>
-            <span>untitled</span>
-            <span class="track-time">—</span>
-          </div>
-
-
-          <div class="track">
-            <span class="track-num">10</span>
-            <span>untitled</span>
-            <span class="track-time">—</span>
-          </div>
-
-        </div>
-
+      <div class="listening-room" id="listeningRoom">
+        <div class="room-label" data-content="music.roomLabel">access granted</div>
+        <h2 class="room-title" data-content="music.roomTitle">listening room</h2>
+        <div class="track-list" id="trackList"></div>
       </div>
-
 
       <div class="music-bottom">
-
-        <span>
-          this project is private
-        </span>
-
-        <span>
-          connor.fm/music
-        </span>
-
+        <span data-content="music.footerLeft">this project is private</span>
+        <span data-content="music.footerRight">connor.fm/music</span>
       </div>
-
     </section>
 
+    <div class="player" id="player" hidden>
+      <div class="player-inner">
+        <div class="player-now">
+          <span class="player-label">now playing</span>
+          <span class="player-title" id="playerTitle">—</span>
+        </div>
+
+        <div class="player-controls">
+          <button class="player-button" id="previousButton" type="button" aria-label="previous track"></button>
+          <button class="player-button player-play" id="playButton" type="button" aria-label="play"></button>
+          <button class="player-button" id="nextButton" type="button" aria-label="next track"></button>
+        </div>
+
+        <div class="player-progress">
+          <span class="player-time" id="currentTime">0:00</span>
+          <input class="player-seek" id="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="position">
+          <span class="player-time" id="totalTime">0:00</span>
+        </div>
+      </div>
+    </div>
+
+    <audio id="audio" preload="metadata"></audio>
   </main>
 
-
   <footer>
-
     <div class="footer-divider"></div>
 
     <div class="footer-content">
-
-      <div class="footer-name">
-        connor.fm
-      </div>
-
-      <div class="footer-year">
-        © 2026
-      </div>
-
+      <div class="footer-name" data-content="site.footerName">connor.fm</div>
+      <div class="footer-year" data-content="site.footerYear">© 2026</div>
     </div>
-
   </footer>
 
+  <script src="/site.js"></script>
 
   <script>
 
+    let trackCount = 10;
+    let tracks = [];
+    let current = -1;
+
+
+    // ---------- project info ----------
+
+    contentReady.then(data => {
+      const music = data?.music;
+
+      if (!music) {
+        return;
+      }
+
+      const type = [music.type, music.year].filter(Boolean).join(" / ");
+      const lines = [type, music.tracks, music.status && `status: ${music.status}`].filter(Boolean);
+
+      if (lines.length) {
+        const meta = document.getElementById("musicMeta");
+        meta.replaceChildren();
+
+        lines.forEach((line, index) => {
+          if (index > 0) {
+            meta.append(document.createElement("br"));
+          }
+
+          meta.append(line);
+        });
+      }
+
+      trackCount = parseInt(music.tracks, 10) || trackCount;
+    });
+
+
+    // ---------- access ----------
+
     const form = document.getElementById("codeForm");
-
     const input = document.getElementById("codeInput");
-
+    const unlockButton = form.querySelector("button");
     const room = document.getElementById("listeningRoom");
-
     const error = document.getElementById("codeError");
 
 
-    form.addEventListener("submit", function(event) {
+    // Still unlocked from earlier? (access lasts a few hours)
+    fetch("/api/listening-room", { cache: "no-store" })
+      .then(response => (response.ok ? response.json() : null))
+      .then(data => {
+        if (data?.success) {
+          openRoom(data.tracklist, false);
+        }
+      })
+      .catch(() => {});
 
+
+    form.addEventListener("submit", async event => {
       event.preventDefault();
 
+      error.style.display = "none";
+      unlockButton.disabled = true;
 
-      if (input.value.trim() === "1234") {
-
-        room.classList.add("visible");
-
-        error.style.display = "none";
-
-        input.value = "";
-
-        room.scrollIntoView({
-          behavior: "smooth",
-          block: "start"
+      try {
+        const response = await fetch("/api/listening-room", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: input.value.trim() })
         });
 
-      } else {
+        const data = await response.json();
 
+        if (!data.success) {
+          throw new Error(
+            response.status === 429 ? "too many attempts. try again later." : "invalid access code"
+          );
+        }
+
+        input.value = "";
+        openRoom(data.tracklist, true);
+
+      } catch (err) {
+        error.textContent = err instanceof SyntaxError ? "something went wrong" : err.message;
         error.style.display = "block";
 
+      } finally {
+        unlockButton.disabled = false;
       }
-
     });
 
+
+    async function openRoom(tracklist, scroll) {
+      await contentReady;
+
+      tracks = Array.isArray(tracklist) && tracklist.length
+        ? tracklist
+        : Array.from({ length: trackCount }, () => ({}));
+
+      renderTracks();
+
+      room.classList.add("visible");
+      document.getElementById("accessBox").hidden = true;
+
+      if (tracks.some(track => track.audio)) {
+        document.getElementById("player").hidden = false;
+        document.body.classList.add("has-player");
+        updatePlayer();
+      }
+
+      if (scroll) {
+        room.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+
+
+    function renderTracks() {
+      document.getElementById("trackList").replaceChildren(
+        ...tracks.map((track, index) => {
+          const playable = Boolean(track.audio);
+          const row = createElement(playable ? "button" : "div", "track");
+
+          if (playable) {
+            row.type = "button";
+            row.classList.add("playable");
+            row.addEventListener("click", () => (index === current ? togglePlay() : playTrack(index)));
+          }
+
+          if (index === current) {
+            row.classList.add("current");
+          }
+
+          const number = createElement("span", "track-num");
+          number.append(
+            index === current && !audio.paused ? icon("pause") : String(index + 1).padStart(2, "0")
+          );
+
+          row.append(
+            number,
+            createElement("span", "track-title", track.title || "untitled"),
+            createElement("span", "track-time", track.duration || "—")
+          );
+
+          return row;
+        })
+      );
+    }
+
+
+    // ---------- player ----------
+
+    const audio = document.getElementById("audio");
+    const playButton = document.getElementById("playButton");
+    const seek = document.getElementById("seek");
+    let seeking = false;
+
+    document.getElementById("previousButton").append(icon("previous"));
+    document.getElementById("nextButton").append(icon("next"));
+
+    playButton.addEventListener("click", togglePlay);
+    document.getElementById("previousButton").addEventListener("click", previousTrack);
+    document.getElementById("nextButton").addEventListener("click", nextTrack);
+
+
+    function playable(index) {
+      return Boolean(tracks[index]?.audio);
+    }
+
+
+    function playTrack(index) {
+      if (!playable(index)) {
+        return;
+      }
+
+      current = index;
+      audio.src = tracks[index].audio;
+      audio.play().catch(() => {});
+
+      updatePlayer();
+      renderTracks();
+      updateMediaSession();
+    }
+
+
+    function togglePlay() {
+      if (current === -1) {
+        playTrack(tracks.findIndex(track => track.audio));
+        return;
+      }
+
+      if (audio.paused) {
+        audio.play().catch(() => {});
+      } else {
+        audio.pause();
+      }
+    }
+
+
+    function step(direction) {
+      for (let index = current + direction; index >= 0 && index < tracks.length; index += direction) {
+        if (playable(index)) {
+          return index;
+        }
+      }
+
+      return -1;
+    }
+
+
+    function nextTrack() {
+      const index = step(1);
+
+      if (index !== -1) {
+        playTrack(index);
+      }
+    }
+
+
+    function previousTrack() {
+      // Like most players: first press restarts the song.
+      if (audio.currentTime > 3 || step(-1) === -1) {
+        audio.currentTime = 0;
+        return;
+      }
+
+      playTrack(step(-1));
+    }
+
+
+    function updatePlayer() {
+      const track = tracks[current];
+
+      document.getElementById("playerTitle").textContent = track
+        ? `${String(current + 1).padStart(2, "0")} — ${track.title || "untitled"}`
+        : "select a track";
+
+      playButton.replaceChildren(icon(audio.paused ? "play" : "pause"));
+      playButton.setAttribute("aria-label", audio.paused ? "play" : "pause");
+
+      document.getElementById("previousButton").disabled = current === -1;
+      document.getElementById("nextButton").disabled = step(1) === -1;
+    }
+
+
+    function updateTime() {
+      const duration = audio.duration;
+
+      document.getElementById("currentTime").textContent = formatTime(audio.currentTime);
+      document.getElementById("totalTime").textContent = formatTime(duration);
+
+      if (!seeking) {
+        seek.value = duration ? Math.round((audio.currentTime / duration) * 1000) : 0;
+      }
+
+      seek.style.setProperty("--progress", `${seek.value / 10}%`);
+    }
+
+
+    seek.addEventListener("input", () => {
+      seeking = true;
+      document.getElementById("currentTime").textContent = formatTime((seek.value / 1000) * (audio.duration || 0));
+      seek.style.setProperty("--progress", `${seek.value / 10}%`);
+    });
+
+    seek.addEventListener("change", () => {
+      if (audio.duration) {
+        audio.currentTime = (seek.value / 1000) * audio.duration;
+      }
+
+      seeking = false;
+    });
+
+
+    audio.addEventListener("timeupdate", updateTime);
+    audio.addEventListener("durationchange", updateTime);
+
+    audio.addEventListener("loadedmetadata", () => {
+      // Show the real length in the tracklist when no duration was entered.
+      if (tracks[current] && !tracks[current].duration) {
+        tracks[current].duration = formatTime(audio.duration);
+        renderTracks();
+      }
+    });
+
+    ["play", "pause"].forEach(name =>
+      audio.addEventListener(name, () => {
+        updatePlayer();
+        renderTracks();
+      })
+    );
+
+    audio.addEventListener("ended", () => {
+      if (step(1) !== -1) {
+        nextTrack();
+      } else {
+        updatePlayer();
+        renderTracks();
+      }
+    });
+
+
+    // Space bar = play / pause
+    document.addEventListener("keydown", event => {
+      if (event.code === "Space" && !document.getElementById("player").hidden && !event.target.closest("input, textarea, button")) {
+        event.preventDefault();
+        togglePlay();
+      }
+    });
+
+
+    // Controls on the lock screen / headphones
+    function updateMediaSession() {
+      if (!("mediaSession" in navigator) || !tracks[current]) {
+        return;
+      }
+
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: tracks[current].title || "untitled",
+        artist: "connor",
+        album: document.querySelector(".project-title").textContent
+      });
+
+      navigator.mediaSession.setActionHandler("play", () => audio.play());
+      navigator.mediaSession.setActionHandler("pause", () => audio.pause());
+      navigator.mediaSession.setActionHandler("previoustrack", previousTrack);
+      navigator.mediaSession.setActionHandler("nexttrack", nextTrack);
+    }
   </script>
 
 </body>

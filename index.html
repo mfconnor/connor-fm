@@ -6,6 +6,15 @@
 
   <title>connor.fm</title>
 
+  <meta name="description" content="connor.fm — a personal space for music, ideas and unfinished things by connor.">
+  <meta name="theme-color" content="#080808">
+
+  <meta property="og:title" content="connor.fm">
+  <meta property="og:description" content="connor.fm — a personal space for music, ideas and unfinished things by connor.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="connor.fm">
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/style.css">
 </head>
 
@@ -13,92 +22,48 @@
 
   <nav>
     <div class="nav-inner">
-
-      <a href="/" class="site-name">
-        connor.fm
-      </a>
+      <a href="/" class="site-name">connor.fm</a>
 
       <div class="nav-links">
-
-        <a href="/music">
-          music
-        </a>
-
-        <a href="/archive">
-          archive
-        </a>
-
-        <a href="/about">
-          about
-        </a>
-
-        <a href="#">
-          ...
-        </a>
-
+        <a href="/music">music</a>
+        <a href="/archive">archive</a>
+        <a href="/about">about</a>
+        <a href="/messages">...</a>
       </div>
-
     </div>
   </nav>
 
   <div class="nav-divider"></div>
 
-
   <main>
 
     <section class="announcement">
-
-      <div class="section-label">
-        01 / announcement
-      </div>
+      <div class="section-label" data-content="home.label">01 / announcement</div>
 
       <div class="announcement-content">
-
         <div class="announcement-text">
-
-          <div class="coming">
-            coming 2027
-          </div>
-
-          <h1>
-            avant-garde
-          </h1>
-
-          <p class="description">
-            a mixtape by connor
-          </p>
-
+          <div class="coming" data-content="home.coming">coming 2027</div>
+          <h1 data-content="home.title">avant-garde</h1>
+          <p class="description" data-content="home.description">a mixtape by connor</p>
         </div>
 
-
-        <div class="placeholder-cover">
+        <div class="placeholder-cover" data-cover="home">
           <span>?</span>
         </div>
-
       </div>
-
     </section>
-
   </main>
 
-
   <footer>
-
     <div class="footer-divider"></div>
 
     <div class="footer-content">
-
-      <div class="footer-name">
-        connor.fm
-      </div>
-
-      <div class="footer-year">
-        © 2026
-      </div>
-
+      <div class="footer-name" data-content="site.footerName">connor.fm</div>
+      <div class="footer-year" data-content="site.footerYear">© 2026</div>
     </div>
-
   </footer>
+
+  <script src="/site.js"></script>
 
 </body>
 </html>
