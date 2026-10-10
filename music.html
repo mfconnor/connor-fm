@@ -28,6 +28,7 @@
         <a href="/music" class="active">music</a>
         <a href="/archive">archive</a>
         <a href="/about">about</a>
+        <a href="/questions">ask</a>
         <a href="/messages">...</a>
       </div>
     </div>
@@ -75,6 +76,7 @@
                 type="text"
                 placeholder="access code"
                 autocomplete="off"
+                autocapitalize="none"
                 aria-label="access code"
                 required
               >
@@ -90,7 +92,27 @@
       <div class="listening-room" id="listeningRoom">
         <div class="room-label" data-content="music.roomLabel">access granted</div>
         <h2 class="room-title" data-content="music.roomTitle">listening room</h2>
+
+        <canvas class="visualizer" id="visualizer" aria-hidden="true"></canvas>
+
         <div class="track-list" id="trackList"></div>
+
+        <div class="comments" id="comments" hidden>
+          <div class="comments-head">
+            <span class="room-label">comments</span>
+            <span class="comments-track" id="commentsTrack"></span>
+          </div>
+
+          <div class="comment-list" id="commentList"></div>
+
+          <form class="comment-form" id="commentForm">
+            <input class="code-input comment-name-input" id="commentName" type="text" placeholder="name (optional)" maxlength="40" aria-label="your name">
+            <input class="code-input comment-text" id="commentText" type="text" placeholder="say something about this track" maxlength="500" aria-label="comment" required>
+            <button class="unlock-button" id="commentButton" type="submit">post</button>
+          </form>
+
+          <div class="error" id="commentError" role="alert"></div>
+        </div>
       </div>
 
       <div class="music-bottom">
@@ -100,6 +122,8 @@
     </section>
 
     <div class="player" id="player" hidden>
+      <canvas class="player-visualizer" id="playerVisualizer" aria-hidden="true"></canvas>
+
       <div class="player-inner">
         <div class="player-now">
           <span class="player-label">now playing</span>
@@ -114,7 +138,12 @@
 
         <div class="player-progress">
           <span class="player-time" id="currentTime">0:00</span>
-          <input class="player-seek" id="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="position">
+
+          <div class="seek-wrap">
+            <input class="player-seek" id="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="position">
+            <div class="seek-markers" id="seekMarkers"></div>
+          </div>
+
           <span class="player-time" id="totalTime">0:00</span>
         </div>
       </div>
@@ -128,6 +157,7 @@
 
     <div class="footer-content">
       <div class="footer-name" data-content="site.footerName">connor.fm</div>
+      <div class="now-listening" data-now-listening hidden></div>
       <div class="footer-year" data-content="site.footerYear">© 2026</div>
     </div>
   </footer>
@@ -139,6 +169,8 @@
     let trackCount = 10;
     let tracks = [];
     let current = -1;
+    let selected = -1;
+    let comments = [];
 
 
     // ---------- project info ----------
@@ -224,6 +256,16 @@
     });
 
 
+    // Links like connor.fm/music?code=… unlock directly.
+    const codeFromLink = new URLSearchParams(location.search).get("code");
+
+    if (codeFromLink) {
+      input.value = codeFromLink;
+      history.replaceState(null, "", location.pathname);
+      form.requestSubmit();
+    }
+
+
     async function openRoom(tracklist, scroll) {
       await contentReady;
 
@@ -231,16 +273,23 @@
         ? tracklist
         : Array.from({ length: trackCount }, () => ({}));
 
-      renderTracks();
+      selected = tracks.findIndex(track => track.audio);
 
       room.classList.add("visible");
       document.getElementById("accessBox").hidden = true;
 
-      if (tracks.some(track => track.audio)) {
+      if (selected !== -1) {
         document.getElementById("player").hidden = false;
+        document.getElementById("comments").hidden = false;
         document.body.classList.add("has-player");
         updatePlayer();
+        loadComments();
+        startVisualizer();
+      } else {
+        document.getElementById("visualizer").hidden = true;
       }
+
+      renderTracks();
 
       if (scroll) {
         room.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -251,10 +300,10 @@
     function renderTracks() {
       document.getElementById("trackList").replaceChildren(
         ...tracks.map((track, index) => {
-          const playable = Boolean(track.audio);
-          const row = createElement(playable ? "button" : "div", "track");
+          const isPlayable = Boolean(track.audio);
+          const row = createElement(isPlayable ? "button" : "div", "track");
 
-          if (playable) {
+          if (isPlayable) {
             row.type = "button";
             row.classList.add("playable");
             row.addEventListener("click", () => (index === current ? togglePlay() : playTrack(index)));
@@ -269,11 +318,14 @@
             index === current && !audio.paused ? icon("pause") : String(index + 1).padStart(2, "0")
           );
 
-          row.append(
-            number,
-            createElement("span", "track-title", track.title || "untitled"),
-            createElement("span", "track-time", track.duration || "—")
-          );
+          const title = createElement("span", "track-title", track.title || "untitled");
+          const count = commentsFor(track).length;
+
+          if (count) {
+            title.append(createElement("span", "track-comments", ` · ${count} comment${count === 1 ? "" : "s"}`));
+          }
+
+          row.append(number, title, createElement("span", "track-time", track.duration || "—"));
 
           return row;
         })
@@ -301,26 +353,40 @@
     }
 
 
-    function playTrack(index) {
+    function playTrack(index, startAt = 0) {
       if (!playable(index)) {
         return;
       }
 
-      current = index;
-      audio.src = tracks[index].audio;
+      setupAnalyser();
+
+      if (index !== current) {
+        current = index;
+        selected = index;
+        audio.src = tracks[index].audio;
+        logEvent("play", tracks[index]);
+      }
+
+      if (startAt) {
+        audio.currentTime = startAt;
+      }
+
       audio.play().catch(() => {});
 
       updatePlayer();
       renderTracks();
+      renderComments();
       updateMediaSession();
     }
 
 
     function togglePlay() {
       if (current === -1) {
-        playTrack(tracks.findIndex(track => track.audio));
+        playTrack(selected !== -1 ? selected : tracks.findIndex(track => track.audio));
         return;
       }
+
+      setupAnalyser();
 
       if (audio.paused) {
         audio.play().catch(() => {});
@@ -387,6 +453,7 @@
       }
 
       seek.style.setProperty("--progress", `${seek.value / 10}%`);
+      updateCommentButton();
     }
 
 
@@ -406,7 +473,11 @@
 
 
     audio.addEventListener("timeupdate", updateTime);
-    audio.addEventListener("durationchange", updateTime);
+
+    audio.addEventListener("durationchange", () => {
+      updateTime();
+      renderMarkers();
+    });
 
     audio.addEventListener("loadedmetadata", () => {
       // Show the real length in the tracklist when no duration was entered.
@@ -424,6 +495,8 @@
     );
 
     audio.addEventListener("ended", () => {
+      logEvent("complete", tracks[current]);
+
       if (step(1) !== -1) {
         nextTrack();
       } else {
@@ -459,6 +532,353 @@
       navigator.mediaSession.setActionHandler("previoustrack", previousTrack);
       navigator.mediaSession.setActionHandler("nexttrack", nextTrack);
     }
+
+
+    // Lets the admin see who listened to what (per access code).
+    function logEvent(type, track) {
+      if (!track?.audio) {
+        return;
+      }
+
+      fetch("/api/listening-room/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, track: track.audio }),
+        keepalive: true
+      }).catch(() => {});
+    }
+
+
+    // ---------- comments ----------
+
+    const commentForm = document.getElementById("commentForm");
+    const commentName = document.getElementById("commentName");
+    const commentText = document.getElementById("commentText");
+    const commentButton = document.getElementById("commentButton");
+    const commentError = document.getElementById("commentError");
+
+    try {
+      commentName.value = localStorage.getItem("connor-comment-name") || "";
+    } catch {
+      // Private mode etc.
+    }
+
+
+    function commentsFor(track) {
+      return track?.audio ? comments.filter(comment => comment.track === track.audio) : [];
+    }
+
+
+    async function loadComments() {
+      try {
+        const response = await fetch("/api/listening-room/comments", { cache: "no-store" });
+        const data = await response.json();
+
+        comments = data.success ? data.comments : [];
+      } catch {
+        comments = [];
+      }
+
+      renderComments();
+      renderTracks();
+    }
+
+
+    function renderComments() {
+      const track = tracks[selected];
+      const list = document.getElementById("commentList");
+
+      document.getElementById("commentsTrack").textContent = track
+        ? `${String(selected + 1).padStart(2, "0")} — ${track.title || "untitled"}`
+        : "";
+
+      const items = commentsFor(track).sort((a, b) => (a.at ?? 1e9) - (b.at ?? 1e9) || a.ts - b.ts);
+
+      if (!items.length) {
+        list.replaceChildren(createElement("div", "comment-empty", "no comments yet. be the first."));
+      } else {
+        list.replaceChildren(
+          ...items.map(comment => {
+            const item = createElement("div", "comment");
+
+            const time = createElement("button", "comment-time", comment.at != null ? formatTime(comment.at) : "—");
+            time.type = "button";
+            time.disabled = comment.at == null;
+            time.setAttribute("aria-label", "jump to this moment");
+            time.addEventListener("click", () => playTrack(selected, comment.at));
+
+            const body = createElement("div", "comment-body");
+            body.append(
+              createElement("span", "comment-name", comment.name || "anonymous"),
+              createElement("p", "comment-text", comment.text)
+            );
+
+            item.append(time, body);
+            return item;
+          })
+        );
+      }
+
+      renderMarkers();
+      updateCommentButton();
+    }
+
+
+    // Small dots on the seek bar where people commented.
+    function renderMarkers() {
+      const markers = document.getElementById("seekMarkers");
+      const duration = audio.duration;
+
+      if (current === -1 || !duration) {
+        markers.replaceChildren();
+        return;
+      }
+
+      markers.replaceChildren(
+        ...commentsFor(tracks[current])
+          .filter(comment => comment.at != null && comment.at <= duration)
+          .map(comment => {
+            const marker = createElement("span", "seek-marker");
+            marker.style.left = `${(comment.at / duration) * 100}%`;
+            marker.title = `${formatTime(comment.at)} · ${comment.name || "anonymous"}: ${comment.text}`;
+            return marker;
+          })
+      );
+    }
+
+
+    function updateCommentButton() {
+      const timed = selected === current && current !== -1;
+      commentButton.textContent = timed ? `post at ${formatTime(audio.currentTime)}` : "post";
+    }
+
+
+    commentForm.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      const track = tracks[selected];
+
+      if (!track?.audio) {
+        return;
+      }
+
+      commentError.style.display = "none";
+      commentButton.disabled = true;
+
+      try {
+        localStorage.setItem("connor-comment-name", commentName.value.trim());
+      } catch {
+        // ignore
+      }
+
+      try {
+        const response = await fetch("/api/listening-room/comments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            track: track.audio,
+            at: selected === current ? audio.currentTime : null,
+            name: commentName.value.trim(),
+            text: commentText.value.trim()
+          })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error || "could not post");
+        }
+
+        comments.push(data.comment);
+        commentText.value = "";
+        renderComments();
+        renderTracks();
+
+      } catch (err) {
+        commentError.textContent = (err instanceof SyntaxError ? "something went wrong" : err.message).toLowerCase();
+        commentError.style.display = "block";
+
+      } finally {
+        commentButton.disabled = false;
+      }
+    });
+
+
+    // ---------- visualizer ----------
+    //
+    // Mirrored frequency bars in khaki. Bars left of the playhead are
+    // bright, the rest dimmed. When paused it settles into a slow wave.
+
+    let audioContext = null;
+    let analyser = null;
+    let frequencies = null;
+    let levels = [];
+    let visualizerRunning = false;
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+
+    function setupAnalyser() {
+      if (audioContext) {
+        audioContext.resume?.();
+        return;
+      }
+
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+
+      if (!AudioContextClass) {
+        return;
+      }
+
+      try {
+        audioContext = new AudioContextClass();
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 2048;
+        analyser.smoothingTimeConstant = 0.8;
+
+        audioContext.createMediaElementSource(audio).connect(analyser);
+        analyser.connect(audioContext.destination);
+
+        frequencies = new Uint8Array(analyser.frequencyBinCount);
+      } catch {
+        analyser = null;
+      }
+    }
+
+
+    function prepareCanvas(canvas) {
+      const ratio = window.devicePixelRatio || 1;
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+
+      if (canvas.width !== Math.round(width * ratio) || canvas.height !== Math.round(height * ratio)) {
+        canvas.width = Math.round(width * ratio);
+        canvas.height = Math.round(height * ratio);
+      }
+
+      const context = canvas.getContext("2d");
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      context.clearRect(0, 0, width, height);
+
+      return { context, width, height };
+    }
+
+
+    // Level (0–1) for bar i of n, from low (center) to high frequencies.
+    function sample(i, n, time) {
+      const playing = analyser && !audio.paused;
+
+      if (!playing) {
+        // Calm idle wave.
+        return 0.06 + 0.05 * Math.sin(time / 900 + i * 0.35) * Math.sin(time / 1700 + i * 0.12);
+      }
+
+      const nyquist = audioContext.sampleRate / 2;
+      const low = 40;
+      const high = 14000;
+      const from = low * Math.pow(high / low, i / n);
+      const to = low * Math.pow(high / low, (i + 1) / n);
+      const start = Math.floor((from / nyquist) * frequencies.length);
+      const end = Math.max(start + 1, Math.floor((to / nyquist) * frequencies.length));
+
+      let sum = 0;
+
+      for (let bin = start; bin < end; bin++) {
+        sum += frequencies[bin];
+      }
+
+      // Treble is naturally quieter; lift it a little.
+      return Math.min(1, Math.pow(sum / (end - start) / 255, 1.3) * (1 + (i / n) * 0.6));
+    }
+
+
+    function drawRoom(time) {
+      const canvas = document.getElementById("visualizer");
+      const { context, width, height } = prepareCanvas(canvas);
+
+      const gap = width < 600 ? 3 : 4;
+      const barWidth = width < 600 ? 2 : 3;
+      const count = Math.floor(width / (barWidth + gap));
+      const half = Math.ceil(count / 2);
+      const middle = height / 2;
+      const progress = audio.duration ? audio.currentTime / audio.duration : 0;
+      const khaki = "154, 152, 101";
+
+      if (levels.length !== half) {
+        levels = new Array(half).fill(0);
+      }
+
+      for (let i = 0; i < half; i++) {
+        const target = sample(i, half, time);
+        levels[i] += (target - levels[i]) * (target > levels[i] ? 0.5 : 0.12);
+      }
+
+      for (let bar = 0; bar < count; bar++) {
+        // Low frequencies in the middle, mirrored to both sides.
+        const fromCenter = Math.abs(bar - (count - 1) / 2);
+        const level = levels[Math.min(half - 1, Math.floor(fromCenter))];
+        const barHeight = Math.max(2, level * height * 0.92);
+        const x = bar * (barWidth + gap) + (width - count * (barWidth + gap) + gap) / 2;
+        const played = current !== -1 && x / width <= progress;
+
+        context.fillStyle = played ? `rgba(${khaki}, 0.95)` : `rgba(${khaki}, ${0.22 + level * 0.35})`;
+        if (context.roundRect) {
+          context.beginPath();
+          context.roundRect(x, middle - barHeight / 2, barWidth, barHeight, barWidth / 2);
+          context.fill();
+        } else {
+          context.fillRect(x, middle - barHeight / 2, barWidth, barHeight);
+        }
+      }
+
+      // Thin center line
+      context.fillStyle = "rgba(232, 232, 227, 0.06)";
+      context.fillRect(0, middle - 0.5, width, 1);
+    }
+
+
+    function drawPlayer() {
+      const canvas = document.getElementById("playerVisualizer");
+      const { context, width, height } = prepareCanvas(canvas);
+      const count = Math.floor(width / 6);
+
+      for (let bar = 0; bar < count; bar++) {
+        const fromCenter = Math.abs(bar - (count - 1) / 2) / (count / 2);
+        const level = levels[Math.min(levels.length - 1, Math.floor(fromCenter * levels.length))] || 0;
+        const barHeight = Math.max(1, level * height * 0.55);
+
+        context.fillStyle = `rgba(154, 152, 101, ${0.03 + level * 0.12})`;
+        context.fillRect(bar * 6 + 1, height - barHeight, 3, barHeight);
+      }
+    }
+
+
+    function startVisualizer() {
+      if (visualizerRunning) {
+        return;
+      }
+
+      visualizerRunning = true;
+
+      const frame = time => {
+        if (analyser && !audio.paused) {
+          analyser.getByteFrequencyData(frequencies);
+        }
+
+        drawRoom(time);
+        drawPlayer();
+
+        if (!reducedMotion || !audio.paused) {
+          requestAnimationFrame(frame);
+        } else {
+          visualizerRunning = false;
+        }
+      };
+
+      requestAnimationFrame(frame);
+    }
+
+    audio.addEventListener("play", startVisualizer);
   </script>
 
 </body>

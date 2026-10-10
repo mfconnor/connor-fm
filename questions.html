@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>ask — connor.fm</title>
+
+  <meta name="description" content="connor.fm — a personal space for music, ideas and unfinished things by connor.">
+  <meta name="theme-color" content="#080808">
+
+  <meta property="og:title" content="ask — connor.fm">
+  <meta property="og:description" content="connor.fm — a personal space for music, ideas and unfinished things by connor.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="connor.fm">
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="/" class="site-name">connor.fm</a>
+
+      <div class="nav-links">
+        <a href="/music">music</a>
+        <a href="/archive">archive</a>
+        <a href="/about">about</a>
+        <a href="/questions" class="active">ask</a>
+        <a href="/messages">...</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="nav-divider"></div>
+
+  <main>
+
+    <section class="page">
+      <div class="section-label" data-content="questionsPage.label">05 / ask</div>
+
+      <div class="questions-intro">
+        <h1 class="questions-title" data-content="questionsPage.title">ask</h1>
+        <p data-content="questionsPage.intro">anything. anonymous. some answers end up here.</p>
+      </div>
+
+      <form class="question-form" id="questionForm">
+        <textarea
+          class="question-input"
+          id="questionInput"
+          rows="3"
+          maxlength="500"
+          placeholder="your question"
+          aria-label="your question"
+          required
+        ></textarea>
+
+        <div class="question-actions">
+          <span class="question-count" id="questionCount">0 / 500</span>
+          <button class="unlock-button" type="submit">send →</button>
+        </div>
+
+        <div class="question-status" id="questionStatus" role="status"></div>
+      </form>
+
+      <div class="question-list" id="questionList"></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-divider"></div>
+
+    <div class="footer-content">
+      <div class="footer-name" data-content="site.footerName">connor.fm</div>
+      <div class="now-listening" data-now-listening hidden></div>
+      <div class="footer-year" data-content="site.footerYear">© 2026</div>
+    </div>
+  </footer>
+
+  <script src="/site.js"></script>
+
+  <script>
+
+    const questionForm = document.getElementById("questionForm");
+    const questionInput = document.getElementById("questionInput");
+    const questionStatus = document.getElementById("questionStatus");
+    const questionButton = questionForm.querySelector("button");
+
+
+    contentReady.then(data => {
+      const placeholder = data?.questionsPage?.placeholder;
+
+      if (placeholder) {
+        questionInput.placeholder = placeholder;
+      }
+    });
+
+
+    questionInput.addEventListener("input", () => {
+      document.getElementById("questionCount").textContent = `${questionInput.value.length} / 500`;
+    });
+
+
+    questionForm.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      questionButton.disabled = true;
+      questionStatus.className = "question-status";
+
+      try {
+        const response = await fetch("/api/questions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: questionInput.value.trim() })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error || "could not send");
+        }
+
+        questionInput.value = "";
+        questionInput.dispatchEvent(new Event("input"));
+        questionStatus.textContent = "sent. thank you.";
+        questionStatus.classList.add("success");
+
+      } catch (err) {
+        questionStatus.textContent = (err instanceof SyntaxError ? "something went wrong" : err.message).toLowerCase();
+        questionStatus.classList.add("failed");
+
+      } finally {
+        questionButton.disabled = false;
+      }
+    });
+
+
+    fetch("/api/questions", { cache: "no-store" })
+      .then(response => response.json())
+      .then(data => {
+        const questions = data.success ? data.questions : [];
+
+        document.getElementById("questionList").replaceChildren(
+          ...questions.map(question => {
+            const item = createElement("article", "question-item");
+
+            item.append(
+              createElement("div", "question-meta", formatDate(question.answered || question.ts)),
+              createElement("h2", "question-text", question.text),
+              createElement("p", "question-answer", question.answer)
+            );
+
+            return item;
+          })
+        );
+      })
+      .catch(() => {});
+  </script>
+
+</body>
+</html>

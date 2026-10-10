@@ -7,19 +7,31 @@
   <title>admin — connor.fm</title>
 
   <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#080808">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 
   <style>
+    /* Same colors and type as the public site (style.css). */
+
     :root {
-      --background: #e8e3d4;
-      --surface: #efebdf;
-      --text: #171714;
-      --muted: rgba(23, 23, 20, .55);
-      --line: rgba(23, 23, 20, .3);
-      --line-light: rgba(23, 23, 20, .15);
-      --error: #8b2929;
-      --success: #35633c;
-      --warning: #8a6824;
+      color-scheme: dark;
+
+      --background: #080808;
+      --surface: #10100f;
+      --surface-light: #151512;
+
+      --text: #e8e8e3;
+      --muted: #8c8c87;
+      --faint: #55554f;
+
+      --khaki: #9a9865;
+
+      --line: #242420;
+      --line-strong: #33332d;
+
+      --error: #c27070;
+      --success: #9a9865;
+      --warning: #c9a35a;
     }
 
     * {
@@ -50,29 +62,55 @@
       font: inherit;
     }
 
+    ::selection {
+      background: var(--khaki);
+      color: var(--background);
+    }
+
+
+    /* BUTTONS — like the unlock button on the music page */
+
     button {
       cursor: pointer;
-      border: 1px solid var(--text);
-      background: var(--text);
+      border: 1px solid var(--khaki);
+      background: var(--khaki);
       color: var(--background);
-      padding: 11px 16px;
+      padding: 12px 18px;
+      font-family: monospace;
       font-size: 12px;
+      transition: opacity .2s ease, color .2s ease, border-color .2s ease;
+    }
+
+    button:hover {
+      opacity: .8;
     }
 
     button:disabled {
-      opacity: .5;
+      opacity: .4;
       cursor: wait;
     }
 
     button.secondary {
       background: transparent;
+      border-color: var(--line-strong);
       color: var(--text);
     }
 
+    button.secondary:hover {
+      opacity: 1;
+      border-color: var(--khaki);
+      color: var(--khaki);
+    }
+
     button.danger {
-      border-color: var(--error);
       background: transparent;
+      border-color: var(--line-strong);
       color: var(--error);
+    }
+
+    button.danger:hover {
+      opacity: 1;
+      border-color: var(--error);
     }
 
     button.small {
@@ -81,25 +119,28 @@
     }
 
     .container {
-      width: min(1100px, calc(100% - 32px));
-      margin: auto;
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 32px;
     }
 
     .small {
-      font-size: 11px;
+      font-size: 12px;
       color: var(--muted);
+      line-height: 1.5;
     }
 
     .mono {
       font-family: monospace;
+      letter-spacing: .08em;
     }
 
 
-    /* HEADER */
+    /* HEADER — like the site navigation */
 
     header {
-      border-bottom: 1px solid var(--line);
-      padding: 22px 0;
+      padding: 24px 0 20px;
     }
 
     .header-inner {
@@ -110,49 +151,81 @@
     }
 
     .brand {
-      font-size: 13px;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .site-name {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      transition: color .2s ease;
+    }
+
+    .site-name:hover {
+      color: var(--khaki);
+    }
+
+    .brand-sub {
+      color: var(--khaki);
+      font-size: 14px;
     }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 18px;
-      font-size: 12px;
+      gap: 24px;
+      font-size: 14px;
     }
 
     .header-actions a {
       color: var(--muted);
       text-decoration: none;
+      transition: color .2s ease;
     }
 
     .header-actions a:hover {
-      color: var(--text);
+      color: var(--khaki);
     }
 
     #logoutButton {
       display: none;
     }
 
+    .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 0 32px;
+    }
+
 
     /* LOGIN */
 
     .login {
-      max-width: 460px;
-      padding: 70px 0 100px;
+      max-width: 450px;
+      padding: 85px 0 120px;
     }
 
     h1 {
-      font-size: clamp(42px, 8vw, 76px);
-      font-weight: 400;
-      letter-spacing: -.06em;
-      line-height: .95;
-      margin: 10px 0 30px;
+      font-size: clamp(56px, 8vw, 110px);
+      font-weight: 600;
+      letter-spacing: -.07em;
+      line-height: .85;
+      margin: 40px 0 45px;
+    }
+
+    .login form {
+      border-top: 1px solid var(--line);
+      padding-top: 28px;
     }
 
     .login button {
       width: 100%;
       margin-top: 12px;
-      padding: 13px;
+      padding: 15px;
     }
 
     .login .status {
@@ -165,14 +238,14 @@
 
     #dashboard {
       display: none;
-      grid-template-columns: 190px 1fr;
-      gap: 60px;
-      padding: 50px 0 0;
+      grid-template-columns: 200px 1fr;
+      gap: 70px;
+      padding: 60px 0 0;
     }
 
     .tabs {
       position: sticky;
-      top: 20px;
+      top: 24px;
       align-self: start;
       display: flex;
       flex-direction: column;
@@ -186,22 +259,28 @@
       background: transparent;
       color: var(--muted);
       border: 0;
-      border-bottom: 1px solid var(--line-light);
-      padding: 13px 0;
-      font-size: 13px;
+      border-bottom: 1px solid var(--line);
+      padding: 14px 0;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 14px;
       text-align: left;
+      transition: color .2s ease;
     }
 
-    .tabs button:hover,
+    .tabs button:hover {
+      opacity: 1;
+      color: var(--khaki);
+    }
+
     .tabs button.active {
-      color: var(--text);
+      color: var(--khaki);
     }
 
     .tabs button .num {
       font-family: monospace;
-      font-size: 10px;
-      margin-right: 10px;
-      opacity: .7;
+      font-size: 11px;
+      margin-right: 12px;
+      color: var(--faint);
     }
 
     .tabs button .dot {
@@ -228,27 +307,28 @@
     }
 
     .panel-head h1 {
-      margin-bottom: 0;
+      margin: 30px 0 0;
     }
 
     .panel-intro {
-      font-size: 13px;
+      font-size: 15px;
       color: var(--muted);
-      margin: 18px 0 40px;
+      margin: 28px 0 55px;
       max-width: 560px;
-      line-height: 1.5;
+      line-height: 1.65;
     }
 
     .view-link {
-      font-size: 12px;
+      font-size: 14px;
       color: var(--muted);
       text-decoration: none;
       white-space: nowrap;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
+      transition: color .2s ease;
     }
 
     .view-link:hover {
-      color: var(--text);
+      color: var(--khaki);
     }
 
 
@@ -256,17 +336,18 @@
 
     .group {
       border-top: 1px solid var(--line);
-      padding: 28px 0 10px;
+      padding: 32px 0 14px;
     }
 
     .group-head {
-      margin-bottom: 22px;
+      margin-bottom: 26px;
     }
 
     h2 {
-      font-size: 22px;
-      font-weight: 400;
-      margin: 0 0 6px;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -.05em;
+      margin: 0 0 8px;
     }
 
     .fields {
@@ -277,7 +358,7 @@
 
     .field {
       grid-column: 1 / -1;
-      margin-bottom: 18px;
+      margin-bottom: 22px;
     }
 
     .field.half {
@@ -286,138 +367,62 @@
 
     label {
       display: block;
+      font-family: monospace;
       font-size: 11px;
       color: var(--muted);
-      margin: 0 0 7px;
+      margin: 0 0 10px;
     }
 
     .hint {
+      font-family: monospace;
       font-size: 11px;
-      color: var(--muted);
-      margin-top: 6px;
-      line-height: 1.4;
+      color: var(--faint);
+      margin-top: 8px;
+      line-height: 1.5;
     }
 
     input,
     textarea,
     select {
       width: 100%;
-      background: transparent;
-      border: 1px solid rgba(23, 23, 20, .35);
-      padding: 12px;
-      color: inherit;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      padding: 14px 15px;
+      color: var(--text);
+      font-size: 14px;
       outline: none;
       border-radius: 0;
+      transition: border-color .2s ease;
     }
 
     textarea {
-      min-height: 110px;
+      min-height: 120px;
       resize: vertical;
-      line-height: 1.5;
+      line-height: 1.6;
     }
 
     input:focus,
     textarea:focus,
     select:focus {
-      border-color: var(--text);
+      border-color: var(--khaki);
     }
 
     input::placeholder,
     textarea::placeholder {
-      color: rgba(23, 23, 20, .35);
+      color: var(--faint);
+    }
+
+    input[type="password"] {
+      font-family: monospace;
     }
 
     .preview {
       display: none;
-      width: 120px;
-      height: 120px;
+      width: 140px;
+      height: 140px;
       object-fit: cover;
       border: 1px solid var(--line);
-      margin-top: 10px;
-    }
-
-
-    /* LISTS */
-
-    .list-items {
-      margin-bottom: 14px;
-    }
-
-    .list-item {
-      border: 1px solid var(--line);
-      margin-bottom: 10px;
-      background: var(--surface);
-    }
-
-    .list-item-head {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 14px;
-      cursor: pointer;
-    }
-
-    .list-item-index {
-      font-family: monospace;
-      font-size: 10px;
-      color: var(--muted);
-      width: 22px;
-    }
-
-    .list-item-title {
-      flex: 1;
-      min-width: 0;
-      font-size: 15px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .list-item-actions {
-      display: flex;
-      gap: 6px;
-    }
-
-    .list-item-body {
-      display: none;
-      border-top: 1px solid var(--line-light);
-      padding: 18px 14px 4px;
-    }
-
-    .list-item.open .list-item-body {
-      display: block;
-    }
-
-    .badge {
-      font-family: monospace;
-      font-size: 9px;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      border: 1px solid var(--line);
-      padding: 4px 6px;
-      white-space: nowrap;
-    }
-
-    .badge.live {
-      border-color: var(--success);
-      color: var(--success);
-    }
-
-    .badge.scheduled {
-      border-color: var(--warning);
-      color: var(--warning);
-    }
-
-    .badge.draft {
-      color: var(--muted);
-    }
-
-    .empty {
-      font-size: 12px;
-      color: var(--muted);
-      border: 1px dashed var(--line);
-      padding: 18px 14px;
-      margin-bottom: 14px;
+      margin-top: 12px;
     }
 
 
@@ -425,16 +430,20 @@
 
     .file-row {
       display: flex;
-      gap: 8px;
     }
 
     .file-row input {
       flex: 1;
       min-width: 0;
+      border-right: 0;
     }
 
     .file-row button {
       white-space: nowrap;
+    }
+
+    .file-row button + button {
+      border-left: 0;
     }
 
     .file-input {
@@ -443,8 +452,8 @@
 
     .progress {
       height: 2px;
-      background: var(--line-light);
-      margin-top: 8px;
+      background: var(--line);
+      margin-top: 10px;
       display: none;
     }
 
@@ -455,7 +464,7 @@
     .progress div {
       height: 100%;
       width: 0;
-      background: var(--text);
+      background: var(--khaki);
       transition: width .2s ease;
     }
 
@@ -463,45 +472,143 @@
       display: block;
       width: 100%;
       height: 36px;
-      margin-top: 10px;
+      margin-top: 12px;
     }
 
     .file-row.dragging input {
-      border-color: var(--text);
+      border-color: var(--khaki);
       border-style: dashed;
+    }
+
+
+    /* LISTS */
+
+    .list-items {
+      margin-bottom: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .list-item {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .list-item.open {
+      background: var(--surface);
+    }
+
+    .list-item-head {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 12px;
+      cursor: pointer;
+    }
+
+    .list-item-index {
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--muted);
+      width: 24px;
+    }
+
+    .list-item-title {
+      flex: 1;
+      min-width: 0;
+      font-size: 17px;
+      letter-spacing: -.02em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: color .2s ease;
+    }
+
+    .list-item-head:hover .list-item-title,
+    .list-item.open .list-item-title {
+      color: var(--khaki);
+    }
+
+    .list-item-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .list-item-body {
+      display: none;
+      border-top: 1px solid var(--line);
+      padding: 22px 12px 6px;
+    }
+
+    .list-item.open .list-item-body {
+      display: block;
+    }
+
+    .badge {
+      font-family: monospace;
+      font-size: 10px;
+      letter-spacing: .08em;
+      border: 1px solid var(--line-strong);
+      color: var(--muted);
+      padding: 4px 7px;
+      white-space: nowrap;
+    }
+
+    .badge.live {
+      border-color: var(--khaki);
+      color: var(--khaki);
+    }
+
+    .badge.scheduled {
+      border-color: var(--warning);
+      color: var(--warning);
+    }
+
+    .badge.draft {
+      color: var(--faint);
+    }
+
+    .empty {
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 22px 0;
+      border-bottom: 1px solid var(--line);
     }
 
 
     /* MEDIA LIBRARY */
 
     .media-summary {
+      font-family: monospace;
       font-size: 12px;
       color: var(--muted);
-      margin-bottom: 18px;
+      margin-bottom: 22px;
+    }
+
+    #mediaList {
+      border-top: 1px solid var(--line);
     }
 
     .media-item {
       display: grid;
       grid-template-columns: 56px 1fr auto;
-      gap: 14px;
+      gap: 18px;
       align-items: center;
-      border: 1px solid var(--line);
-      background: var(--surface);
-      padding: 10px;
-      margin-bottom: 8px;
+      border-bottom: 1px solid var(--line);
+      padding: 14px 0;
     }
 
     .media-thumb {
       width: 56px;
       height: 56px;
       object-fit: cover;
-      border: 1px solid var(--line-light);
+      background: var(--surface);
+      border: 1px solid var(--line);
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: monospace;
       font-size: 10px;
-      color: var(--muted);
+      color: var(--khaki);
     }
 
     .media-info {
@@ -509,20 +616,308 @@
     }
 
     .media-name {
-      font-size: 14px;
+      font-size: 15px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
     .media-meta {
+      font-family: monospace;
       font-size: 11px;
       color: var(--muted);
-      margin-top: 4px;
+      margin-top: 6px;
     }
 
     .media-meta .unused {
       color: var(--warning);
+    }
+
+
+    /* ROWS (codes, comments, questions) */
+
+    .rows {
+      border-top: 1px solid var(--line);
+      margin-top: 8px;
+    }
+
+    .row-item {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .row-item.open:not(:has(.question-admin)) {
+      background: var(--surface);
+    }
+
+    .row-head {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 12px;
+      cursor: pointer;
+    }
+
+    .row-head.static {
+      cursor: default;
+    }
+
+    .row-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .row-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 17px;
+      letter-spacing: -.02em;
+    }
+
+    .row-head:not(.static):hover .row-title > span:first-child {
+      color: var(--khaki);
+    }
+
+    .row-text {
+      font-size: 15px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+    }
+
+    .row-meta {
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+      line-height: 1.6;
+    }
+
+    .code-value {
+      color: var(--khaki);
+    }
+
+    .row-details {
+      display: none;
+      padding: 4px 12px 22px 12px;
+    }
+
+    .row-item.open .row-details {
+      display: block;
+    }
+
+    .detail-label {
+      font-family: monospace;
+      font-size: 11px;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin: 34px 0 12px;
+    }
+
+    .row-details .detail-label:first-child {
+      margin-top: 10px;
+    }
+
+    .log-line {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 14px;
+      font-size: 13px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .log-time {
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .question-admin {
+      padding: 20px 0 22px;
+    }
+
+    .question-admin-text {
+      font-size: 20px;
+      line-height: 1.35;
+      letter-spacing: -.02em;
+      margin: 12px 0 16px;
+      overflow-wrap: anywhere;
+    }
+
+    .question-admin textarea {
+      min-height: 90px;
+      margin-bottom: 12px;
+    }
+
+    .checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .checkbox input {
+      width: auto;
+      accent-color: var(--khaki);
+    }
+
+    .mono-input {
+      font-family: monospace;
+    }
+
+
+    /* STATS */
+
+    .range-buttons {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 26px;
+    }
+
+    .range-buttons button.selected {
+      border-color: var(--khaki);
+      color: var(--khaki);
+    }
+
+    .tiles {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .tile {
+      padding: 22px 0;
+    }
+
+    .tile + .tile {
+      padding-left: 22px;
+      border-left: 1px solid var(--line);
+    }
+
+    .tile-value {
+      font-size: clamp(32px, 4vw, 48px);
+      font-weight: 600;
+      letter-spacing: -.05em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tile-label {
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    .chart {
+      position: relative;
+      padding-top: 18px;
+    }
+
+    .chart-scale {
+      position: absolute;
+      top: 0;
+      right: 0;
+      font-family: monospace;
+      font-size: 10px;
+      color: var(--faint);
+    }
+
+    .chart-bars {
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 160px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .chart-column {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      align-items: flex-end;
+      outline: none;
+      cursor: default;
+    }
+
+    .chart-bar {
+      width: 100%;
+      background: var(--khaki);
+      border-radius: 4px 4px 0 0;
+      opacity: .85;
+      transition: opacity .15s ease;
+    }
+
+    .chart-column.hover .chart-bar,
+    .chart-column:focus-visible .chart-bar {
+      opacity: 1;
+      box-shadow: 0 0 0 1px var(--text);
+    }
+
+    .chart-tooltip {
+      position: absolute;
+      top: 0;
+      transform: translate(-50%, -4px);
+      background: var(--surface-light);
+      border: 1px solid var(--line-strong);
+      padding: 8px 10px;
+      font-family: monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .1s ease;
+    }
+
+    .chart-tooltip.visible {
+      opacity: 1;
+    }
+
+    .chart-tooltip-date,
+    .chart-tooltip-muted {
+      color: var(--muted);
+    }
+
+    .chart-axis {
+      display: flex;
+      justify-content: space-between;
+      font-family: monospace;
+      font-size: 10px;
+      color: var(--faint);
+      margin-top: 8px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .data-table th {
+      font-family: monospace;
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--muted);
+      text-align: left;
+      padding: 0 0 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .data-table td {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .data-table .num {
+      text-align: right;
+      font-family: monospace;
+      font-variant-numeric: tabular-nums;
+      padding-left: 16px;
+      white-space: nowrap;
     }
 
 
@@ -533,16 +928,17 @@
       bottom: 0;
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 18px;
       background: var(--background);
       border-top: 1px solid var(--line);
-      padding: 16px 0 22px;
-      margin-top: 20px;
+      padding: 18px 0 24px;
+      margin-top: 24px;
       z-index: 2;
     }
 
     .status {
-      font-size: 12px;
+      font-family: monospace;
+      font-size: 11px;
       color: var(--muted);
     }
 
@@ -569,26 +965,55 @@
     /* MOBILE */
 
     @media (max-width: 760px) {
+      .container {
+        padding: 0 20px;
+      }
+
+      header {
+        padding: 20px 0 18px;
+      }
+
+      .divider {
+        margin: 0 20px;
+      }
+
+      .header-actions {
+        gap: 16px;
+        font-size: 13px;
+      }
+
+      h1 {
+        font-size: 18vw;
+      }
+
       #dashboard {
         grid-template-columns: 1fr;
-        gap: 30px;
-        padding-top: 25px;
+        gap: 10px;
+        padding-top: 20px;
       }
 
       .tabs {
-        position: static;
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        background: var(--background);
         flex-direction: row;
         overflow-x: auto;
         border-top: 0;
         border-bottom: 1px solid var(--line);
-        gap: 20px;
+        gap: 22px;
         scrollbar-width: none;
+      }
+
+      .tabs::-webkit-scrollbar {
+        display: none;
       }
 
       .tabs button {
         border-bottom: 0;
         white-space: nowrap;
         gap: 6px;
+        font-size: 13px;
       }
 
       .tabs button .num {
@@ -602,6 +1027,15 @@
       .panel-head {
         flex-direction: column;
         align-items: flex-start;
+        gap: 14px;
+      }
+
+      .panel {
+        padding-top: 24px;
+      }
+
+      .panel-intro {
+        margin-bottom: 40px;
       }
 
       .list-item-head {
@@ -612,8 +1046,41 @@
         flex-wrap: wrap;
       }
 
+      .file-row input {
+        flex-basis: 100%;
+        border-right: 1px solid var(--line);
+        border-bottom: 0;
+      }
+
+      .file-row button {
+        flex: 1;
+      }
+
       .media-item {
         grid-template-columns: 56px 1fr;
+      }
+
+      .row-head {
+        flex-wrap: wrap;
+      }
+
+      .tiles {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .tile:nth-child(3) {
+        padding-left: 0;
+        border-left: 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .tile:nth-child(4) {
+        border-top: 1px solid var(--line);
+      }
+
+      .log-line {
+        grid-template-columns: 1fr;
+        gap: 2px;
       }
 
       .media-item .list-item-actions {
@@ -627,7 +1094,10 @@
 
 <header>
   <div class="container header-inner">
-    <div class="brand">connor.fm / admin</div>
+    <div class="brand">
+      <a href="/" class="site-name">connor.fm</a>
+      <span class="brand-sub">admin</span>
+    </div>
 
     <div class="header-actions">
       <a href="/" target="_blank" rel="noopener">view site ↗</a>
@@ -635,6 +1105,8 @@
     </div>
   </div>
 </header>
+
+<div class="divider"></div>
 
 <main class="container">
 
@@ -714,6 +1186,16 @@ const TABS = [
           { path: "home.coverImage", label: "cover image", type: "image", hint: "Upload an image or paste a link. Leave empty to show the cover text instead." },
           { path: "home.coverText", label: "cover text", def: "?", half: true }
         ]
+      },
+      {
+        title: "countdown",
+        description: "Shown below the announcement. Leave the date empty to hide it.",
+        fields: [
+          { path: "home.countdownAt", label: "count down to", type: "datetime", half: true, hint: "Your local time." },
+          { path: "home.countdownLabel", label: "label", def: "release in", half: true },
+          { path: "home.countdownDone", label: "text when the time is up", def: "out now", half: true },
+          { path: "home.countdownLink", label: "link when the time is up (optional)", placeholder: "https://… or /music", half: true }
+        ]
       }
     ]
   },
@@ -743,11 +1225,6 @@ const TABS = [
           { path: "music.coverImage", label: "cover image", type: "image", hint: "Upload an image or paste a link. Leave empty to show the cover text instead." },
           { path: "music.coverText", label: "cover text", def: "?", half: true }
         ]
-      },
-      {
-        title: "access code",
-        description: "The code people need to enter the listening room.",
-        special: "listeningCode"
       },
       {
         title: "access box",
@@ -791,6 +1268,24 @@ const TABS = [
           { path: "music.footerLeft", label: "left", def: "this project is private", half: true },
           { path: "music.footerRight", label: "right", def: "connor.fm/music", half: true }
         ]
+      }
+    ]
+  },
+
+  {
+    id: "room",
+    title: "listening room",
+    view: "/music",
+    intro: "Give every person their own access code. You see who unlocked the room and what they listened to, and you can pause a code at any time.",
+    groups: [
+      {
+        title: "access codes",
+        special: "codes"
+      },
+      {
+        title: "comments",
+        description: "Comments people left in the listening room.",
+        special: "comments"
       }
     ]
   },
@@ -907,10 +1402,44 @@ const TABS = [
       {
         title: "page",
         fields: [
-          { path: "messagesPage.label", label: "section label", def: "05 / ...", half: true },
+          { path: "messagesPage.label", label: "section label", def: "06 / ...", half: true },
           { path: "messagesPage.title", label: "title", def: "messages", half: true },
           { path: "messagesPage.intro", label: "intro", type: "long", def: "notes, updates and things worth saying." }
         ]
+      }
+    ]
+  },
+
+  {
+    id: "questions",
+    title: "questions",
+    view: "/questions",
+    intro: "Anonymous questions from the ask page. Answer and publish the ones you like — delete anything you don't want to keep.",
+    groups: [
+      {
+        title: "inbox",
+        special: "questions"
+      },
+      {
+        title: "page",
+        fields: [
+          { path: "questionsPage.label", label: "section label", def: "05 / ask", half: true },
+          { path: "questionsPage.title", label: "title", def: "ask", half: true },
+          { path: "questionsPage.intro", label: "intro", type: "long", def: "anything. anonymous. some answers end up here." },
+          { path: "questionsPage.placeholder", label: "placeholder in the text field", def: "your question" }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: "stats",
+    title: "stats",
+    intro: "Page views and plays. No cookies, no tracking across sites — visitors are counted anonymously per day.",
+    groups: [
+      {
+        title: "overview",
+        special: "stats"
       }
     ]
   },
@@ -926,6 +1455,14 @@ const TABS = [
         fields: [
           { path: "site.footerName", label: "left", def: "connor.fm", half: true },
           { path: "site.footerYear", label: "right", def: "© 2026", half: true }
+        ]
+      },
+      {
+        title: "now listening",
+        description: "A small line in the footer of every page. Leave empty to hide it.",
+        fields: [
+          { path: "site.nowListening", label: "song", placeholder: "artist — song", half: true },
+          { path: "site.nowListeningLink", label: "link (optional)", placeholder: "https://open.spotify.com/…", half: true }
         ]
       }
     ]
@@ -1228,14 +1765,23 @@ function renderGroup(group) {
 
   section.append(head);
 
-  if (group.special === "listeningCode") {
-    section.append(renderListeningCode());
-
-  } else if (group.special === "password") {
+  if (group.special === "password") {
     section.append(renderPasswordForm());
 
   } else if (group.special === "media") {
     section.append(renderMediaLibrary());
+
+  } else if (group.special === "codes") {
+    section.append(renderCodes());
+
+  } else if (group.special === "comments") {
+    section.append(renderCommentModeration());
+
+  } else if (group.special === "questions") {
+    section.append(renderQuestions());
+
+  } else if (group.special === "stats") {
+    section.append(renderStats());
 
   } else {
     section.append(renderFields(group.fields, content));
@@ -1577,7 +2123,7 @@ function renderMediaLibrary() {
 
   const wrapper = el("div");
   const summary = el("div", { class: "media-summary" }, "loading files…");
-  const list = el("div");
+  const list = el("div", { id: "mediaList" });
 
   wrapper.append(summary, list);
 
@@ -1928,49 +2474,58 @@ function fromLocalInput(value) {
 
 
 // ==========================================
-// LISTENING CODE
+// ACCESS CODES (one per person)
 // ==========================================
 
-function renderListeningCode() {
+function renderCodes() {
 
-  const wrapper = el("div", { class: "fields" });
-  const field = el("div", { class: "field" });
-  const input = el("input", { id: "listeningCode", type: "text", autocomplete: "off" });
-  const row = el("div", { class: "inline-action" });
-  const button = el("button", { type: "button", class: "secondary" }, "save code");
+  const wrapper = el("div");
+
+  // --- create ---
+  const form = el("form", { class: "fields" });
+  const labelField = el("div", { class: "field half" });
+  const codeField = el("div", { class: "field half" });
+  const labelInput = el("input", { id: "newCodeLabel", type: "text", placeholder: "e.g. max, press, studio", maxlength: "60", required: "" });
+  const codeInput = el("input", { id: "newCodeValue", type: "text", placeholder: "leave empty for a random code", maxlength: "32", autocomplete: "off", class: "mono-input" });
+
+  labelField.append(el("label", { for: "newCodeLabel" }, "who is it for?"), labelInput);
+  codeField.append(el("label", { for: "newCodeValue" }, "code (optional)"), codeInput);
+
+  const row = el("div", { class: "field inline-action" });
+  const createButton = el("button", { type: "submit" }, "create code");
   const status = el("span", { class: "status" });
+  row.append(createButton, status);
 
-  row.append(button, status);
-  row.style.marginTop = "12px";
+  form.append(labelField, codeField, row);
 
-  field.append(
-    el("label", { for: "listeningCode" }, "access code"),
-    input,
-    el("div", { class: "hint" }, "4–32 characters. Saved separately with its own button."),
-    row
-  );
+  const list = el("div", { class: "rows" });
 
-  wrapper.append(field);
+  wrapper.append(form, list);
 
-  api("/api/admin/listening-code")
-    .then(data => {
-      input.value = data.code || "";
-    })
-    .catch(error => {
-      status.textContent = error.message;
-      status.className = "status error";
-    });
+  const show = codes => {
+    if (!codes.length) {
+      list.replaceChildren(el("div", { class: "empty" }, "No codes yet. Create one for every person who should hear the project."));
+      return;
+    }
 
-  button.addEventListener("click", async () => {
-    button.disabled = true;
+    list.replaceChildren(...codes.map(code => renderCode(code, show)));
+  };
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    createButton.disabled = true;
+    status.textContent = "";
 
     try {
-      await api("/api/admin/listening-code", {
+      const data = await api("/api/admin/codes", {
         method: "POST",
-        body: JSON.stringify({ code: input.value })
+        body: JSON.stringify({ label: labelInput.value, code: codeInput.value })
       });
 
-      status.textContent = "code saved.";
+      labelInput.value = "";
+      codeInput.value = "";
+      show(data.codes);
+      status.textContent = "code created.";
       status.className = "status success";
 
     } catch (error) {
@@ -1978,11 +2533,543 @@ function renderListeningCode() {
       status.className = "status error";
 
     } finally {
-      button.disabled = false;
+      createButton.disabled = false;
     }
   });
 
+  list.append(el("div", { class: "empty" }, "loading codes…"));
+
+  api("/api/admin/codes")
+    .then(data => show(data.codes))
+    .catch(error => list.replaceChildren(el("div", { class: "empty" }, error.message)));
+
   return wrapper;
+}
+
+
+function renderCode(code, show) {
+
+  const item = el("div", { class: "row-item" });
+  const head = el("div", { class: "row-head" });
+  const main = el("div", { class: "row-main" });
+  const title = el("div", { class: "row-title" });
+  const meta = el("div", { class: "row-meta" });
+  const actions = el("div", { class: "list-item-actions" });
+  const details = el("div", { class: "row-details" });
+
+  title.append(
+    el("span", {}, code.label),
+    el("span", { class: `badge ${code.active ? "live" : "draft"}` }, code.active ? "active" : "paused")
+  );
+
+  meta.append(
+    el("span", { class: "code-value" }, code.code),
+    ` · ${code.unlocks} unlock${code.unlocks === 1 ? "" : "s"} · ${code.plays} play${code.plays === 1 ? "" : "s"} · ${code.completes} completed · ${code.last_seen ? `last seen ${timeAgo(code.last_seen)}` : "never used"}`
+  );
+
+  main.append(title, meta);
+
+  const action = (label, className, handler) => {
+    const button = el("button", { type: "button", class: `small ${className}` }, label);
+
+    button.addEventListener("click", async event => {
+      event.stopPropagation();
+      button.disabled = true;
+
+      try {
+        await handler(button);
+      } catch (error) {
+        alert(error.message);
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    actions.append(button);
+  };
+
+  action("copy link", "secondary", async button => {
+    await navigator.clipboard.writeText(`${location.origin}/music?code=${encodeURIComponent(code.code)}`);
+    button.textContent = "copied";
+    setTimeout(() => (button.textContent = "copy link"), 1500);
+  });
+
+  action(code.active ? "pause" : "activate", "secondary", async () => {
+    const data = await api("/api/admin/codes", {
+      method: "PATCH",
+      body: JSON.stringify({ id: code.id, active: !code.active })
+    });
+
+    show(data.codes);
+  });
+
+  action("delete", "danger", async () => {
+    if (!confirm(`Delete the code for "${code.label}"? They lose access immediately.`)) {
+      return;
+    }
+
+    await api(`/api/admin/codes?id=${encodeURIComponent(code.id)}`, { method: "DELETE" });
+
+    const data = await api("/api/admin/codes");
+    show(data.codes);
+  });
+
+  head.append(main, actions);
+  item.append(head, details);
+
+  // Click to see what this person listened to.
+  head.addEventListener("click", async () => {
+    const open = item.classList.toggle("open");
+
+    if (!open || details.dataset.loaded) {
+      return;
+    }
+
+    details.replaceChildren(el("div", { class: "small" }, "loading…"));
+
+    try {
+      const activity = await api(`/api/admin/codes/activity?id=${encodeURIComponent(code.id)}`);
+      details.dataset.loaded = "1";
+      details.replaceChildren(renderActivity(activity));
+    } catch (error) {
+      details.replaceChildren(el("div", { class: "small" }, error.message));
+    }
+  });
+
+  return item;
+}
+
+
+function renderActivity({ tracks, recent }) {
+
+  const wrapper = el("div");
+
+  if (!tracks.length && !recent.length) {
+    wrapper.append(el("div", { class: "small" }, "Nothing yet."));
+    return wrapper;
+  }
+
+  if (tracks.length) {
+    wrapper.append(
+      el("div", { class: "detail-label" }, "tracks"),
+      table(
+        ["track", "plays", "completed", "last"],
+        tracks.map(track => [track.title || "untitled", track.plays, track.completes, timeAgo(track.last)])
+      )
+    );
+  }
+
+  if (recent.length) {
+    const names = { unlock: "unlocked the room", play: "played", complete: "finished" };
+
+    const log = el("div", { class: "log" });
+
+    recent.forEach(event => {
+      const line = el("div", { class: "log-line" });
+      line.append(
+        el("span", { class: "log-time" }, formatDateTime(event.ts)),
+        el("span", {}, [names[event.type] || event.type, event.title].filter(Boolean).join(" — "))
+      );
+      log.append(line);
+    });
+
+    wrapper.append(el("div", { class: "detail-label" }, "recent"), log);
+  }
+
+  return wrapper;
+}
+
+
+// ==========================================
+// COMMENTS (moderation)
+// ==========================================
+
+function renderCommentModeration() {
+
+  const list = el("div", { class: "rows" });
+
+  const titleOf = audio =>
+    (content.music?.tracklist || []).find(track => track.audio === audio)?.title || "removed track";
+
+  const load = async () => {
+    try {
+      const { comments } = await api("/api/admin/comments");
+
+      if (!comments.length) {
+        list.replaceChildren(el("div", { class: "empty" }, "No comments yet."));
+        return;
+      }
+
+      list.replaceChildren(
+        ...comments.map(comment => {
+          const item = el("div", { class: "row-item" });
+          const head = el("div", { class: "row-head static" });
+          const main = el("div", { class: "row-main" });
+
+          main.append(
+            el("div", { class: "row-text" }, comment.text),
+            el(
+              "div",
+              { class: "row-meta" },
+              [
+                comment.name || "anonymous",
+                comment.code_label ? `code: ${comment.code_label}` : "",
+                `${titleOf(comment.track)}${comment.at != null ? ` at ${formatSeconds(comment.at)}` : ""}`,
+                timeAgo(comment.ts)
+              ]
+                .filter(Boolean)
+                .join(" · ")
+            )
+          );
+
+          const remove = el("button", { type: "button", class: "small danger" }, "delete");
+
+          remove.addEventListener("click", async () => {
+            if (!confirm("Delete this comment?")) {
+              return;
+            }
+
+            remove.disabled = true;
+
+            try {
+              await api(`/api/admin/comments?id=${encodeURIComponent(comment.id)}`, { method: "DELETE" });
+              item.remove();
+            } catch (error) {
+              alert(error.message);
+              remove.disabled = false;
+            }
+          });
+
+          const actions = el("div", { class: "list-item-actions" });
+          actions.append(remove);
+          head.append(main, actions);
+          item.append(head);
+
+          return item;
+        })
+      );
+
+    } catch (error) {
+      list.replaceChildren(el("div", { class: "empty" }, error.message));
+    }
+  };
+
+  list.append(el("div", { class: "empty" }, "loading comments…"));
+  load();
+
+  return list;
+}
+
+
+// ==========================================
+// QUESTIONS
+// ==========================================
+
+function renderQuestions() {
+
+  const wrapper = el("div");
+  const summary = el("div", { class: "media-summary" });
+  const list = el("div", { class: "rows" });
+
+  wrapper.append(summary, list);
+
+  const load = async () => {
+    try {
+      const { questions } = await api("/api/admin/questions");
+      const open = questions.filter(question => !question.answer).length;
+
+      summary.textContent = `${questions.length} question${questions.length === 1 ? "" : "s"} · ${open} without answer`;
+
+      if (!questions.length) {
+        list.replaceChildren(el("div", { class: "empty" }, "No questions yet."));
+        return;
+      }
+
+      list.replaceChildren(...questions.map(question => renderQuestion(question, load)));
+
+    } catch (error) {
+      list.replaceChildren(el("div", { class: "empty" }, error.message));
+    }
+  };
+
+  list.append(el("div", { class: "empty" }, "loading questions…"));
+  load();
+
+  return wrapper;
+}
+
+
+function renderQuestion(question, reload) {
+
+  const item = el("div", { class: "row-item open" });
+  const body = el("div", { class: "question-admin" });
+  const meta = el("div", { class: "row-meta" });
+
+  const state = !question.answer ? "new" : question.published ? "published" : "answered";
+
+  meta.append(
+    el("span", { class: `badge ${state === "published" ? "live" : state === "new" ? "scheduled" : "draft"}` }, state),
+    ` ${formatDateTime(question.ts)}`
+  );
+
+  const id = `answer-${question.id}`;
+  const answer = el("textarea", { id, placeholder: "your answer" });
+  answer.value = question.answer || "";
+
+  const publish = el("input", { type: "checkbox", id: `publish-${question.id}` });
+  publish.checked = Boolean(question.published);
+
+  const publishLabel = el("label", { for: `publish-${question.id}`, class: "checkbox" });
+  publishLabel.prepend(publish);
+  publishLabel.append(" show on the ask page");
+
+  const save = el("button", { type: "button", class: "small" }, "save");
+  const remove = el("button", { type: "button", class: "small danger" }, "delete");
+  const status = el("span", { class: "status" });
+
+  save.addEventListener("click", async () => {
+    if (publish.checked && !answer.value.trim()) {
+      status.textContent = "write an answer before publishing.";
+      status.className = "status error";
+      return;
+    }
+
+    save.disabled = true;
+
+    try {
+      await api("/api/admin/questions", {
+        method: "PATCH",
+        body: JSON.stringify({ id: question.id, answer: answer.value.trim(), published: publish.checked })
+      });
+
+      reload();
+
+    } catch (error) {
+      status.textContent = error.message;
+      status.className = "status error";
+      save.disabled = false;
+    }
+  });
+
+  remove.addEventListener("click", async () => {
+    if (!confirm("Delete this question for good?")) {
+      return;
+    }
+
+    remove.disabled = true;
+
+    try {
+      await api(`/api/admin/questions?id=${encodeURIComponent(question.id)}`, { method: "DELETE" });
+      reload();
+    } catch (error) {
+      alert(error.message);
+      remove.disabled = false;
+    }
+  });
+
+  const actions = el("div", { class: "inline-action" });
+  actions.append(save, remove, publishLabel, status);
+
+  body.append(meta, el("div", { class: "question-admin-text" }, question.text), answer, actions);
+  item.append(body);
+
+  return item;
+}
+
+
+// ==========================================
+// STATS
+// ==========================================
+
+function renderStats() {
+
+  const wrapper = el("div");
+  const ranges = el("div", { class: "range-buttons" });
+  const output = el("div");
+
+  [7, 30, 90].forEach(days => {
+    const button = el("button", { type: "button", class: "small secondary", "data-days": String(days) }, `${days} days`);
+    button.addEventListener("click", () => load(days));
+    ranges.append(button);
+  });
+
+  wrapper.append(ranges, output);
+
+  const load = async days => {
+    ranges.querySelectorAll("button").forEach(button =>
+      button.classList.toggle("selected", button.dataset.days === String(days))
+    );
+
+    output.replaceChildren(el("div", { class: "small" }, "loading…"));
+
+    try {
+      const stats = await api(`/api/admin/stats?days=${days}`);
+      output.replaceChildren(renderStatsOutput(stats));
+    } catch (error) {
+      output.replaceChildren(el("div", { class: "small" }, error.message));
+    }
+  };
+
+  load(30);
+
+  return wrapper;
+}
+
+
+function renderStatsOutput({ days, daily, pages, tracks, unlocks }) {
+
+  const wrapper = el("div");
+
+  // Fill in days without views so the chart has no gaps.
+  const byDay = Object.fromEntries(daily.map(row => [row.day, row]));
+  const series = [];
+
+  for (let offset = days - 1; offset >= 0; offset--) {
+    const day = new Date(Date.now() - offset * 86400000).toISOString().slice(0, 10);
+    series.push({ day, views: byDay[day]?.views || 0, visitors: byDay[day]?.visitors || 0 });
+  }
+
+  const sum = key => series.reduce((total, row) => total + row[key], 0);
+  const plays = tracks.reduce((total, track) => total + track.plays, 0);
+
+  const tiles = el("div", { class: "tiles" });
+
+  [
+    ["page views", sum("views")],
+    ["visitors", sum("visitors")],
+    ["room unlocks", unlocks],
+    ["plays", plays]
+  ].forEach(([label, value]) => {
+    const tile = el("div", { class: "tile" });
+    tile.append(el("div", { class: "tile-value" }, value.toLocaleString()), el("div", { class: "tile-label" }, label));
+    tiles.append(tile);
+  });
+
+  wrapper.append(tiles, el("div", { class: "detail-label" }, "page views per day"), barChart(series));
+
+  wrapper.append(
+    el("div", { class: "detail-label" }, "pages"),
+    pages.length
+      ? table(["page", "views"], pages.map(page => [page.path, page.views]))
+      : el("div", { class: "empty" }, "No page views yet.")
+  );
+
+  wrapper.append(
+    el("div", { class: "detail-label" }, "listening room"),
+    tracks.length
+      ? table(
+          ["track", "plays", "completed", "listeners"],
+          tracks.map(track => [track.title || "untitled", track.plays, track.completes, track.listeners])
+        )
+      : el("div", { class: "empty" }, "No plays yet.")
+  );
+
+  return wrapper;
+}
+
+
+// Single series → one color, no legend; hover shows the exact numbers.
+function barChart(series) {
+
+  const chart = el("div", { class: "chart" });
+  const bars = el("div", { class: "chart-bars" });
+  const tooltip = el("div", { class: "chart-tooltip" });
+  const max = Math.max(1, ...series.map(row => row.views));
+
+  series.forEach(row => {
+    const column = el("div", { class: "chart-column", tabindex: "0" });
+    const bar = el("div", { class: "chart-bar" });
+
+    bar.style.height = row.views ? `${Math.max(2, (row.views / max) * 100)}%` : "0";
+    column.append(bar);
+
+    const show = () => {
+      tooltip.replaceChildren(
+        el("div", { class: "chart-tooltip-date" }, formatDay(row.day)),
+        el("div", {}, `${row.views} view${row.views === 1 ? "" : "s"}`),
+        el("div", { class: "chart-tooltip-muted" }, `${row.visitors} visitor${row.visitors === 1 ? "" : "s"}`)
+      );
+
+      const left = column.offsetLeft + column.offsetWidth / 2;
+      tooltip.style.left = `${Math.min(Math.max(left, 60), bars.offsetWidth - 60)}px`;
+      tooltip.classList.add("visible");
+      column.classList.add("hover");
+    };
+
+    const hide = () => {
+      tooltip.classList.remove("visible");
+      column.classList.remove("hover");
+    };
+
+    column.addEventListener("mouseenter", show);
+    column.addEventListener("focus", show);
+    column.addEventListener("mouseleave", hide);
+    column.addEventListener("blur", hide);
+
+    bars.append(column);
+  });
+
+  const axis = el("div", { class: "chart-axis" });
+  axis.append(el("span", {}, formatDay(series[0].day)), el("span", {}, formatDay(series[series.length - 1].day)));
+
+  const scale = el("div", { class: "chart-scale" }, `max ${max}`);
+
+  chart.append(scale, bars, tooltip, axis);
+
+  return chart;
+}
+
+
+function table(headers, rows) {
+
+  const element = el("table", { class: "data-table" });
+  const head = el("tr");
+
+  headers.forEach((header, index) => head.append(el("th", { class: index ? "num" : "" }, header)));
+  element.append(head);
+
+  rows.forEach(cells => {
+    const row = el("tr");
+    cells.forEach((cell, index) => row.append(el("td", { class: index ? "num" : "" }, String(cell ?? ""))));
+    element.append(row);
+  });
+
+  return element;
+}
+
+
+function timeAgo(time) {
+
+  if (!time) {
+    return "";
+  }
+
+  const seconds = Math.round((Date.now() - time) / 1000);
+
+  if (seconds < 60) return "just now";
+  if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)} h ago`;
+  if (seconds < 86400 * 30) return `${Math.floor(seconds / 86400)} days ago`;
+
+  return new Date(time).toLocaleDateString();
+}
+
+
+function formatDateTime(time) {
+
+  return new Date(time).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+}
+
+
+function formatDay(day) {
+
+  return new Date(`${day}T12:00:00`).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+}
+
+
+function formatSeconds(seconds) {
+
+  return `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
 }
 
 
