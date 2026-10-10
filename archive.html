@@ -6,250 +6,106 @@
 
   <title>archive — connor.fm</title>
 
+  <meta name="description" content="connor.fm — a personal space for music, ideas and unfinished things by connor.">
+  <meta name="theme-color" content="#080808">
+
+  <meta property="og:title" content="archive — connor.fm">
+  <meta property="og:description" content="connor.fm — a personal space for music, ideas and unfinished things by connor.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="connor.fm">
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/style.css">
 </head>
 
 <body>
 
   <nav>
-
     <div class="nav-inner">
-
-      <a href="/" class="site-name">
-        connor.fm
-      </a>
+      <a href="/" class="site-name">connor.fm</a>
 
       <div class="nav-links">
-
-        <a href="/music">
-          music
-        </a>
-
-        <a href="/archive" class="active">
-          archive
-        </a>
-
-        <a href="/about">
-          about
-        </a>
-
-        <a href="#">
-          ...
-        </a>
-
+        <a href="/music">music</a>
+        <a href="/archive" class="active">archive</a>
+        <a href="/about">about</a>
+        <a href="/messages">...</a>
       </div>
-
     </div>
-
   </nav>
 
-
   <div class="nav-divider"></div>
-
 
   <main>
 
     <section class="page">
+      <div class="section-label">03 / archive</div>
 
-      <div class="section-label">
-        03 / archive
+      <div class="archive-list" id="archiveList">
+        <div class="archive-empty">loading archive...</div>
       </div>
-
-
-      <div
-        id="archive-list"
-        class="archive-list"
-      >
-
-        <div class="archive-empty">
-          loading archive...
-        </div>
-
-      </div>
-
 
       <div class="archive-note">
-
         a small archive of projects, ideas, releases and things
         that would otherwise disappear into the internet.
-
       </div>
-
 
       <div class="music-bottom">
-
-        <span>
-          a record of things that happened
-        </span>
-
-        <span>
-          connor.fm/archive
-        </span>
-
+        <span>a record of things that happened</span>
+        <span>connor.fm/archive</span>
       </div>
-
     </section>
-
   </main>
 
-
   <footer>
-
     <div class="footer-divider"></div>
 
     <div class="footer-content">
-
-      <div class="footer-name">
-        connor.fm
-      </div>
-
-      <div class="footer-year">
-        © 2026
-      </div>
-
+      <div class="footer-name">connor.fm</div>
+      <div class="footer-year">© 2026</div>
     </div>
-
   </footer>
 
-
+  <script src="/site.js"></script>
   <script>
 
-    async function loadArchive() {
-
-      const archiveList =
-        document.getElementById("archive-list");
+    const archiveList = document.getElementById("archiveList");
 
 
-      try {
-
-        const response = await fetch(
-          "/api/content",
-          {
-            method: "GET",
-            cache: "no-store"
-          }
-        );
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            "Failed to load archive."
-          );
-
-        }
-
-
-        const data =
-          await response.json();
-
-
-        let archive =
-          data.archive;
-
-
-        if (!Array.isArray(archive)) {
-
-          archive = [];
-
-        }
-
-
-        if (archive.length === 0) {
-
-          archiveList.innerHTML = `
-
-            <div class="archive-empty">
-              nothing here yet.
-            </div>
-
-          `;
-
+    loadContent()
+      .then(({ archive }) => {
+        if (!Array.isArray(archive) || archive.length === 0) {
+          showEmpty(archiveList, "nothing here yet.");
           return;
-
         }
 
-
-        archiveList.innerHTML = "";
-
-
-        archive.forEach(entry => {
-
-          const item =
-            document.createElement("div");
-
-          /*
-            Wichtig:
-            style.css erwartet .archive-item,
-            nicht .archive-entry.
-          */
-
-          item.className =
-            "archive-item";
-
-
-          const year =
-            document.createElement("span");
-
-          year.className =
-            "archive-year";
-
-          year.textContent =
-            entry.year || "";
-
-
-          const title =
-            document.createElement("span");
-
-          title.className =
-            "archive-title";
-
-          title.textContent =
-            entry.title || "";
-
-
-          const type =
-            document.createElement("span");
-
-          type.className =
-            "archive-type";
-
-          type.textContent =
-            entry.type || "";
-
-
-          item.appendChild(year);
-
-          item.appendChild(title);
-
-          item.appendChild(type);
-
-
-          archiveList.appendChild(item);
-
-        });
-
-
-      } catch (error) {
-
+        archiveList.replaceChildren(...archive.map(renderEntry));
+      })
+      .catch(error => {
         console.error(error);
+        showEmpty(archiveList, "archive temporarily unavailable.");
+      });
 
 
-        archiveList.innerHTML = `
+    function renderEntry(entry) {
+      const item = createElement(entry.link ? "a" : "div", "archive-item");
 
-          <div class="archive-empty">
-            archive temporarily unavailable.
-          </div>
+      if (entry.link) {
+        item.href = entry.link;
 
-        `;
-
+        if (!entry.link.startsWith("/")) {
+          item.target = "_blank";
+          item.rel = "noopener noreferrer";
+        }
       }
 
+      item.append(
+        createElement("span", "archive-year", entry.year || ""),
+        createElement("span", "archive-title", entry.title || ""),
+        createElement("span", "archive-type", entry.link ? `${entry.type || ""} ↗`.trim() : entry.type || "")
+      );
+
+      return item;
     }
-
-
-    loadArchive();
-
   </script>
 
 </body>

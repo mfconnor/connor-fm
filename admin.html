@@ -6,6 +6,9 @@
 
   <title>admin — connor.fm</title>
 
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
   <style>
     * {
       box-sizing: border-box;
@@ -33,6 +36,11 @@
 
     button {
       cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: wait;
     }
 
     .container {
@@ -295,23 +303,26 @@
 
     <!-- LOGIN -->
 
-    <section id="login">
+    <section id="login" class="login">
       <div class="small">00 / authentication</div>
 
       <h1>admin</h1>
 
-      <label for="loginPassword">password</label>
+      <form id="loginForm">
+        <label for="loginPassword">password</label>
 
-      <input
-        id="loginPassword"
-        type="password"
-        autocomplete="current-password"
-        placeholder="enter password"
-      >
+        <input
+          id="loginPassword"
+          type="password"
+          autocomplete="current-password"
+          placeholder="enter password"
+          required
+        >
 
-      <button class="full" onclick="login()">
-        enter
-      </button>
+        <button class="full" type="submit">
+          enter
+        </button>
+      </form>
 
       <div class="error" id="loginError"></div>
     </section>
@@ -342,7 +353,7 @@
         </div>
 
         <div class="field">
-          <label>access code</label>
+          <label for="listeningCode">access code</label>
 
           <input
             id="listeningCode"
@@ -396,29 +407,29 @@
         </div>
 
         <div class="field">
-          <label>title</label>
+          <label for="aboutTitle">title</label>
           <input id="aboutTitle">
         </div>
 
         <div class="field">
-          <label>intro</label>
+          <label for="aboutIntro">intro</label>
           <textarea id="aboutIntro"></textarea>
         </div>
 
         <div class="field">
-          <label>description</label>
+          <label for="aboutDescription">description</label>
           <textarea id="aboutDescription"></textarea>
         </div>
 
         <div class="row">
 
           <div class="field">
-            <label>name</label>
+            <label for="aboutName">name</label>
             <input id="aboutName">
           </div>
 
           <div class="field">
-            <label>currently</label>
+            <label for="aboutCurrently">currently</label>
             <input id="aboutCurrently">
           </div>
 
@@ -427,12 +438,12 @@
         <div class="row">
 
           <div class="field">
-            <label>working on</label>
+            <label for="aboutWorking">working on</label>
             <input id="aboutWorking">
           </div>
 
           <div class="field">
-            <label>website</label>
+            <label for="aboutWebsite">website</label>
             <input id="aboutWebsite">
           </div>
 
@@ -445,6 +456,8 @@
         <div class="success" id="aboutSuccess">
           about saved.
         </div>
+
+        <div class="error" id="aboutError"></div>
 
       </div>
 
@@ -461,19 +474,19 @@
         </div>
 
         <div class="field">
-          <label>project title</label>
+          <label for="musicTitle">project title</label>
           <input id="musicTitle">
         </div>
 
         <div class="row">
 
           <div class="field">
-            <label>type</label>
+            <label for="musicType">type</label>
             <input id="musicType">
           </div>
 
           <div class="field">
-            <label>release year</label>
+            <label for="musicYear">release year</label>
             <input id="musicYear">
           </div>
 
@@ -482,20 +495,31 @@
         <div class="row">
 
           <div class="field">
-            <label>track count</label>
+            <label for="musicTracks">track count</label>
             <input id="musicTracks">
           </div>
 
           <div class="field">
-            <label>status</label>
+            <label for="musicStatus">status</label>
             <input id="musicStatus">
           </div>
 
         </div>
 
         <div class="field">
-          <label>description</label>
+          <label for="musicDescription">description</label>
           <textarea id="musicDescription"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="musicTracklist">
+            tracklist — only visible inside the listening room.
+            one track per line: title | duration
+          </label>
+          <textarea
+            id="musicTracklist"
+            placeholder="untitled | 3:21"
+          ></textarea>
         </div>
 
         <button onclick="saveMusic()">
@@ -505,6 +529,8 @@
         <div class="success" id="musicSuccess">
           music information saved.
         </div>
+
+        <div class="error" id="musicError"></div>
 
       </div>
 
@@ -541,18 +567,21 @@
         </div>
 
         <div class="field">
-          <label>current password</label>
+          <label for="currentPassword">current password</label>
           <input
             id="currentPassword"
             type="password"
+            autocomplete="current-password"
           >
         </div>
 
         <div class="field">
-          <label>new password</label>
+          <label for="newPassword">new password</label>
           <input
             id="newPassword"
             type="password"
+            autocomplete="new-password"
+            minlength="12"
           >
         </div>
 
@@ -597,81 +626,106 @@ let content = {
 
 
 // ==========================================
-// LOGIN
+// API
 // ==========================================
 
-async function login() {
+async function api(path, options = {}) {
 
-  const password =
-    document.getElementById("loginPassword").value;
+  const response = await fetch(path, {
+    cache: "no-store",
+    ...options,
+    headers: options.body
+      ? { "Content-Type": "application/json" }
+      : undefined
+  });
 
-  const error =
-    document.getElementById("loginError");
-
-  error.style.display = "none";
+  let data = {};
 
   try {
-
-    const response = await fetch(
-      "/api/admin/login",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          password
-        })
-      }
-    );
-
-    const data = await response.json();
-
-    if (!data.success) {
-      throw new Error(data.error || "Login failed.");
-    }
-
-    document.getElementById("login").style.display = "none";
-    document.getElementById("dashboard").style.display = "block";
-
-    await loadData();
-
-  } catch (error) {
-
-    errorMessage(
-      "loginError",
-      error.message
-    );
-
+    data = await response.json();
+  } catch {
+    // Non-JSON response; handled below.
   }
+
+  if (response.status === 401 && path !== "/api/admin/login") {
+    alert("Your session has expired. Please log in again.");
+    location.reload();
+    throw new Error("Unauthorized.");
+  }
+
+  if (!response.ok || data.success === false) {
+    throw new Error(data.error || "Something went wrong.");
+  }
+
+  return data;
 }
 
 
 // ==========================================
-// CHECK SESSION
+// LOGIN
 // ==========================================
+
+document.getElementById("loginForm").addEventListener(
+  "submit",
+  async event => {
+
+    event.preventDefault();
+
+    const button =
+      event.target.querySelector("button");
+
+    hideMessage("loginError");
+    button.disabled = true;
+
+    try {
+
+      await api("/api/admin/login", {
+        method: "POST",
+        body: JSON.stringify({
+          password:
+            document.getElementById("loginPassword").value
+        })
+      });
+
+      document.getElementById("loginPassword").value = "";
+
+      await showDashboard();
+
+    } catch (error) {
+
+      errorMessage("loginError", error.message);
+
+    } finally {
+
+      button.disabled = false;
+    }
+  }
+);
+
 
 async function checkSession() {
 
   try {
 
-    const response =
-      await fetch("/api/admin/check");
-
     const data =
-      await response.json();
+      await api("/api/admin/check");
 
     if (data.authenticated) {
-
-      document.getElementById("login").style.display = "none";
-      document.getElementById("dashboard").style.display = "block";
-
-      await loadData();
+      await showDashboard();
     }
 
   } catch {
     // Stay on login screen
   }
+}
+
+
+async function showDashboard() {
+
+  document.getElementById("login").style.display = "none";
+  document.getElementById("dashboard").style.display = "block";
+
+  await loadData();
 }
 
 
@@ -681,42 +735,33 @@ async function checkSession() {
 
 async function loadData() {
 
-  const response =
-    await fetch("/api/content");
+  const [data, codeData] = await Promise.all([
+    api("/api/admin/content"),
+    api("/api/admin/listening-code")
+  ]);
 
-  const data =
-    await response.json();
+  applyContent(data);
 
-  if (data.about) {
-    content.about = data.about;
-  }
-
-  if (data.music) {
-    content.music = data.music;
-  }
-
-  if (Array.isArray(data.archive)) {
-    content.archive = data.archive;
-  }
-
-  if (Array.isArray(data.messages)) {
-    content.messages = data.messages;
-  }
-
-  const codeResponse =
-    await fetch("/api/listening-code");
-
-  if (codeResponse.ok) {
-
-    const codeData =
-      await codeResponse.json();
-
-    document.getElementById(
-      "listeningCode"
-    ).value = codeData.code || "";
-  }
+  document.getElementById("listeningCode").value =
+    codeData.code || "";
 
   renderAll();
+}
+
+
+function applyContent(data) {
+
+  content.about =
+    data.about || {};
+
+  content.music =
+    data.music || {};
+
+  content.archive =
+    Array.isArray(data.archive) ? data.archive : [];
+
+  content.messages =
+    Array.isArray(data.messages) ? data.messages : [];
 }
 
 
@@ -740,57 +785,32 @@ function renderAbout() {
 
   const about = content.about || {};
 
-  document.getElementById("aboutTitle").value =
-    about.title || "about connor";
-
-  document.getElementById("aboutIntro").value =
-    about.intro || "";
-
-  document.getElementById("aboutDescription").value =
-    about.description || "";
-
-  document.getElementById("aboutName").value =
-    about.name || "connor";
-
-  document.getElementById("aboutCurrently").value =
-    about.currently || "";
-
-  document.getElementById("aboutWorking").value =
-    about.working || "";
-
-  document.getElementById("aboutWebsite").value =
-    about.website || "connor.fm";
+  setValue("aboutTitle", about.title || "about connor");
+  setValue("aboutIntro", about.intro || "");
+  setValue("aboutDescription", about.description || "");
+  setValue("aboutName", about.name || "connor");
+  setValue("aboutCurrently", about.currently || "");
+  setValue("aboutWorking", about.working || "");
+  setValue("aboutWebsite", about.website || "connor.fm");
 }
 
 
 async function saveAbout() {
 
   content.about = {
-    title:
-      document.getElementById("aboutTitle").value,
-
-    intro:
-      document.getElementById("aboutIntro").value,
-
-    description:
-      document.getElementById("aboutDescription").value,
-
-    name:
-      document.getElementById("aboutName").value,
-
-    currently:
-      document.getElementById("aboutCurrently").value,
-
-    working:
-      document.getElementById("aboutWorking").value,
-
-    website:
-      document.getElementById("aboutWebsite").value
+    title: getValue("aboutTitle"),
+    intro: getValue("aboutIntro"),
+    description: getValue("aboutDescription"),
+    name: getValue("aboutName"),
+    currently: getValue("aboutCurrently"),
+    working: getValue("aboutWorking"),
+    website: getValue("aboutWebsite")
   };
 
-  await saveContent();
-
-  showSuccess("aboutSuccess");
+  if (await saveContent("aboutError")) {
+    renderAbout();
+    showSuccess("aboutSuccess");
+  }
 }
 
 
@@ -802,52 +822,54 @@ function renderMusic() {
 
   const music = content.music || {};
 
-  document.getElementById("musicTitle").value =
-    music.title || "avant-garde";
+  setValue("musicTitle", music.title || "avant-garde");
+  setValue("musicType", music.type || "mixtape");
+  setValue("musicYear", music.year || "2027");
+  setValue("musicTracks", music.tracks || "10 tracks / 01 instrumental");
+  setValue("musicStatus", music.status || "unreleased");
+  setValue("musicDescription", music.description || "");
 
-  document.getElementById("musicType").value =
-    music.type || "mixtape";
-
-  document.getElementById("musicYear").value =
-    music.year || "2027";
-
-  document.getElementById("musicTracks").value =
-    music.tracks || "10 tracks / 01 instrumental";
-
-  document.getElementById("musicStatus").value =
-    music.status || "unreleased";
-
-  document.getElementById("musicDescription").value =
-    music.description || "";
+  setValue(
+    "musicTracklist",
+    (music.tracklist || [])
+      .map(track =>
+        track.duration
+          ? `${track.title} | ${track.duration}`
+          : track.title
+      )
+      .join("\n")
+  );
 }
 
 
 async function saveMusic() {
 
+  const tracklist =
+    getValue("musicTracklist")
+      .split("\n")
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map(line => {
+        const [title, duration = ""] =
+          line.split("|").map(part => part.trim());
+
+        return { title, duration };
+      });
+
   content.music = {
-
-    title:
-      document.getElementById("musicTitle").value,
-
-    type:
-      document.getElementById("musicType").value,
-
-    year:
-      document.getElementById("musicYear").value,
-
-    tracks:
-      document.getElementById("musicTracks").value,
-
-    status:
-      document.getElementById("musicStatus").value,
-
-    description:
-      document.getElementById("musicDescription").value
+    title: getValue("musicTitle"),
+    type: getValue("musicType"),
+    year: getValue("musicYear"),
+    tracks: getValue("musicTracks"),
+    status: getValue("musicStatus"),
+    description: getValue("musicDescription"),
+    tracklist
   };
 
-  await saveContent();
-
-  showSuccess("musicSuccess");
+  if (await saveContent("musicError")) {
+    renderMusic();
+    showSuccess("musicSuccess");
+  }
 }
 
 
@@ -857,37 +879,23 @@ async function saveMusic() {
 
 async function saveListeningCode() {
 
-  const code =
-    document.getElementById("listeningCode").value;
+  hideMessage("codeError");
 
-  const response =
-    await fetch(
-      "/api/listening-code",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          code
-        })
-      }
-    );
+  try {
 
-  const data =
-    await response.json();
+    await api("/api/admin/listening-code", {
+      method: "POST",
+      body: JSON.stringify({
+        code: getValue("listeningCode")
+      })
+    });
 
-  if (!data.success) {
+    showSuccess("codeSuccess");
 
-    errorMessage(
-      "codeError",
-      data.error || "Could not save code."
-    );
+  } catch (error) {
 
-    return;
+    errorMessage("codeError", error.message);
   }
-
-  showSuccess("codeSuccess");
 }
 
 
@@ -916,83 +924,45 @@ function renderArchive() {
         </div>
 
         <div class="item-meta">
-          ${escapeHtml(entry.year || "")}
-          /
-          ${escapeHtml(entry.type || "")}
+          ${escapeHtml(
+            [entry.year, entry.type, entry.link]
+              .filter(Boolean)
+              .join(" / ") || "—"
+          )}
         </div>
 
         <div class="item-actions">
-
-          <button
-            class="secondary"
-            onclick="editArchive(${index})"
-          >
-            edit
-          </button>
-
-          <button
-            class="secondary"
-            onclick="moveArchive(${index}, -1)"
-          >
-            ↑
-          </button>
-
-          <button
-            class="secondary"
-            onclick="moveArchive(${index}, 1)"
-          >
-            ↓
-          </button>
-
-          <button
-            class="danger"
-            onclick="deleteArchive(${index})"
-          >
-            delete
-          </button>
-
+          <button class="secondary" onclick="editArchive(${index})">edit</button>
+          <button class="secondary" onclick="moveArchive(${index}, -1)">↑</button>
+          <button class="secondary" onclick="moveArchive(${index}, 1)">↓</button>
+          <button class="danger" onclick="deleteArchive(${index})">delete</button>
         </div>
 
-        <div
-          class="editor"
-          id="archiveEditor${index}"
-        >
+        <div class="editor" id="archiveEditor${index}">
 
-          <div class="field">
-            <label>year</label>
-            <input
-              id="archiveYear${index}"
-              value="${escapeAttr(entry.year || "")}"
-            >
+          <div class="row">
+            <div class="field">
+              <label for="archiveYear${index}">year</label>
+              <input id="archiveYear${index}" value="${escapeHtml(entry.year || "")}">
+            </div>
+
+            <div class="field">
+              <label for="archiveType${index}">type</label>
+              <input id="archiveType${index}" value="${escapeHtml(entry.type || "")}">
+            </div>
           </div>
 
           <div class="field">
-            <label>title</label>
-            <input
-              id="archiveTitle${index}"
-              value="${escapeAttr(entry.title || "")}"
-            >
+            <label for="archiveTitle${index}">title</label>
+            <input id="archiveTitle${index}" value="${escapeHtml(entry.title || "")}">
           </div>
 
           <div class="field">
-            <label>type</label>
-            <input
-              id="archiveType${index}"
-              value="${escapeAttr(entry.type || "")}"
-            >
+            <label for="archiveLink${index}">link (optional, https://… or /page)</label>
+            <input id="archiveLink${index}" value="${escapeHtml(entry.link || "")}">
           </div>
 
-          <div class="field">
-            <label>link</label>
-            <input
-              id="archiveLink${index}"
-              value="${escapeAttr(entry.link || "")}"
-            >
-          </div>
-
-          <button onclick="saveArchive(${index})">
-            save entry
-          </button>
+          <button onclick="saveArchive(${index})">save entry</button>
 
         </div>
       `;
@@ -1006,7 +976,7 @@ function renderArchive() {
 function addArchive() {
 
   content.archive.push({
-    year: "",
+    year: String(new Date().getFullYear()),
     title: "untitled",
     type: "",
     link: ""
@@ -1014,48 +984,25 @@ function addArchive() {
 
   renderArchive();
 
-  editArchive(
-    content.archive.length - 1
-  );
+  editArchive(content.archive.length - 1);
 }
 
 
 function editArchive(index) {
 
-  const editor =
-    document.getElementById(
-      `archiveEditor${index}`
-    );
-
-  if (editor) {
-    editor.classList.toggle("visible");
-  }
+  document
+    .getElementById(`archiveEditor${index}`)
+    ?.classList.toggle("visible");
 }
 
 
 async function saveArchive(index) {
 
   content.archive[index] = {
-
-    year:
-      document.getElementById(
-        `archiveYear${index}`
-      ).value,
-
-    title:
-      document.getElementById(
-        `archiveTitle${index}`
-      ).value,
-
-    type:
-      document.getElementById(
-        `archiveType${index}`
-      ).value,
-
-    link:
-      document.getElementById(
-        `archiveLink${index}`
-      ).value
+    year: getValue(`archiveYear${index}`),
+    title: getValue(`archiveTitle${index}`),
+    type: getValue(`archiveType${index}`),
+    link: getValue(`archiveLink${index}`).trim()
   };
 
   await saveContent();
@@ -1066,14 +1013,9 @@ async function saveArchive(index) {
 
 async function deleteArchive(index) {
 
-  const entry =
-    content.archive[index];
+  const entry = content.archive[index];
 
-  if (
-    !confirm(
-      `Delete "${entry.title || "untitled"}"?`
-    )
-  ) {
+  if (!confirm(`Delete "${entry.title || "untitled"}"?`)) {
     return;
   }
 
@@ -1087,24 +1029,14 @@ async function deleteArchive(index) {
 
 async function moveArchive(index, direction) {
 
-  const newIndex =
-    index + direction;
+  const newIndex = index + direction;
 
-  if (
-    newIndex < 0 ||
-    newIndex >= content.archive.length
-  ) {
+  if (newIndex < 0 || newIndex >= content.archive.length) {
     return;
   }
 
-  const item =
-    content.archive[index];
-
-  content.archive[index] =
-    content.archive[newIndex];
-
-  content.archive[newIndex] =
-    item;
+  [content.archive[index], content.archive[newIndex]] =
+    [content.archive[newIndex], content.archive[index]];
 
   await saveContent();
 
@@ -1135,8 +1067,8 @@ function renderMessages() {
       item.className = "message-item";
 
       item.innerHTML = `
-        <div class="message-status ${status.className}">
-          ${status.label}
+        <div class="message-status ${status}">
+          ${status}
         </div>
 
         <div class="item-title">
@@ -1150,119 +1082,50 @@ function renderMessages() {
         </div>
 
         <div class="item-actions">
-
-          <button
-            class="secondary"
-            onclick="editMessage(${index})"
-          >
-            edit
-          </button>
-
-          <button
-            class="danger"
-            onclick="deleteMessage(${index})"
-          >
-            delete
-          </button>
-
+          <button class="secondary" onclick="editMessage(${index})">edit</button>
+          <button class="danger" onclick="deleteMessage(${index})">delete</button>
         </div>
 
-        <div
-          class="editor"
-          id="messageEditor${index}"
-        >
+        <div class="editor" id="messageEditor${index}">
 
           <div class="field">
-            <label>title</label>
-
-            <input
-              id="messageTitle${index}"
-              value="${escapeAttr(message.title || "")}"
-            >
+            <label for="messageTitle${index}">title</label>
+            <input id="messageTitle${index}" value="${escapeHtml(message.title || "")}">
           </div>
 
           <div class="field">
-            <label>message</label>
-
-            <textarea
-              id="messageText${index}"
-            >${escapeHtml(message.text || "")}</textarea>
+            <label for="messageText${index}">message</label>
+            <textarea id="messageText${index}">${escapeHtml(message.text || "")}</textarea>
           </div>
 
           <div class="field">
+            <label for="messageMode${index}">publication</label>
 
-            <label>publication</label>
-
-            <select
-              id="messageMode${index}"
-              onchange="toggleSchedule(${index})"
-            >
-
-              <option
-                value="draft"
-                ${message.status === "draft" ? "selected" : ""}
-              >
-                draft
-              </option>
-
-              <option
-                value="live"
-                ${message.status === "live" ? "selected" : ""}
-              >
-                publish immediately
-              </option>
-
-              <option
-                value="scheduled"
-                ${message.status === "scheduled" ? "selected" : ""}
-              >
-                schedule
-              </option>
-
+            <select id="messageMode${index}" onchange="toggleSchedule(${index})">
+              <option value="draft" ${message.status === "draft" ? "selected" : ""}>draft</option>
+              <option value="live" ${message.status === "live" ? "selected" : ""}>publish immediately</option>
+              <option value="scheduled" ${message.status === "scheduled" ? "selected" : ""}>schedule</option>
             </select>
-
           </div>
 
           <div
-            class="schedule ${
-              message.status === "scheduled"
-                ? "visible"
-                : ""
-            }"
+            class="schedule ${message.status === "scheduled" ? "visible" : ""}"
             id="schedule${index}"
           >
-
             <div class="date-row">
-
               <div class="field">
-                <label>date</label>
-
-                <input
-                  type="date"
-                  id="messageDate${index}"
-                  value="${getDatePart(message.publishAt)}"
-                >
+                <label for="messageDate${index}">date</label>
+                <input type="date" id="messageDate${index}" value="${getDatePart(message.publishAt)}">
               </div>
 
               <div class="field">
-                <label>time</label>
-
-                <input
-                  type="time"
-                  id="messageTime${index}"
-                  value="${getTimePart(message.publishAt)}"
-                >
+                <label for="messageTime${index}">time</label>
+                <input type="time" id="messageTime${index}" value="${getTimePart(message.publishAt)}">
               </div>
-
             </div>
-
           </div>
 
-          <button
-            onclick="saveMessage(${index})"
-          >
-            save message
-          </button>
+          <button onclick="saveMessage(${index})">save message</button>
 
         </div>
       `;
@@ -1276,6 +1139,7 @@ function renderMessages() {
 function addMessage() {
 
   content.messages.push({
+    id: crypto.randomUUID(),
     title: "new message",
     text: "",
     status: "draft",
@@ -1284,95 +1148,65 @@ function addMessage() {
 
   renderMessages();
 
-  editMessage(
-    content.messages.length - 1
-  );
+  editMessage(content.messages.length - 1);
 }
 
 
 function editMessage(index) {
 
-  const editor =
-    document.getElementById(
-      `messageEditor${index}`
-    );
-
-  if (editor) {
-    editor.classList.toggle("visible");
-  }
+  document
+    .getElementById(`messageEditor${index}`)
+    ?.classList.toggle("visible");
 }
 
 
 function toggleSchedule(index) {
 
-  const mode =
-    document.getElementById(
-      `messageMode${index}`
-    ).value;
-
-  const schedule =
-    document.getElementById(
-      `schedule${index}`
+  document
+    .getElementById(`schedule${index}`)
+    .classList.toggle(
+      "visible",
+      getValue(`messageMode${index}`) === "scheduled"
     );
-
-  if (mode === "scheduled") {
-    schedule.classList.add("visible");
-  } else {
-    schedule.classList.remove("visible");
-  }
 }
 
 
 async function saveMessage(index) {
 
-  const mode =
-    document.getElementById(
-      `messageMode${index}`
-    ).value;
+  const previous = content.messages[index];
+
+  const mode = getValue(`messageMode${index}`);
 
   let publishAt = null;
 
   if (mode === "scheduled") {
 
-    const date =
-      document.getElementById(
-        `messageDate${index}`
-      ).value;
-
-    const time =
-      document.getElementById(
-        `messageTime${index}`
-      ).value;
+    const date = getValue(`messageDate${index}`);
+    const time = getValue(`messageTime${index}`);
 
     if (!date || !time) {
-      alert(
-        "Please choose a date and time."
-      );
+      alert("Please choose a date and time.");
       return;
     }
 
+    // Interpreted in your local time zone, stored as UTC.
+    publishAt = new Date(`${date}T${time}`).toISOString();
+  }
+
+  if (mode === "live") {
+
+    // Keep the original publication date when a live message is edited.
     publishAt =
-      `${date}T${time}`;
+      previous.status === "live" && previous.publishAt
+        ? previous.publishAt
+        : new Date().toISOString();
   }
 
   content.messages[index] = {
-
-    id:
-      content.messages[index].id ||
-      crypto.randomUUID(),
-
-    title:
-      document.getElementById(
-        `messageTitle${index}`
-      ).value,
-
-    text:
-      document.getElementById(
-        `messageText${index}`
-      ).value,
-
+    id: previous.id || crypto.randomUUID(),
+    title: getValue(`messageTitle${index}`),
+    text: getValue(`messageText${index}`),
     status: mode,
-
     publishAt
   };
 
@@ -1384,14 +1218,9 @@ async function saveMessage(index) {
 
 async function deleteMessage(index) {
 
-  const message =
-    content.messages[index];
+  const message = content.messages[index];
 
-  if (
-    !confirm(
-      `Delete "${message.title || "untitled"}"?`
-    )
-  ) {
+  if (!confirm(`Delete "${message.title || "untitled"}"?`)) {
     return;
   }
 
@@ -1406,76 +1235,55 @@ async function deleteMessage(index) {
 function getMessageStatus(message) {
 
   if (message.status === "draft") {
-    return {
-      label: "draft",
-      className: "draft"
-    };
+    return "draft";
   }
 
   if (
     message.status === "scheduled" &&
-    message.publishAt
+    new Date(message.publishAt) > new Date()
   ) {
-
-    const publishTime =
-      new Date(message.publishAt);
-
-    if (publishTime <= new Date()) {
-      return {
-        label: "live",
-        className: "live"
-      };
-    }
-
-    return {
-      label: "scheduled",
-      className: "scheduled"
-    };
+    return "scheduled";
   }
 
-  return {
-    label: "live",
-    className: "live"
-  };
+  return "live";
 }
 
 
 function formatDate(value) {
 
-  if (!value) {
-    return "";
+  return new Date(value).toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short"
+  });
+}
+
+
+// Date/time inputs work in local time; publishAt is stored as UTC.
+
+function toLocalParts(value) {
+
+  const date = new Date(value);
+
+  if (!value || Number.isNaN(date.getTime())) {
+    return null;
   }
 
-  const date =
-    new Date(value);
+  const pad = number => String(number).padStart(2, "0");
 
-  return date.toLocaleString(
-    undefined,
-    {
-      dateStyle: "medium",
-      timeStyle: "short"
-    }
-  );
+  return {
+    date: `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
+    time: `${pad(date.getHours())}:${pad(date.getMinutes())}`
+  };
 }
 
 
 function getDatePart(value) {
-
-  if (!value) {
-    return "";
-  }
-
-  return value.substring(0, 10);
+  return toLocalParts(value)?.date || "";
 }
 
 
 function getTimePart(value) {
-
-  if (!value) {
-    return "";
-  }
-
-  return value.substring(11, 16);
+  return toLocalParts(value)?.time || "";
 }
 
 
@@ -1483,35 +1291,29 @@ function getTimePart(value) {
 // SAVE CONTENT
 // ==========================================
 
-async function saveContent() {
+async function saveContent(errorId) {
 
-  const response =
-    await fetch(
-      "/api/content",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(content)
-      }
-    );
+  try {
 
-  if (response.status === 401) {
+    const data = await api("/api/admin/content", {
+      method: "POST",
+      body: JSON.stringify(content)
+    });
 
-    alert(
-      "Your session has expired. Please log in again."
-    );
+    // Use what the server actually stored.
+    applyContent(data);
 
-    location.reload();
+    return true;
 
-    return;
-  }
+  } catch (error) {
 
-  if (!response.ok) {
-    throw new Error(
-      "Could not save content."
-    );
+    if (errorId) {
+      errorMessage(errorId, error.message);
+    } else {
+      alert(`Could not save: ${error.message}`);
+    }
+
+    return false;
   }
 }
 
@@ -1522,52 +1324,26 @@ async function saveContent() {
 
 async function changePassword() {
 
-  const currentPassword =
-    document.getElementById(
-      "currentPassword"
-    ).value;
+  hideMessage("passwordError");
 
-  const newPassword =
-    document.getElementById(
-      "newPassword"
-    ).value;
+  try {
 
-  const response =
-    await fetch(
-      "/api/admin/password",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          currentPassword,
-          newPassword
-        })
-      }
-    );
+    await api("/api/admin/password", {
+      method: "POST",
+      body: JSON.stringify({
+        currentPassword: getValue("currentPassword"),
+        newPassword: getValue("newPassword")
+      })
+    });
 
-  const data =
-    await response.json();
+    document.getElementById("passwordSuccess").style.display = "block";
 
-  if (!data.success) {
+    setTimeout(() => location.reload(), 1500);
 
-    errorMessage(
-      "passwordError",
-      data.error
-    );
+  } catch (error) {
 
-    return;
+    errorMessage("passwordError", error.message);
   }
-
-  document.getElementById(
-    "passwordSuccess"
-  ).style.display = "block";
-
-  setTimeout(
-    () => location.reload(),
-    1500
-  );
 }
 
 
@@ -1577,12 +1353,7 @@ async function changePassword() {
 
 async function logout() {
 
-  await fetch(
-    "/api/admin/logout",
-    {
-      method: "POST"
-    }
-  );
+  await fetch("/api/admin/logout", { method: "POST" });
 
   location.reload();
 }
@@ -1592,32 +1363,39 @@ async function logout() {
 // UI HELPERS
 // ==========================================
 
+function getValue(id) {
+  return document.getElementById(id).value;
+}
+
+
+function setValue(id, value) {
+  document.getElementById(id).value = value;
+}
+
+
 function showSuccess(id) {
 
-  const element =
-    document.getElementById(id);
+  const element = document.getElementById(id);
 
   element.style.display = "block";
 
-  setTimeout(
-    () => {
-      element.style.display = "none";
-    },
-    2500
-  );
+  setTimeout(() => {
+    element.style.display = "none";
+  }, 2500);
 }
 
 
 function errorMessage(id, message) {
 
-  const element =
-    document.getElementById(id);
+  const element = document.getElementById(id);
 
-  element.textContent =
-    message;
+  element.textContent = message;
+  element.style.display = "block";
+}
 
-  element.style.display =
-    "block";
+
+function hideMessage(id) {
+  document.getElementById(id).style.display = "none";
 }
 
 
@@ -1629,12 +1407,6 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
-}
-
-
-function escapeAttr(value) {
-
-  return escapeHtml(value);
 }
 
 

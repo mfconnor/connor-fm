@@ -6,299 +6,208 @@
 
   <title>music — connor.fm</title>
 
+  <meta name="description" content="connor.fm — a personal space for music, ideas and unfinished things by connor.">
+  <meta name="theme-color" content="#080808">
+
+  <meta property="og:title" content="music — connor.fm">
+  <meta property="og:description" content="connor.fm — a personal space for music, ideas and unfinished things by connor.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="connor.fm">
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/style.css">
 </head>
 
 <body>
 
   <nav>
-
     <div class="nav-inner">
-
-      <a href="/" class="site-name">
-        connor.fm
-      </a>
+      <a href="/" class="site-name">connor.fm</a>
 
       <div class="nav-links">
-
-        <a href="/music" class="active">
-          music
-        </a>
-
-        <a href="/archive">
-          archive
-        </a>
-
-        <a href="/about">
-          about
-        </a>
-
-        <a href="#">
-          ...
-        </a>
-
+        <a href="/music" class="active">music</a>
+        <a href="/archive">archive</a>
+        <a href="/about">about</a>
+        <a href="/messages">...</a>
       </div>
-
     </div>
-
   </nav>
 
-
   <div class="nav-divider"></div>
-
 
   <main>
 
     <section class="page">
-
-      <div class="section-label">
-        02 / music
-      </div>
-
+      <div class="section-label">02 / music</div>
 
       <div class="music-intro">
-
-
         <div class="cover">
           <span>?</span>
         </div>
 
-
         <div class="project-info">
+          <div class="project-status">currently locked</div>
 
-          <div class="project-status">
-            currently locked
-          </div>
+          <h1 class="project-title" id="musicTitle">avant-garde</h1>
 
-
-          <h1 class="project-title">
-            avant-garde
-          </h1>
-
-
-          <div class="project-meta">
+          <div class="project-meta" id="musicMeta">
             mixtape / 2027<br>
             10 tracks / 01 instrumental<br>
             status: unreleased
           </div>
 
-
-          <p class="project-description">
+          <p class="project-description" id="musicDescription">
             the next mixtape by connor. the listening room
             will open when the project is ready.
           </p>
 
-
           <div class="access-box">
-
-            <div class="access-label">
-              access required
-            </div>
-
+            <div class="access-label">access required</div>
 
             <p class="access-description">
               enter your access code to enter the listening room.
             </p>
 
-
             <form class="code-form" id="codeForm">
-
               <input
                 class="code-input"
                 id="codeInput"
                 type="text"
                 placeholder="access code"
                 autocomplete="off"
+                aria-label="access code"
+                required
               >
 
-
-              <button
-                class="unlock-button"
-                type="submit"
-              >
-                unlock →
-              </button>
-
+              <button class="unlock-button" type="submit">unlock →</button>
             </form>
 
-
-            <div class="error" id="codeError">
-              invalid access code
-            </div>
-
+            <div class="error" id="codeError" role="alert"></div>
           </div>
-
         </div>
-
       </div>
 
-
-      <!-- LISTENING ROOM -->
-
-      <div
-        class="listening-room"
-        id="listeningRoom"
-      >
-
-        <div class="room-label">
-          access granted
-        </div>
-
-
-        <h2 class="room-title">
-          listening room
-        </h2>
-
-
-        <div class="track-list">
-
-          <div class="track">
-            <span class="track-num">01</span>
-            <span>untitled</span>
-            <span class="track-time">—</span>
-          </div>
-
-
-          <div class="track">
-            <span class="track-num">02</span>
-            <span>untitled</span>
-            <span class="track-time">—</span>
-          </div>
-
-
-          <div class="track">
-            <span class="track-num">03</span>
-            <span>untitled</span>
-            <span class="track-time">—</span>
-          </div>
-
-
-          <div class="track">
-            <span class="track-num">04</span>
-            <span>untitled</span>
-            <span class="track-time">—</span>
-          </div>
-
-
-          <div class="track">
-            <span class="track-num">05</span>
-            <span>untitled</span>
-            <span class="track-time">—</span>
-          </div>
-
-
-          <div class="track">
-            <span class="track-num">06</span>
-            <span>untitled</span>
-            <span class="track-time">—</span>
-          </div>
-
-
-          <div class="track">
-            <span class="track-num">07</span>
-            <span>untitled</span>
-            <span class="track-time">—</span>
-          </div>
-
-
-          <div class="track">
-            <span class="track-num">08</span>
-            <span>untitled</span>
-            <span class="track-time">—</span>
-          </div>
-
-
-          <div class="track">
-            <span class="track-num">09</span>
-            <span>untitled</span>
-            <span class="track-time">—</span>
-          </div>
-
-
-          <div class="track">
-            <span class="track-num">10</span>
-            <span>untitled</span>
-            <span class="track-time">—</span>
-          </div>
-
-        </div>
-
+      <div class="listening-room" id="listeningRoom">
+        <div class="room-label">access granted</div>
+        <h2 class="room-title">listening room</h2>
+        <div class="track-list" id="trackList"></div>
       </div>
-
 
       <div class="music-bottom">
-
-        <span>
-          this project is private
-        </span>
-
-        <span>
-          connor.fm/music
-        </span>
-
+        <span>this project is private</span>
+        <span>connor.fm/music</span>
       </div>
-
     </section>
-
   </main>
 
-
   <footer>
-
     <div class="footer-divider"></div>
 
     <div class="footer-content">
-
-      <div class="footer-name">
-        connor.fm
-      </div>
-
-      <div class="footer-year">
-        © 2026
-      </div>
-
+      <div class="footer-name">connor.fm</div>
+      <div class="footer-year">© 2026</div>
     </div>
-
   </footer>
 
-
+  <script src="/site.js"></script>
   <script>
 
+    let trackCount = 10;
+
+
+    loadContent()
+      .then(({ music }) => {
+        if (!music) {
+          return;
+        }
+
+        setText("musicTitle", music.title);
+        setText("musicDescription", music.description);
+
+        const type = [music.type, music.year].filter(Boolean).join(" / ");
+        const lines = [type, music.tracks, music.status && `status: ${music.status}`].filter(Boolean);
+
+        if (lines.length) {
+          const meta = document.getElementById("musicMeta");
+          meta.replaceChildren();
+
+          lines.forEach((line, index) => {
+            if (index > 0) {
+              meta.append(document.createElement("br"));
+            }
+
+            meta.append(line);
+          });
+        }
+
+        trackCount = parseInt(music.tracks, 10) || trackCount;
+      })
+      .catch(console.error);
+
+
     const form = document.getElementById("codeForm");
-
     const input = document.getElementById("codeInput");
-
+    const button = form.querySelector("button");
     const room = document.getElementById("listeningRoom");
-
     const error = document.getElementById("codeError");
 
 
-    form.addEventListener("submit", function(event) {
-
+    form.addEventListener("submit", async event => {
       event.preventDefault();
 
+      error.style.display = "none";
+      button.disabled = true;
 
-      if (input.value.trim() === "1234") {
-
-        room.classList.add("visible");
-
-        error.style.display = "none";
-
-        input.value = "";
-
-        room.scrollIntoView({
-          behavior: "smooth",
-          block: "start"
+      try {
+        const response = await fetch("/api/listening-room", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: input.value.trim() })
         });
 
-      } else {
+        const data = await response.json();
 
+        if (!data.success) {
+          throw new Error(
+            response.status === 429 ? "too many attempts. try again later." : "invalid access code"
+          );
+        }
+
+        renderTracks(data.tracklist);
+
+        input.value = "";
+        room.classList.add("visible");
+        room.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      } catch (err) {
+        error.textContent = err instanceof SyntaxError ? "something went wrong" : err.message;
         error.style.display = "block";
 
+      } finally {
+        button.disabled = false;
       }
-
     });
 
+
+    function renderTracks(tracklist) {
+      const tracks = Array.isArray(tracklist) && tracklist.length
+        ? tracklist
+        : Array.from({ length: trackCount }, () => ({}));
+
+      document.getElementById("trackList").replaceChildren(
+        ...tracks.map((track, index) => {
+          const row = createElement("div", "track");
+
+          row.append(
+            createElement("span", "track-num", String(index + 1).padStart(2, "0")),
+            createElement("span", "", track.title || "untitled"),
+            createElement("span", "track-time", track.duration || "—")
+          );
+
+          return row;
+        })
+      );
+    }
   </script>
 
 </body>

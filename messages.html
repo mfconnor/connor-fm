@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>messages — connor.fm</title>
+
+  <meta name="description" content="connor.fm — a personal space for music, ideas and unfinished things by connor.">
+  <meta name="theme-color" content="#080808">
+
+  <meta property="og:title" content="messages — connor.fm">
+  <meta property="og:description" content="connor.fm — a personal space for music, ideas and unfinished things by connor.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="connor.fm">
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="/" class="site-name">connor.fm</a>
+
+      <div class="nav-links">
+        <a href="/music">music</a>
+        <a href="/archive">archive</a>
+        <a href="/about">about</a>
+        <a href="/messages" class="active">...</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="nav-divider"></div>
+
+  <main>
+
+    <section class="page">
+      <div class="section-label">05 / ...</div>
+
+      <div class="messages-intro">
+        <h1 class="messages-title">messages</h1>
+        <p>notes, updates and things worth saying.</p>
+      </div>
+
+      <div class="message-list" id="messageList">
+        <div class="archive-empty">loading messages...</div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-divider"></div>
+
+    <div class="footer-content">
+      <div class="footer-name">connor.fm</div>
+      <div class="footer-year">© 2026</div>
+    </div>
+  </footer>
+
+  <script src="/site.js"></script>
+  <script>
+
+    const messageList = document.getElementById("messageList");
+
+
+    loadContent()
+      .then(({ messages }) => {
+        if (!Array.isArray(messages) || messages.length === 0) {
+          showEmpty(messageList, "nothing here yet.");
+          return;
+        }
+
+        messageList.replaceChildren(
+          ...messages.map(message => {
+            const item = createElement("article", "message-item");
+
+            item.append(
+              createElement("div", "message-meta", formatDate(message.publishAt)),
+              createElement("h2", "message-title", message.title || "untitled"),
+              createElement("p", "message-text", message.text || "")
+            );
+
+            return item;
+          })
+        );
+      })
+      .catch(error => {
+        console.error(error);
+        showEmpty(messageList, "messages temporarily unavailable.");
+      });
+  </script>
+
+</body>
+</html>

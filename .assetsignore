@@ -1,2 +1,8 @@
-wrangler.jsonc
+# Files that must never be served as part of the website.
+.git
+.github
+.claude
 .assetsignore
+wrangler.jsonc
+_worker.js
+README.md
