@@ -7,26 +7,12 @@
     "not_found_handling": "404-page",
     "run_worker_first": ["/api/*", "/media/*"]
   },
+  // Everything (content, uploads, stats, codes, comments, questions)
+  // lives in this one KV namespace — no paid features needed.
   "kv_namespaces": [
     {
       "binding": "CONNOR_DATA",
       "id": "0cd55b70587548b28b263bd00db73d23"
-    }
-  ],
-  // Database for stats, access codes, comments and questions.
-  // Created automatically by Cloudflare on deploy (free plan: SQLite).
-  "durable_objects": {
-    "bindings": [
-      {
-        "name": "DATABASE",
-        "class_name": "Database"
-      }
-    ]
-  },
-  "migrations": [
-    {
-      "tag": "v1",
-      "new_sqlite_classes": ["Database"]
     }
   ]
 }

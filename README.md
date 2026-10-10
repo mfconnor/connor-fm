@@ -12,7 +12,7 @@ Runs on Cloudflare Workers (static assets + a small API).
 | `style.css` | styles for all public pages |
 | `site.js` | small shared helpers for the public pages |
 | `_worker.js` | the API under `/api/*` and `/media/*` (not served publicly) |
-| `_database.js` | database for stats, access codes, comments, questions (Durable Object with SQLite, not served publicly) |
+| `_database.js` | access codes, plays, comments, questions and stats, stored in KV (not served publicly) |
 | `_headers` | security headers for the static pages |
 | `wrangler.jsonc` | Cloudflare config (KV binding `CONNOR_DATA`) |
 | `.assetsignore` | files that must **not** be served as part of the website |
@@ -45,12 +45,20 @@ text editable, add it in both places and mark the element in the HTML.
 The tracklist is only sent to the browser after the correct listening-room
 code was entered. Drafts and scheduled messages stay hidden until published.
 
-## Database
+## Data and the free plan
 
-Stats, access codes, listening sessions, comments, questions and rate limits
-live in a Durable Object with SQLite (`_database.js`, binding `DATABASE`).
-Cloudflare creates it automatically on deploy (see `migrations` in
-`wrangler.jsonc`), it works on the free plan and needs no setup.
+Everything runs on the **Workers free plan** — no Durable Objects, D1 or R2.
+All data lives in the one KV namespace (`CONNOR_DATA`); `_database.js` handles
+access codes, plays, comments, questions and page views.
+
+The free plan allows 1,000 KV writes and ~10 ms CPU time per request, so:
+
+- rate limits use the Cloudflare cache, not KV (no writes)
+- page views are collected in the cache and written to KV every few minutes,
+  at most 250 times per day — stats can never use up the writes needed for
+  saving content. Numbers in the admin can lag a few minutes behind.
+- the admin password is hashed with settings that fit into the CPU limit
+- pausing an access code can take up to a minute to reach every data center
 
 Page views are counted without cookies: unique visitors per day are a hash of
 IP + browser + a secret salt, the IP itself is never stored.

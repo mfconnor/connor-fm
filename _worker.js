@@ -4,14 +4,13 @@
 // Handles /api/* and /media/*.
 // Everything else is served from the static assets.
 //
-// Storage:
-//   KV (CONNOR_DATA)     — page content, uploads, admin sessions
-//   Database (_database) — stats, access codes, comments, questions
+// Storage (everything works on the Workers free plan):
+//   KV (CONNOR_DATA) — page content, uploads, admin sessions
+//   _database.js     — access codes, plays, comments, questions and
+//                      stats, also in KV, written sparingly
 // ==========================================
 
-import { Database } from "./_database.js";
-
-export { Database };
+import { createStore } from "./_database.js";
 
 // Everything that can be edited in the admin panel.
 // Each key is stored in KV as "content:<key>".
@@ -99,7 +98,9 @@ const CONTENT_KEYS = Object.keys(SCHEMA);
 
 const SESSION_TTL = 60 * 60 * 24; // 24 hours
 
-const PBKDF2_ITERATIONS = 100000; // maximum supported by Workers
+// The free plan allows ~10 ms of CPU time per request; this stays well below it.
+// Older hashes with other settings are upgraded on the next successful login.
+const PBKDF2_ITERATIONS = 6000;
 
 const RATE_LIMITS = {
   login: { max: 10, window: 15 * 60 },
@@ -334,7 +335,7 @@ function publishedMessages(messages) {
 // ==========================================
 
 function db(env) {
-  return env.DATABASE.get(env.DATABASE.idFromName("main"));
+  return createStore(env);
 }
 
 
@@ -610,7 +611,11 @@ async function askQuestion(request, env) {
     return json({ success: false, error: "Write a question first." }, 400);
   }
 
-  await db(env).addQuestion(question);
+  const result = await db(env).addQuestion(question);
+
+  if (result.error) {
+    return json({ success: false, error: result.error }, 503);
+  }
 
   return json({ success: true });
 }
@@ -1051,8 +1056,14 @@ async function verifyAdminPassword(env, password) {
 
   const [, iterations, salt, hash] = stored.split("$");
   const candidate = await pbkdf2(password, base64ToBytes(salt), Number(iterations));
+  const valid = await safeEqual(bytesToBase64(candidate), hash);
 
-  return safeEqual(bytesToBase64(candidate), hash);
+  // Re-hash passwords stored with other settings (e.g. the slower older ones).
+  if (valid && Number(iterations) !== PBKDF2_ITERATIONS) {
+    await env.CONNOR_DATA.put("admin_password", await hashPassword(password));
+  }
+
+  return valid;
 }
 
 
@@ -1109,8 +1120,8 @@ function base64ToBytes(value) {
 // ==========================================
 // RATE LIMITING
 //
-// Per-IP counters in the database (exact, and it keeps
-// the KV write limit free for content).
+// Per-IP counters in the cache (no KV writes, so the
+// free plan's write limit stays free for content).
 // ==========================================
 
 async function withinRateLimit(request, env, scope) {
