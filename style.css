@@ -2052,3 +2052,124 @@ footer {
 
   display: block;
 }
+
+
+/* =========================
+   EASTER EGG
+========================= */
+
+.easter-egg {
+  cursor: pointer;
+
+  transition: color 0.2s ease;
+}
+
+
+.easter-egg:hover,
+.easter-egg:focus-visible {
+  color: var(--khaki);
+
+  outline: none;
+}
+
+
+body.snake-open {
+  overflow: hidden;
+}
+
+
+.snake {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 100;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  background: var(--background);
+
+  animation: page-in 0.3s ease both;
+}
+
+
+.snake-box {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 14px;
+}
+
+
+.snake-head {
+  display: flex;
+
+  align-items: center;
+
+  gap: 18px;
+
+  font-family: monospace;
+
+  font-size: 12px;
+}
+
+
+.snake-score {
+  color: var(--khaki);
+}
+
+
+.snake-best {
+  color: var(--muted);
+
+  flex: 1;
+}
+
+
+.snake-close {
+  background: none;
+
+  border: 1px solid var(--line);
+
+  color: var(--muted);
+
+  padding: 6px 10px;
+
+  font-family: monospace;
+
+  font-size: 11px;
+
+  cursor: pointer;
+}
+
+
+.snake-close:hover {
+  color: var(--khaki);
+
+  border-color: var(--khaki);
+}
+
+
+.snake-canvas {
+  display: block;
+
+  border: 1px solid var(--line);
+
+  touch-action: none;
+}
+
+
+.snake-hint {
+  color: var(--muted);
+
+  font-family: monospace;
+
+  font-size: 10px;
+
+  text-align: center;
+}
