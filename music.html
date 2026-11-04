@@ -115,6 +115,24 @@
         </div>
       </div>
 
+      <div class="bonus" id="bonus" hidden>
+        <div class="room-label" data-content="music.bonusLabel">bonus tracks</div>
+        <p class="bonus-text" data-content="music.bonusText">a few fun tracks. free for everyone.</p>
+        <div class="track-list" id="bonusList"></div>
+      </div>
+
+      <div class="support" id="support" hidden>
+        <div class="access-label" data-content="music.supportLabel">support</div>
+
+        <p class="access-description" data-content="music.supportText">
+          like what you hear? pay what you want, from 1 €.
+        </p>
+
+        <a class="unlock-button support-button" id="supportLink" target="_blank" rel="noopener noreferrer">
+          <span data-content="music.supportButton">support me</span> →
+        </a>
+      </div>
+
       <div class="music-bottom">
         <span data-content="music.footerLeft">this project is private</span>
         <span data-content="music.footerRight">connor.fm/music</span>
@@ -879,6 +897,99 @@
     }
 
     audio.addEventListener("play", startVisualizer);
+
+
+    // ---------- bonus tracks (public) ----------
+    //
+    // A small player of their own, so they work without an access code.
+    // Only one thing plays at a time.
+
+    const bonusAudio = new Audio();
+    let bonusTracks = [];
+    let bonusCurrent = -1;
+
+    bonusAudio.preload = "none";
+
+
+    contentReady.then(data => {
+      const music = data?.music || {};
+
+      bonusTracks = (music.bonus || []).filter(track => track.audio);
+
+      if (bonusTracks.length) {
+        renderBonus();
+        document.getElementById("bonus").hidden = false;
+      }
+
+      if (music.supportLink) {
+        document.getElementById("supportLink").href = music.supportLink;
+        document.getElementById("support").hidden = false;
+      }
+    });
+
+
+    function renderBonus() {
+      document.getElementById("bonusList").replaceChildren(
+        ...bonusTracks.map((track, index) => {
+          const row = createElement("button", "track playable bonus-track");
+          const playing = index === bonusCurrent && !bonusAudio.paused;
+
+          row.type = "button";
+          row.classList.toggle("current", index === bonusCurrent);
+
+          const number = createElement("span", "track-num");
+          number.append(playing ? icon("pause") : String(index + 1).padStart(2, "0"));
+
+          const time = index === bonusCurrent && bonusAudio.duration
+            ? `${formatTime(bonusAudio.currentTime)} / ${formatTime(bonusAudio.duration)}`
+            : track.duration || "—";
+
+          row.append(number, createElement("span", "track-title", track.title || "untitled"), createElement("span", "track-time", time));
+
+          const progress = index === bonusCurrent && bonusAudio.duration ? bonusAudio.currentTime / bonusAudio.duration : 0;
+          row.style.setProperty("--progress", `${progress * 100}%`);
+
+          row.addEventListener("click", () => playBonus(index));
+
+          return row;
+        })
+      );
+    }
+
+
+    function playBonus(index) {
+      if (index === bonusCurrent) {
+        if (bonusAudio.paused) {
+          audio.pause();
+          bonusAudio.play().catch(() => {});
+        } else {
+          bonusAudio.pause();
+        }
+
+        return;
+      }
+
+      audio.pause();
+      bonusCurrent = index;
+      bonusAudio.src = bonusTracks[index].audio;
+      bonusAudio.play().catch(() => {});
+      renderBonus();
+    }
+
+
+    ["play", "pause", "timeupdate", "loadedmetadata"].forEach(name => bonusAudio.addEventListener(name, renderBonus));
+
+    bonusAudio.addEventListener("ended", () => {
+      if (bonusCurrent + 1 < bonusTracks.length) {
+        playBonus(bonusCurrent + 1);
+      } else {
+        bonusCurrent = -1;
+        renderBonus();
+      }
+    });
+
+    // The listening room pauses the bonus tracks and the other way round.
+    audio.addEventListener("play", () => bonusAudio.pause());
   </script>
 
 </body>

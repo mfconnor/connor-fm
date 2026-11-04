@@ -58,7 +58,18 @@ const SCHEMA = {
     roomTitle: "text",
     footerLeft: "text",
     footerRight: "text",
-    tracklist: listOf({ title: "text", duration: "text", audio: "url" })
+    tracklist: listOf({ title: "text", duration: "text", audio: "url" }),
+
+    // Public, free for everyone
+    bonusLabel: "text",
+    bonusText: "long",
+    bonus: listOf({ title: "text", duration: "text", audio: "url" }),
+
+    // "support me" — a link to a pay-what-you-want page (Stripe, PayPal, Ko-fi …)
+    supportLabel: "text",
+    supportText: "long",
+    supportButton: "text",
+    supportLink: "url"
   },
 
   archivePage: {
