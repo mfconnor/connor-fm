@@ -1272,6 +1272,49 @@ const TABS = [
         ]
       },
       {
+        title: "bonus tracks",
+        description: "Free for everyone, playable on the music page without a code. The section stays hidden until you add a track with an mp3.",
+        fields: [
+          { path: "music.bonusLabel", label: "label", def: "bonus tracks", half: true },
+          { path: "music.bonusText", label: "text", def: "a few fun tracks. free for everyone.", half: true },
+          {
+            path: "music.bonus",
+            label: "tracks",
+            type: "list",
+            addLabel: "+ add bonus track",
+            empty: "No bonus tracks yet.",
+            newItem: () => ({ title: "untitled", duration: "", audio: "" }),
+            itemTitle: track => [track.title || "untitled", track.duration, track.audio ? "♪" : ""].filter(Boolean).join(" — "),
+            item: [
+              { path: "title", label: "title", half: true },
+              { path: "duration", label: "duration", placeholder: "3:21 — filled in automatically", half: true },
+              {
+                path: "audio",
+                label: "mp3",
+                type: "audio",
+                hint: "Public — anyone can play it. Export as mp3 with 320 kbps (max. 25 MB).",
+                onUpload: fillTrackFromFile
+              }
+            ]
+          }
+        ]
+      },
+      {
+        title: "support me",
+        description: "A pay-what-you-want link below the bonus tracks. Hidden until you add a link.",
+        fields: [
+          { path: "music.supportLabel", label: "label", def: "support", half: true },
+          { path: "music.supportButton", label: "button", def: "support me", half: true },
+          { path: "music.supportText", label: "text", type: "long", def: "like what you hear? pay what you want, from 1 €." },
+          {
+            path: "music.supportLink",
+            label: "link",
+            placeholder: "https://buy.stripe.com/… or https://paypal.me/…",
+            hint: "Stripe: Payment Links → new link → \"Customers choose what to pay\" with a minimum of 1 €. Also works with PayPal.me or Ko-fi."
+          }
+        ]
+      },
+      {
         title: "page footer",
         fields: [
           { path: "music.footerLeft", label: "left", def: "this project is private", half: true },

@@ -25,7 +25,7 @@ through `/admin`. The admin panel has one tab per page:
 | Tab | What you can edit |
 | --- | --- |
 | home | announcement texts, cover image or text, countdown |
-| music | project info, cover, access box, listening room + tracklist, page footer |
+| music | project info, cover, access box, listening room + tracklist, bonus tracks (public), "support me" link, page footer |
 | listening room | access codes per person (create, pause, delete, see what they listened to), comments |
 | archive | archive entries (with optional link), note and footer of the page |
 | about | label, title, text, the list of facts |
@@ -78,6 +78,15 @@ stored in the same KV namespace as `media:<id>`, served at `/media/<id>`.
   code is paused or deleted) or to the admin
 - archive snippets and images are public and cached by the browser
 - seeking in songs works via HTTP range requests
+
+**Audio format:** export songs as **mp3 with 320 kbps** (the highest mp3
+quality, ~10 MB for 4 minutes). WAV files are far too big for the 25 MB per
+file and 1 GB total.
+
+**Bonus tracks** (admin → music) are public and playable without a code; the
+section stays hidden until a track has an mp3. The **support me** block below
+them links to any pay-what-you-want page, e.g. a Stripe Payment Link with
+"Customers choose what to pay" and a minimum of 1 €.
 
 The listening room shows a player (play / pause, previous / next, seek bar,
 time) as soon as at least one track has an mp3. Tracks without an mp3 are

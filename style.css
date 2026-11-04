@@ -1376,6 +1376,78 @@ body.has-player {
 
 
 /* =========================
+   BONUS TRACKS + SUPPORT
+========================= */
+
+.bonus {
+  margin-top: 100px;
+
+  border-top: 1px solid var(--line);
+
+  padding-top: 35px;
+}
+
+
+.bonus[hidden],
+.support[hidden] {
+  display: none;
+}
+
+
+.bonus-text {
+  color: var(--muted);
+
+  font-size: 15px;
+
+  line-height: 1.65;
+
+  max-width: 520px;
+
+  margin-bottom: 30px;
+}
+
+
+.bonus-track {
+  position: relative;
+}
+
+
+/* thin progress line under the playing bonus track */
+.bonus-track::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  bottom: -1px;
+
+  width: var(--progress, 0%);
+
+  height: 1px;
+
+  background: var(--khaki);
+}
+
+
+.support {
+  margin-top: 70px;
+
+  border-top: 1px solid var(--line);
+
+  padding-top: 28px;
+
+  max-width: 450px;
+}
+
+
+.support-button {
+  display: inline-block;
+
+  text-decoration: none;
+}
+
+
+/* =========================
    ASK
 ========================= */
 
