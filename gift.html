@@ -375,6 +375,7 @@
       gap: 8px;
       overflow-x: auto;
       scroll-snap-type: x mandatory;
+      scroll-padding: 0 4vw;
       padding: 14px 4vw 20px;
       scrollbar-width: none;
     }
@@ -598,7 +599,7 @@
       position: fixed;
       inset: 0;
       z-index: 30;
-      background: rgba(8, 8, 8, 0.96);
+      background: var(--background);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -713,6 +714,10 @@
       .carousel {
         padding-left: 20px;
         padding-right: 20px;
+      }
+
+      .carousel {
+        scroll-padding: 0 20px;
       }
 
       .card {
@@ -1090,6 +1095,26 @@
     $("lightbox").addEventListener("click", event => {
       if (event.target === $("lightbox")) {
         closePhoto();
+      }
+    });
+
+    // Swipe between photos on phones.
+    let touchX = null;
+
+    $("lightbox").addEventListener("touchstart", event => {
+      touchX = event.touches[0].clientX;
+    }, { passive: true });
+
+    $("lightbox").addEventListener("touchend", event => {
+      if (touchX === null) {
+        return;
+      }
+
+      const distance = event.changedTouches[0].clientX - touchX;
+      touchX = null;
+
+      if (Math.abs(distance) > 50 && photos.length > 1) {
+        openPhoto(photoIndex + (distance < 0 ? 1 : -1));
       }
     });
 
