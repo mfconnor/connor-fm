@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>für dich</title>
+
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#080808">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23080808'/%3E%3Ctext x='32' y='46' font-family='Arial' font-size='42' font-weight='700' fill='%239a9865' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E">
+
+  <style>
+    /* A streaming-style title page in the colors of the site. */
+
+    :root {
+      --background: #080808;
+      --surface: #10100f;
+      --surface-light: #1a1a17;
+      --text: #e8e8e3;
+      --muted: #8c8c87;
+      --khaki: #9a9865;
+      --line: #242420;
+      --red: #e50914;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--background);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    .mono {
+      font-family: monospace;
+    }
+
+    .section-label {
+      color: var(--muted);
+      font-family: monospace;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      margin-bottom: 40px;
+    }
+
+
+    /* SNOW */
+
+    #snow {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+
+    /* LOADING / NOT FOUND */
+
+    .center-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-family: monospace;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+    }
+
+
+    /* LOCKED */
+
+    .locked {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 0 8vw;
+      background:
+        radial-gradient(ellipse at 70% 40%, rgba(154, 152, 101, 0.08), transparent 60%),
+        var(--background);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--khaki);
+      font-family: monospace;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 26px;
+    }
+
+    .tag::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--red);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .locked-title {
+      font-size: clamp(80px, 16vw, 220px);
+      font-weight: 700;
+      letter-spacing: -0.07em;
+      line-height: 0.85;
+      margin-bottom: 30px;
+    }
+
+    .locked-text {
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.6;
+      max-width: 460px;
+      margin-bottom: 55px;
+    }
+
+    .countdown {
+      display: flex;
+      gap: 30px;
+    }
+
+    .countdown-unit {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .countdown-number {
+      font-size: clamp(38px, 5vw, 64px);
+      font-weight: 700;
+      letter-spacing: -0.05em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .countdown-label {
+      color: var(--muted);
+      font-family: monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+    }
+
+
+    /* PREVIEW BANNER (admin only) */
+
+    .preview-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      background: var(--khaki);
+      color: var(--background);
+      font-family: monospace;
+      font-size: 12px;
+      text-align: center;
+      padding: 8px 16px;
+    }
+
+
+    /* HERO */
+
+    .hero {
+      position: relative;
+      min-height: 92vh;
+      display: flex;
+      align-items: flex-end;
+      padding: 0 4vw 9vh;
+      overflow: hidden;
+    }
+
+    .hero-image {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      animation: slow-zoom 30s ease-out both;
+    }
+
+    .hero-shade {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to right, rgba(8, 8, 8, 0.92) 0%, rgba(8, 8, 8, 0.55) 45%, rgba(8, 8, 8, 0.1) 75%),
+        linear-gradient(to top, var(--background) 0%, rgba(8, 8, 8, 0) 40%);
+    }
+
+    .hero.no-image .hero-shade {
+      background: radial-gradient(ellipse at 75% 30%, rgba(154, 152, 101, 0.12), transparent 60%);
+    }
+
+    .hero-content {
+      position: relative;
+      max-width: 640px;
+      animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    }
+
+    .brand-tag {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-family: monospace;
+      font-size: 13px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    .brand-mark {
+      color: var(--red);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 30px;
+      font-weight: 900;
+      letter-spacing: 0;
+      transform: scaleY(1.15);
+    }
+
+    .hero-title {
+      font-size: clamp(84px, 15vw, 210px);
+      font-weight: 700;
+      letter-spacing: -0.07em;
+      line-height: 0.82;
+      margin-left: -0.04em;
+    }
+
+    .hero-subtitle {
+      color: var(--khaki);
+      font-family: monospace;
+      font-size: 15px;
+      letter-spacing: 0.08em;
+      margin: 18px 0 26px;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 14px;
+      font-size: 15px;
+      margin-bottom: 22px;
+    }
+
+    .match {
+      color: #46d369;
+      font-weight: 700;
+    }
+
+    .meta-text {
+      color: var(--text);
+    }
+
+    .badge {
+      border: 1px solid rgba(232, 232, 227, 0.4);
+      color: var(--text);
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+
+    .hero-description {
+      color: var(--text);
+      font-size: clamp(16px, 1.6vw, 20px);
+      line-height: 1.5;
+      margin-bottom: 30px;
+      text-shadow: 0 1px 12px rgba(0, 0, 0, 0.6);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border: 0;
+      border-radius: 4px;
+      padding: 13px 26px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .button:hover {
+      opacity: 0.85;
+    }
+
+    .button:active {
+      transform: scale(0.97);
+    }
+
+    .button-primary {
+      background: var(--text);
+      color: var(--background);
+    }
+
+    .button-secondary {
+      background: rgba(140, 140, 135, 0.35);
+      color: var(--text);
+      backdrop-filter: blur(6px);
+    }
+
+    .rating {
+      position: absolute;
+      right: 0;
+      bottom: 18vh;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(8, 8, 8, 0.55);
+      border-left: 3px solid var(--text);
+      padding: 10px 4vw 10px 14px;
+      font-family: monospace;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .rating strong {
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 20px;
+    }
+
+
+    /* PHOTO ROW */
+
+    .row {
+      position: relative;
+      z-index: 1;
+      margin-top: -4vh;
+      padding: 0 0 60px;
+    }
+
+    .row-title {
+      font-size: clamp(20px, 2vw, 26px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      padding: 0 4vw;
+      margin-bottom: 14px;
+    }
+
+    .carousel {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding: 14px 4vw 20px;
+      scrollbar-width: none;
+    }
+
+    .carousel::-webkit-scrollbar {
+      display: none;
+    }
+
+    .card {
+      flex: 0 0 auto;
+      width: clamp(220px, 24vw, 340px);
+      scroll-snap-align: start;
+      background: none;
+      border: 0;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+      transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+    }
+
+    .card:hover,
+    .card:focus-visible {
+      transform: scale(1.06);
+      outline: none;
+      z-index: 2;
+    }
+
+    .card img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      object-fit: cover;
+      border-radius: 4px;
+      background: var(--surface);
+    }
+
+    .card-caption {
+      display: block;
+      color: var(--muted);
+      font-family: monospace;
+      font-size: 12px;
+      margin-top: 10px;
+      min-height: 14px;
+    }
+
+
+    /* LETTER */
+
+    .letter {
+      max-width: 1280px;
+      padding: 90px 4vw;
+      border-top: 1px solid var(--line);
+      margin: 0 4vw;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .letter-title,
+    .gift-title {
+      font-size: clamp(48px, 7vw, 100px);
+      font-weight: 700;
+      letter-spacing: -0.07em;
+      line-height: 0.88;
+      margin-bottom: 45px;
+    }
+
+    .letter-body {
+      max-width: 640px;
+      color: var(--text);
+      font-size: clamp(17px, 1.6vw, 20px);
+      line-height: 1.75;
+    }
+
+    .letter-body p + p {
+      margin-top: 22px;
+    }
+
+    .signature {
+      color: var(--khaki);
+      font-family: monospace;
+      font-size: 14px;
+      margin-top: 40px;
+    }
+
+
+    /* GIFT CARD */
+
+    .gift {
+      border-top: 1px solid var(--line);
+      margin: 0 4vw;
+      padding: 90px 0;
+    }
+
+    .gift-card {
+      position: relative;
+      display: block;
+      width: min(560px, 100%);
+      aspect-ratio: 16 / 10;
+      perspective: 1400px;
+      background: none;
+      border: 0;
+      color: inherit;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .gift-inner {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+    }
+
+    .gift-card.open .gift-inner {
+      transform: rotateY(180deg);
+    }
+
+    .gift-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: clamp(22px, 4vw, 40px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .gift-front {
+      background:
+        linear-gradient(135deg, rgba(154, 152, 101, 0.16), transparent 55%),
+        var(--surface);
+    }
+
+    .gift-front::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 62%;
+      width: 14px;
+      background: rgba(229, 9, 20, 0.75);
+    }
+
+    .gift-question {
+      color: var(--khaki);
+      font-size: clamp(90px, 14vw, 150px);
+      font-weight: 300;
+      line-height: 1;
+    }
+
+    .gift-hint {
+      color: var(--muted);
+      font-family: monospace;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+    }
+
+    .gift-back {
+      transform: rotateY(180deg);
+      background:
+        radial-gradient(ellipse at 100% 0%, rgba(154, 152, 101, 0.22), transparent 60%),
+        var(--surface-light);
+      border-color: var(--khaki);
+    }
+
+    .gift-label {
+      color: var(--khaki);
+      font-family: monospace;
+      font-size: 13px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+    }
+
+    .gift-text {
+      font-size: clamp(26px, 4vw, 42px);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+    }
+
+    .gift-detail {
+      color: var(--muted);
+      font-family: monospace;
+      font-size: 12px;
+    }
+
+
+    /* END */
+
+    .end {
+      border-top: 1px solid var(--line);
+      margin: 0 4vw;
+      padding: 110px 0 140px;
+      text-align: center;
+    }
+
+    .end-text {
+      font-size: clamp(30px, 5vw, 64px);
+      font-weight: 700;
+      letter-spacing: -0.05em;
+      line-height: 1.05;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .end-rating {
+      color: var(--khaki);
+      font-family: monospace;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      margin-top: 30px;
+    }
+
+
+    /* LIGHTBOX */
+
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      background: rgba(8, 8, 8, 0.96);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      padding: 60px 16px;
+      animation: fade 0.25s ease both;
+    }
+
+    .lightbox img {
+      max-width: 100%;
+      max-height: calc(100vh - 160px);
+      object-fit: contain;
+      border-radius: 4px;
+    }
+
+    .lightbox-caption {
+      color: var(--muted);
+      font-family: monospace;
+      font-size: 12px;
+      min-height: 14px;
+    }
+
+    .lightbox-button {
+      position: absolute;
+      background: none;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-family: monospace;
+      font-size: 13px;
+      padding: 10px 14px;
+      cursor: pointer;
+    }
+
+    .lightbox-button:hover {
+      color: var(--khaki);
+      border-color: var(--khaki);
+    }
+
+    .lightbox-close { top: 16px; right: 16px; }
+    .lightbox-prev { left: 16px; top: 50%; }
+    .lightbox-next { right: 16px; top: 50%; }
+
+
+    /* ANIMATIONS */
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(24px); }
+    }
+
+    @keyframes fade {
+      from { opacity: 0; }
+    }
+
+    @keyframes slow-zoom {
+      from { transform: scale(1.08); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+
+
+    /* MOBILE */
+
+    @media (max-width: 700px) {
+      .hero {
+        min-height: 86vh;
+        padding: 0 20px 70px;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: stretch;
+      }
+
+      .hero-shade {
+        background:
+          linear-gradient(to top, var(--background) 8%, rgba(8, 8, 8, 0.75) 45%, rgba(8, 8, 8, 0.15) 100%);
+      }
+
+      .hero-title {
+        font-size: 26vw;
+      }
+
+      .rating {
+        position: relative;
+        right: auto;
+        bottom: auto;
+        display: inline-flex;
+        align-self: flex-start;
+        margin-top: 24px;
+        padding-right: 14px;
+      }
+
+      .button {
+        flex: 1;
+        justify-content: center;
+        padding: 13px 16px;
+        font-size: 15px;
+      }
+
+      .row-title,
+      .carousel {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+      .card {
+        width: 72vw;
+      }
+
+      .letter,
+      .gift,
+      .end {
+        margin: 0 20px;
+      }
+
+      .letter,
+      .gift {
+        padding: 70px 0;
+      }
+
+      .locked {
+        padding: 0 20px;
+      }
+
+      .countdown {
+        gap: 20px;
+      }
+
+      .lightbox-prev,
+      .lightbox-next {
+        top: auto;
+        bottom: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <canvas id="snow" aria-hidden="true"></canvas>
+
+  <div class="center-screen" id="loading">…</div>
+
+  <div class="center-screen" id="missing" hidden>hier ist nichts.</div>
+
+
+  <!-- BEFORE THE DATE: only a countdown -->
+
+  <main class="locked" id="locked" hidden>
+    <div>
+      <div class="tag" id="lockedTitle">demnächst</div>
+      <h1 class="locked-title" id="lockedName">KIMI</h1>
+      <p class="locked-text" id="lockedText">diese folge erscheint an heiligabend.</p>
+      <div class="countdown" id="countdown"></div>
+    </div>
+  </main>
+
+
+  <!-- THE PAGE -->
+
+  <div id="page" hidden>
+    <div class="preview-banner" id="previewBanner" hidden></div>
+
+    <header class="hero" id="hero">
+      <img class="hero-image" id="heroImage" alt="" hidden>
+      <div class="hero-shade"></div>
+
+      <div class="hero-content">
+        <div class="brand-tag">
+          <span class="brand-mark" aria-hidden="true">K</span>
+          <span id="label"></span>
+        </div>
+
+        <h1 class="hero-title" id="title"></h1>
+        <div class="hero-subtitle" id="subtitle"></div>
+
+        <div class="hero-meta">
+          <span class="match">100 % match</span>
+          <span class="meta-text" id="meta"></span>
+          <span class="badge">HD</span>
+        </div>
+
+        <p class="hero-description" id="description"></p>
+
+        <div class="hero-actions">
+          <a class="button button-primary" href="#letter" id="letterButton">▶ brief lesen</a>
+          <a class="button button-secondary" href="#gift" id="giftButton">🎁 geschenk öffnen</a>
+        </div>
+      </div>
+
+      <div class="rating" id="ratingBox">
+        <span>bewertung</span>
+        <strong id="rating"></strong>
+      </div>
+    </header>
+
+    <section class="row" id="photos" hidden>
+      <h2 class="row-title" id="photosTitle"></h2>
+      <div class="carousel" id="carousel"></div>
+    </section>
+
+    <section class="letter" id="letter" hidden>
+      <div class="section-label">01 / brief</div>
+      <h2 class="letter-title" id="messageTitle"></h2>
+      <div class="letter-body" id="message"></div>
+      <div class="signature" id="signature"></div>
+    </section>
+
+    <section class="gift" id="gift" hidden>
+      <div class="section-label">02 / geschenk</div>
+      <h2 class="gift-title" id="giftTitle"></h2>
+
+      <button class="gift-card" id="giftCard" type="button" aria-label="geschenk öffnen">
+        <span class="gift-inner">
+          <span class="gift-face gift-front">
+            <span class="gift-question">?</span>
+            <span class="gift-hint">zum öffnen tippen</span>
+          </span>
+
+          <span class="gift-face gift-back">
+            <span class="gift-label" id="giftLabel"></span>
+            <span class="gift-text" id="giftText"></span>
+            <span class="gift-detail" id="giftDetail"></span>
+          </span>
+        </span>
+      </button>
+    </section>
+
+    <footer class="end" id="end">
+      <p class="end-text" id="footer"></p>
+      <div class="end-rating" id="endRating"></div>
+    </footer>
+  </div>
+
+
+  <div class="lightbox" id="lightbox" hidden role="dialog" aria-label="foto">
+    <button class="lightbox-button lightbox-close" id="lightboxClose" type="button">schließen ✕</button>
+    <button class="lightbox-button lightbox-prev" id="lightboxPrev" type="button" aria-label="vorheriges foto">←</button>
+    <img id="lightboxImage" alt="">
+    <div class="lightbox-caption" id="lightboxCaption"></div>
+    <button class="lightbox-button lightbox-next" id="lightboxNext" type="button" aria-label="nächstes foto">→</button>
+  </div>
+
+
+  <script>
+
+    const $ = id => document.getElementById(id);
+
+    const DEFAULTS = {
+      lockedTitle: "demnächst",
+      lockedText: "diese folge erscheint an heiligabend.",
+      label: "eine dokumentation",
+      title: "KIMI",
+      subtitle: "die dokumentation",
+      meta: "2026 · 1 folge · für die beste große schwester",
+      rating: "10/10",
+      description: "Täufling. Hauptperson. Große Schwester. Kino-Begleitung. Übernachtungs-Partnerin. Und einfach: Kimi.",
+      messageTitle: "ein brief für dich",
+      signature: "connor",
+      photosTitle: "die taufe",
+      giftTitle: "dein geschenk",
+      giftLabel: "gutschein",
+      giftText: "ein kinoabend. du suchst den film aus.",
+      giftDetail: "einlösbar bei connor. jederzeit.",
+      footer: "frohe weihnachten, kimi. wir haben dich lieb."
+    };
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let gift = {};
+    let photos = [];
+    let photoIndex = 0;
+
+
+    function value(key) {
+      const text = typeof gift[key] === "string" ? gift[key].trim() : "";
+      return text || DEFAULTS[key] || "";
+    }
+
+
+    function setText(id, key) {
+      $(id).textContent = value(key);
+    }
+
+
+    function show(id) {
+      $("loading").hidden = true;
+      $(id).hidden = false;
+    }
+
+
+    // ---------- load ----------
+
+    const slug = location.pathname.replace(/^\/+|\/+$/g, "");
+
+    fetch(`/api/gift?slug=${encodeURIComponent(slug)}`, { cache: "no-store" })
+      .then(response => response.json())
+      .then(data => {
+        if (!data.success) {
+          show("missing");
+          return;
+        }
+
+        gift = data;
+
+        if (data.locked) {
+          renderLocked();
+        } else {
+          renderPage(data.preview);
+        }
+
+        startSnow();
+      })
+      .catch(() => show("missing"));
+
+
+    // ---------- before the date ----------
+
+    function renderLocked() {
+      setText("lockedTitle", "lockedTitle");
+      setText("lockedName", "title");
+      setText("lockedText", "lockedText");
+      document.title = value("title");
+      show("locked");
+
+      const target = Date.parse(gift.unlockAt);
+      const units = [["tage", 86400], ["std", 3600], ["min", 60], ["sek", 1]];
+
+      const numbers = units.map(([label]) => {
+        const unit = document.createElement("div");
+        const number = document.createElement("span");
+        const name = document.createElement("span");
+
+        unit.className = "countdown-unit";
+        number.className = "countdown-number";
+        name.className = "countdown-label";
+        name.textContent = label;
+        unit.append(number, name);
+        $("countdown").append(unit);
+
+        return number;
+      });
+
+      const tick = () => {
+        let left = Math.max(0, Math.floor((target - Date.now()) / 1000));
+
+        if (left === 0) {
+          // It's time — load the real page.
+          location.reload();
+          return;
+        }
+
+        units.forEach(([, size], index) => {
+          const amount = Math.floor(left / size);
+          left -= amount * size;
+          numbers[index].textContent = String(amount).padStart(2, "0");
+        });
+      };
+
+      tick();
+      setInterval(tick, 1000);
+    }
+
+
+    // ---------- the page ----------
+
+    function renderPage(preview) {
+      document.title = `${value("title")} — ${value("subtitle")}`;
+
+      ["label", "title", "subtitle", "meta", "rating", "description"].forEach(key => setText(key, key));
+      $("endRating").textContent = `bewertung: ${value("rating")}`;
+
+      if (gift.heroImage) {
+        $("heroImage").src = gift.heroImage;
+        $("heroImage").hidden = false;
+      } else {
+        $("hero").classList.add("no-image");
+      }
+
+      // photos
+      photos = (gift.photos || []).filter(photo => photo.image);
+
+      if (photos.length) {
+        setText("photosTitle", "photosTitle");
+
+        $("carousel").replaceChildren(
+          ...photos.map((photo, index) => {
+            const card = document.createElement("button");
+            const image = document.createElement("img");
+            const caption = document.createElement("span");
+
+            card.type = "button";
+            card.className = "card";
+            image.src = photo.image;
+            image.alt = photo.caption || "";
+            image.loading = "lazy";
+            caption.className = "card-caption";
+            caption.textContent = photo.caption || "";
+
+            card.append(image, caption);
+            card.addEventListener("click", () => openPhoto(index));
+
+            return card;
+          })
+        );
+
+        $("photos").hidden = false;
+      }
+
+      // letter
+      const paragraphs = (gift.message || "")
+        .split(/\n\s*\n/)
+        .map(part => part.trim())
+        .filter(Boolean);
+
+      if (paragraphs.length) {
+        setText("messageTitle", "messageTitle");
+        $("signature").textContent = `— ${value("signature")}`;
+
+        $("message").replaceChildren(
+          ...paragraphs.map(text => {
+            const paragraph = document.createElement("p");
+            paragraph.textContent = text;
+            return paragraph;
+          })
+        );
+
+        $("letter").hidden = false;
+      } else {
+        $("letterButton").hidden = true;
+      }
+
+      // gift
+      ["giftTitle", "giftLabel", "giftText", "giftDetail"].forEach(key => setText(key, key));
+      $("gift").hidden = false;
+
+      $("giftCard").addEventListener("click", () => {
+        const open = $("giftCard").classList.toggle("open");
+        $("giftCard").setAttribute("aria-label", open ? "geschenk schließen" : "geschenk öffnen");
+
+        if (open) {
+          snowBurst();
+        }
+      });
+
+      setText("footer", "footer");
+
+      if (preview) {
+        const opens = new Date(gift.unlockAt).toLocaleString("de-DE", { dateStyle: "medium", timeStyle: "short" });
+        $("previewBanner").textContent = `vorschau — nur du siehst das. für alle anderen öffnet die seite am ${opens}.`;
+        $("previewBanner").hidden = false;
+      }
+
+      show("page");
+    }
+
+
+    // ---------- photo viewer ----------
+
+    function openPhoto(index) {
+      photoIndex = (index + photos.length) % photos.length;
+      $("lightboxImage").src = photos[photoIndex].image;
+      $("lightboxCaption").textContent = photos[photoIndex].caption || "";
+      $("lightboxPrev").hidden = $("lightboxNext").hidden = photos.length < 2;
+      $("lightbox").hidden = false;
+      document.body.style.overflow = "hidden";
+    }
+
+    function closePhoto() {
+      $("lightbox").hidden = true;
+      document.body.style.overflow = "";
+    }
+
+    $("lightboxClose").addEventListener("click", closePhoto);
+    $("lightboxPrev").addEventListener("click", () => openPhoto(photoIndex - 1));
+    $("lightboxNext").addEventListener("click", () => openPhoto(photoIndex + 1));
+
+    $("lightbox").addEventListener("click", event => {
+      if (event.target === $("lightbox")) {
+        closePhoto();
+      }
+    });
+
+    document.addEventListener("keydown", event => {
+      if ($("lightbox").hidden) {
+        return;
+      }
+
+      if (event.key === "Escape") closePhoto();
+      if (event.key === "ArrowLeft") openPhoto(photoIndex - 1);
+      if (event.key === "ArrowRight") openPhoto(photoIndex + 1);
+    });
+
+
+    // ---------- snow ----------
+
+    let flakes = [];
+
+    function startSnow() {
+      if (reducedMotion) {
+        return;
+      }
+
+      const canvas = $("snow");
+      const context = canvas.getContext("2d");
+
+      const resize = () => {
+        const ratio = window.devicePixelRatio || 1;
+        canvas.width = innerWidth * ratio;
+        canvas.height = innerHeight * ratio;
+        context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      };
+
+      resize();
+      addEventListener("resize", resize);
+
+      const count = innerWidth < 700 ? 45 : 90;
+      flakes = Array.from({ length: count }, () => newFlake(true));
+
+      const frame = time => {
+        context.clearRect(0, 0, innerWidth, innerHeight);
+
+        flakes.forEach((flake, index) => {
+          flake.y += flake.speed;
+          flake.x += Math.sin(time / 1600 + flake.phase) * 0.35;
+
+          if (flake.y > innerHeight + 10) {
+            flakes[index] = flake.extra ? null : newFlake(false);
+          }
+
+          if (flakes[index]) {
+            context.globalAlpha = flake.alpha;
+            context.fillStyle = "#e8e8e3";
+            context.beginPath();
+            context.arc(flake.x, flake.y, flake.size, 0, Math.PI * 2);
+            context.fill();
+          }
+        });
+
+        flakes = flakes.filter(Boolean);
+        requestAnimationFrame(frame);
+      };
+
+      requestAnimationFrame(frame);
+    }
+
+    function newFlake(anywhere) {
+      return {
+        x: Math.random() * innerWidth,
+        y: anywhere ? Math.random() * innerHeight : -10,
+        size: 0.6 + Math.random() * 1.8,
+        speed: 0.25 + Math.random() * 0.7,
+        alpha: 0.15 + Math.random() * 0.45,
+        phase: Math.random() * 10
+      };
+    }
+
+    // A short flurry when the gift is opened.
+    function snowBurst() {
+      if (reducedMotion) {
+        return;
+      }
+
+      for (let i = 0; i < 120; i++) {
+        flakes.push({ ...newFlake(false), y: -10 - Math.random() * innerHeight * 0.5, speed: 1 + Math.random() * 2, extra: true });
+      }
+    }
+
+  </script>
+
+</body>
+</html>

@@ -4,7 +4,10 @@
   "main": "./_worker.js",
   "assets": {
     "directory": ".",
-    "not_found_handling": "404-page",
+    "binding": "ASSETS",
+    // Unknown paths go to the worker: it serves the secret gift link
+    // (stored in KV, not in the code) and the 404 page.
+    "not_found_handling": "none",
     "run_worker_first": ["/api/*", "/media/*"]
   },
   // Everything (content, uploads, stats, codes, comments, questions)
