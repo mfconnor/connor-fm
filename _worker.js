@@ -102,8 +102,37 @@ const SCHEMA = {
     title: "text",
     intro: "long",
     placeholder: "text"
+  },
+
+  // The hidden gift page (admin → gift). Never part of /api/content:
+  // it is only served by /api/gift, for its secret link, from unlockAt on.
+  gift: {
+    slug: "slug",
+    unlockAt: "date",
+    lockedTitle: "text",
+    lockedText: "long",
+    title: "text",
+    subtitle: "text",
+    label: "text",
+    meta: "text",
+    rating: "text",
+    description: "long",
+    heroImage: "url",
+    messageTitle: "text",
+    message: "long",
+    signature: "text",
+    photosTitle: "text",
+    photos: listOf({ image: "url", caption: "text" }),
+    giftTitle: "text",
+    giftLabel: "text",
+    giftText: "long",
+    giftDetail: "text",
+    footer: "long"
   }
 };
+
+// Content keys that are never sent to /api/content.
+const PRIVATE_CONTENT_KEYS = ["gift"];
 
 const CONTENT_KEYS = Object.keys(SCHEMA);
 
@@ -119,6 +148,9 @@ const RATE_LIMITS = {
   question: { max: 5, window: 60 * 60 },
   comment: { max: 20, window: 15 * 60 }
 };
+
+// Paths a secret gift link may not use.
+const RESERVED_PATHS = ["music", "archive", "about", "messages", "questions", "admin", "gift", "api", "media", "index", "404"];
 
 // Pages that are counted in the stats.
 const PAGES = ["/", "/music", "/archive", "/about", "/messages", "/questions"];
@@ -153,7 +185,7 @@ export default {
     }
 
     if (!url.pathname.startsWith("/api/")) {
-      return env.ASSETS.fetch(request);
+      return serveAsset(request, env, url);
     }
 
     try {
@@ -193,6 +225,10 @@ async function handleApi(request, env, url) {
 
     "/api/listening-room/event": {
       POST: () => logRoomEvent(request, env)
+    },
+
+    "/api/gift": {
+      GET: () => getGift(request, env, url)
     },
 
     "/api/hit": {
@@ -299,6 +335,10 @@ async function getPublicContent(env) {
   // The tracklist is only revealed inside the listening room.
   if (music) {
     delete music.tracklist;
+  }
+
+  for (const key of PRIVATE_CONTENT_KEYS) {
+    delete content[key];
   }
 
   return json({
@@ -649,6 +689,87 @@ async function updateQuestion(request, env) {
 
 
 // ==========================================
+// STATIC PAGES + THE GIFT PAGE
+//
+// Unknown paths reach the worker (not_found_handling: "none"),
+// so the secret gift link can live in KV instead of the code.
+// ==========================================
+
+async function serveAsset(request, env, url) {
+  const response = await env.ASSETS.fetch(request);
+
+  if (response.status !== 404 || !["GET", "HEAD"].includes(request.method)) {
+    return response;
+  }
+
+  const gift = await readKey(env, "gift");
+  const path = url.pathname.replace(/^\/+|\/+$/g, "").toLowerCase();
+
+  if (gift?.slug && path === gift.slug) {
+    const page = await env.ASSETS.fetch(new Request(new URL("/gift", url), request));
+
+    return new Response(page.body, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store",
+        "X-Robots-Tag": "noindex, nofollow"
+      }
+    });
+  }
+
+  const notFound = await env.ASSETS.fetch(new Request(new URL("/404", url), request));
+
+  return new Response(notFound.body, {
+    status: 404,
+    headers: { "Content-Type": "text/html; charset=utf-8" }
+  });
+}
+
+
+async function giftIsOpen(env, gift) {
+  gift ??= await readKey(env, "gift");
+
+  const opensAt = Date.parse(gift?.unlockAt);
+
+  return Boolean(gift) && (Number.isNaN(opensAt) || opensAt <= Date.now());
+}
+
+
+async function getGift(request, env, url) {
+  const gift = await readKey(env, "gift");
+  const slug = (url.searchParams.get("slug") || "").replace(/^\/+|\/+$/g, "").toLowerCase();
+
+  if (!gift?.slug || slug !== gift.slug) {
+    return json({ success: false, error: "Not found." }, 404);
+  }
+
+  const isAdmin = await isAuthenticated(request, env);
+
+  if (!(await giftIsOpen(env, gift)) && !isAdmin) {
+    // Before the date only the countdown is shown — nothing else leaves the server.
+    return json({
+      success: true,
+      locked: true,
+      unlockAt: gift.unlockAt,
+      lockedTitle: gift.lockedTitle,
+      lockedText: gift.lockedText,
+      title: gift.title
+    });
+  }
+
+  const { slug: _slug, ...content } = gift;
+
+  return json({
+    success: true,
+    locked: false,
+    preview: isAdmin && !(await giftIsOpen(env, gift)),
+    ...content
+  });
+}
+
+
+// ==========================================
 // ADMIN — AUTH
 // ==========================================
 
@@ -825,6 +946,11 @@ const FIELD_TYPES = {
   url: value => safeLink(value),
   id: value => text(value, 64) || crypto.randomUUID(),
   status: value => (["draft", "live", "scheduled"].includes(value) ? value : "draft"),
+  // a secret page link: lowercase letters, numbers, dashes
+  slug: value => {
+    const slug = text(value, 64).trim().toLowerCase().replace(/^\/+/, "");
+    return /^[a-z0-9-]{8,64}$/.test(slug) && !RESERVED_PATHS.includes(slug) ? slug : "";
+  },
   date: value => {
     const date = text(value, 40);
     return date && !Number.isNaN(Date.parse(date)) ? new Date(date).toISOString() : null;
@@ -916,7 +1042,8 @@ async function uploadMedia(request, env, url) {
     name: (url.searchParams.get("name") || id).slice(0, 120),
     type: type === "audio/mp3" ? "audio/mpeg" : type,
     size: data.byteLength,
-    private: url.searchParams.get("private") === "1",
+    private: ["1", "gift"].includes(url.searchParams.get("private")),
+    scope: url.searchParams.get("private") === "gift" ? "gift" : undefined,
     uploaded: new Date().toISOString()
   };
 
@@ -977,7 +1104,11 @@ async function serveMedia(request, env, url) {
     return new Response("Not found.", { status: 404 });
   }
 
-  if (metadata?.private && !(await hasListeningAccess(request, env)) && !(await isAuthenticated(request, env))) {
+  if (metadata?.scope === "gift") {
+    if (!(await giftIsOpen(env)) && !(await isAuthenticated(request, env))) {
+      return new Response("Not yet.", { status: 403 });
+    }
+  } else if (metadata?.private && !(await hasListeningAccess(request, env)) && !(await isAuthenticated(request, env))) {
     return new Response("Access code required.", { status: 403 });
   }
 

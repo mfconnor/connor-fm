@@ -31,6 +31,7 @@ through `/admin`. The admin panel has one tab per page:
 | about | label, title, text, the list of facts |
 | messages | messages (draft / published / scheduled) and the page texts |
 | questions | anonymous questions from `/questions`: answer, publish, delete |
+| gift | the hidden gift page behind a secret link (see below) |
 | stats | page views, visitors, plays, unlocks |
 | site | footer on every page, "now listening" line |
 | media | all uploaded files, storage used, delete unused files |
@@ -44,6 +45,20 @@ text editable, add it in both places and mark the element in the HTML.
 
 The tracklist is only sent to the browser after the correct listening-room
 code was entered. Drafts and scheduled messages stay hidden until published.
+
+## Gift page
+
+`gift.html` is a hidden page behind a secret link (admin → gift). It has no
+navigation and no links to the rest of the site.
+
+- The secret link is stored in KV, not in the code, so it stays secret even if
+  the repository is public. Unknown paths reach the worker
+  (`not_found_handling: "none"`), which serves `gift.html` for that link and
+  the 404 page for everything else.
+- Before the "opens at" date, `/api/gift` only returns the countdown. Letter,
+  photos and gift stay on the server, and photos uploaded in the gift tab
+  return 403. Logged in as admin you see a preview at any time.
+- Gift content is never part of `/api/content`.
 
 ## Data and the free plan
 

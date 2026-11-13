@@ -1485,6 +1485,103 @@ const TABS = [
   },
 
   {
+    id: "gift",
+    title: "gift",
+    view: () => (content.gift?.slug ? `/${content.gift.slug}` : null),
+    intro: "The hidden page behind the QR code. It is not linked anywhere on the site and opens at the date below — before that, visitors only see a countdown. You can preview it here any time with \"view page\".",
+    groups: [
+      {
+        title: "link + date",
+        fields: [
+          {
+            path: "gift.slug",
+            label: "secret link",
+            placeholder: "e.g. wurfw34zu5t89uwgpijw4890r",
+            half: true,
+            hint: "The part after connor.fm/ — letters, numbers and dashes, at least 8 characters. Must match the QR code."
+          },
+          {
+            path: "gift.unlockAt",
+            label: "opens at",
+            type: "datetime",
+            def: "2026-12-23T23:00:00.000Z",
+            half: true,
+            hint: "Your local time. To open it right away, pick a time in the past."
+          },
+          { path: "gift.lockedTitle", label: "title before it opens", def: "demnächst", half: true },
+          { path: "gift.lockedText", label: "text before it opens", def: "diese folge erscheint an heiligabend.", half: true }
+        ]
+      },
+      {
+        title: "title",
+        description: "The big header, like a streaming title page.",
+        fields: [
+          { path: "gift.label", label: "small line above", def: "eine dokumentation", half: true },
+          { path: "gift.title", label: "title", def: "KIMI", half: true },
+          { path: "gift.subtitle", label: "subtitle", def: "die dokumentation", half: true },
+          { path: "gift.rating", label: "rating", def: "10/10", half: true },
+          { path: "gift.meta", label: "details line", def: "2026 · 1 folge · für die beste große schwester" },
+          {
+            path: "gift.description",
+            label: "description",
+            type: "long",
+            def: "Täufling. Hauptperson. Große Schwester. Kino-Begleitung. Übernachtungs-Partnerin. Und einfach: Kimi."
+          },
+          {
+            path: "gift.heroImage",
+            label: "title image",
+            type: "image",
+            private: "gift",
+            hint: "A wide photo works best. Only visible once the page is open."
+          }
+        ]
+      },
+      {
+        title: "letter",
+        fields: [
+          { path: "gift.messageTitle", label: "heading", def: "ein brief für dich", half: true },
+          { path: "gift.signature", label: "signed", def: "connor", half: true },
+          { path: "gift.message", label: "letter", type: "long", hint: "Leave an empty line between paragraphs." }
+        ]
+      },
+      {
+        title: "photos",
+        fields: [
+          { path: "gift.photosTitle", label: "row title", def: "die taufe" },
+          {
+            path: "gift.photos",
+            type: "list",
+            addLabel: "+ add photo",
+            empty: "No photos yet.",
+            newItem: () => ({ image: "", caption: "" }),
+            itemTitle: photo => photo.caption || (photo.image ? "photo" : "new photo"),
+            item: [
+              { path: "image", label: "photo", type: "image", private: "gift", hint: "Only visible once the page is open." },
+              { path: "caption", label: "caption (optional)" }
+            ]
+          }
+        ]
+      },
+      {
+        title: "gift",
+        description: "A card that Kimi opens with a click.",
+        fields: [
+          { path: "gift.giftTitle", label: "heading", def: "dein geschenk", half: true },
+          { path: "gift.giftLabel", label: "small line on the card", def: "gutschein", half: true },
+          { path: "gift.giftText", label: "what it is", type: "long", def: "ein kinoabend. du suchst den film aus." },
+          { path: "gift.giftDetail", label: "small print", def: "einlösbar bei connor. jederzeit." }
+        ]
+      },
+      {
+        title: "end",
+        fields: [
+          { path: "gift.footer", label: "last line", type: "long", def: "frohe weihnachten, kimi. wir haben dich lieb." }
+        ]
+      }
+    ]
+  },
+
+  {
     id: "stats",
     title: "stats",
     intro: "Page views and plays. No cookies, no tracking across sites — visitors are counted anonymously per day. Page views are saved every few minutes, so the newest ones can take a moment to show up.",
@@ -1778,8 +1875,10 @@ function renderPanel() {
 
   head.append(titles);
 
-  if (tab.view) {
-    head.append(el("a", { class: "view-link", href: tab.view, target: "_blank", rel: "noopener" }, "view page ↗"));
+  const view = typeof tab.view === "function" ? tab.view() : tab.view;
+
+  if (view) {
+    head.append(el("a", { class: "view-link", href: view, target: "_blank", rel: "noopener" }, "view page ↗"));
   }
 
   const children = [head, el("p", { class: "panel-intro" }, tab.intro)];
@@ -2071,7 +2170,7 @@ function uploadFile(file, kind, isPrivate, onProgress) {
     const params = new URLSearchParams({ name: file.name });
 
     if (isPrivate) {
-      params.set("private", "1");
+      params.set("private", isPrivate === "gift" ? "gift" : "1");
     }
 
     // XMLHttpRequest instead of fetch, because it can report upload progress.
