@@ -1537,6 +1537,21 @@ const TABS = [
         ]
       },
       {
+        title: "documentary",
+        description: "Upload the video to YouTube as \"unlisted\" and paste the link here. It plays right on the page and stays hidden until the page opens.",
+        fields: [
+          {
+            path: "gift.video",
+            label: "youtube link",
+            placeholder: "https://youtu.be/…",
+            hint: "Any YouTube link works (share link, browser link). Leave empty to hide the documentary."
+          },
+          { path: "gift.videoButton", label: "button", def: "doku ansehen", half: true },
+          { path: "gift.videoLength", label: "length", def: "9 min", half: true },
+          { path: "gift.videoTitle", label: "episode title", def: "KIMI – Die Dokumentation" }
+        ]
+      },
+      {
         title: "letter",
         fields: [
           { path: "gift.messageTitle", label: "heading", def: "ein brief für dich", half: true },

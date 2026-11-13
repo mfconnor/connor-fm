@@ -59,6 +59,9 @@ navigation and no links to the rest of the site.
   photos and gift stay on the server, and photos uploaded in the gift tab
   return 403. Logged in as admin you see a preview at any time.
 - Gift content is never part of `/api/content`.
+- A documentary can be added as a YouTube link (upload it as "unlisted"). Only
+  the video id is stored; it is embedded via `youtube-nocookie.com` with
+  `rel=0` and, like everything else, only sent once the page is open.
 
 ## Data and the free plan
 

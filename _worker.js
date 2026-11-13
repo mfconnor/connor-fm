@@ -118,6 +118,10 @@ const SCHEMA = {
     rating: "text",
     description: "long",
     heroImage: "url",
+    video: "youtube",
+    videoTitle: "text",
+    videoLength: "text",
+    videoButton: "text",
     messageTitle: "text",
     message: "long",
     signature: "text",
@@ -946,6 +950,12 @@ const FIELD_TYPES = {
   url: value => safeLink(value),
   id: value => text(value, 64) || crypto.randomUUID(),
   status: value => (["draft", "live", "scheduled"].includes(value) ? value : "draft"),
+  // a YouTube link in any common form; only the 11-character video id is kept
+  youtube: value => {
+    const input = text(value, 300).trim();
+    const match = input.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})(?![\w-])/) || input.match(/^([\w-]{11})$/);
+    return match ? match[1] : "";
+  },
   // a secret page link: lowercase letters, numbers, dashes
   slug: value => {
     const slug = text(value, 64).trim().toLowerCase().replace(/^\/+/, "");
